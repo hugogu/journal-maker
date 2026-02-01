@@ -206,9 +206,46 @@ Company: ${context.company.name}`
     
     // Special handling for content that has both mermaid and JSON
     if (!jsonMatch && (fullContent.includes('```json') || fullContent.includes('json'))) {
-      // Try different JSON block patterns
+      // First try to find the JSON block specifically
+      const jsonBlockMatch = fullContent.match(/```json\s*\{[\s\S]*?\}\s*```/)
+      if (jsonBlockMatch) {
+        let jsonContent = jsonBlockMatch[0]
+        
+        // Clean up the JSON string
+        jsonContent = jsonContent
+          .replace(/```json\s*/, '')
+          .replace(/```$/, '')
+          .trim()
+        
+        try {
+          console.log('Attempting to parse JSON from ```json block:', jsonContent.substring(0, 100) + '...')
+          const parsed = JSON.parse(jsonContent)
+          return {
+            message: parsed.message || fullContent,
+            structured: parsed.structured || {
+              flowchart: {
+                nodes: [
+                  { id: "start", type: "start", label: "开始" },
+                  { id: "process", type: "process", label: "业务处理" },
+                  { id: "end", type: "end", label: "结束" }
+                ],
+                edges: [
+                  { from: "start", to: "process", label: "" },
+                  { from: "process", to: "end", label: "" }
+                ]
+              },
+              accounts: parsed.structured?.accounts || [],
+              rules: parsed.structured?.rules || []
+            }
+          }
+        } catch (e) {
+          console.error('Failed to parse JSON from ```json block:', e)
+          console.error('JSON content was:', jsonContent)
+        }
+      }
+      
+      // Try other patterns as fallback
       const jsonPatterns = [
-        /```json\s*\{[\s\S]*?\}\s*```/,  // Standard ```json block
         /json\s*\{[\s\S]*?\}\s*`/,  // json without backticks
         /\{[\s\S]*?"message"[\s\S]*?"structured"[\s\S]*?\}/,  // JSON with message and structured
         /\{[\s\S]*?"flowchart"[\s\S]*?"nodes"[\s\S]*?\}/,  // JSON with flowchart nodes
@@ -221,14 +258,12 @@ Company: ${context.company.name}`
           
           // Clean up the JSON string
           jsonContent = jsonContent
-            .replace(/```json\s*/, '')
             .replace(/json\s*/, '')
-            .replace(/```$/, '')
             .replace(/`$/, '')
             .trim()
           
           try {
-            console.log('Attempting to parse JSON:', jsonContent.substring(0, 100) + '...')
+            console.log('Attempting to parse JSON from pattern:', jsonContent.substring(0, 100) + '...')
             const parsed = JSON.parse(jsonContent)
             return {
               message: parsed.message || fullContent,
@@ -249,7 +284,7 @@ Company: ${context.company.name}`
               }
             }
           } catch (e) {
-            console.error('Failed to parse JSON from code block:', e)
+            console.error('Failed to parse JSON from pattern:', e)
             console.error('JSON content was:', jsonContent)
           }
         }
