@@ -59,7 +59,11 @@ export class AIService {
     })
     
     if (!config) {
-      throw new Error('AI configuration not found. Please configure AI settings first.')
+      throw new Error('AI configuration not found. Please configure AI settings in Admin > AI Config.')
+    }
+    
+    if (!config.apiKey || config.apiKey.trim() === '') {
+      throw new Error('API Key is empty. Please configure a valid API key in Admin > AI Config.')
     }
     
     return new OpenAI({
