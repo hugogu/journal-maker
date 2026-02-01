@@ -15,17 +15,25 @@
         <div class="flex-1 overflow-y-auto" ref="messagesContainer">
           <div v-for="(message, index) in messages" :key="index" class="mb-4">
             <div :class="message.role === 'user' ? 'user-message' : 'assistant-message'">
-              <div class="font-medium text-sm mb-1">
-                {{ message.role === 'user' ? '你' : 'AI助手' }}
+              <div class="flex items-center mb-2">
+                <div class="w-8 h-8 rounded-full flex items-center justify-center text-white text-sm font-medium mr-3"
+                     :class="message.role === 'user' ? 'bg-blue-500' : 'bg-gray-500'">
+                  {{ message.role === 'user' ? '你' : 'AI' }}
+                </div>
+                <div class="font-medium text-sm">
+                  {{ message.role === 'user' ? '用户' : 'AI助手' }}
+                  <span v-if="message.role === 'assistant' && streaming && index === messages.length - 1" 
+                        class="ml-2 inline-block w-2 h-2 bg-blue-500 rounded-full animate-pulse"></span>
+                </div>
               </div>
-              <div class="whitespace-pre-wrap text-sm">{{ message.content }}</div>
-              <div v-if="message.role === 'assistant' && streaming && index === messages.length - 1" class="inline-block ml-1">
-                <span class="animate-pulse">▊</span>
-              </div>
+              <div class="message-content whitespace-pre-wrap ml-11">{{ message.content }}</div>
             </div>
           </div>
-          <div v-if="streaming" class="text-center text-gray-400 text-sm py-2">
-            AI正在分析中...
+          <div v-if="streaming" class="text-center text-gray-400 text-sm py-3">
+            <div class="inline-flex items-center">
+              <div class="w-2 h-2 bg-gray-400 rounded-full animate-pulse mr-2"></div>
+              AI正在分析中...
+            </div>
           </div>
         </div>
         
@@ -326,3 +334,17 @@ function generateMermaidCode(flowchart: any): string {
   return result
 }
 </script>
+
+<style scoped>
+.user-message {
+  @apply bg-blue-50 border-l-4 border-blue-500 p-4 rounded-r-lg shadow-sm;
+}
+
+.assistant-message {
+  @apply bg-gray-50 border-l-4 border-gray-400 p-4 rounded-r-lg shadow-sm;
+}
+
+.message-content {
+  @apply text-sm leading-relaxed text-gray-800;
+}
+</style>

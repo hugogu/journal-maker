@@ -177,16 +177,62 @@ Company: ${context.company.name}`
     }
 
     // Extract JSON from the end of the response
-    const jsonMatch = fullContent.match(/\{[\s\S]*\}$/)
+    // Look for JSON pattern more robustly
+    let jsonMatch = fullContent.match(/\{[\s\S]*\}$/)
+    
+    // If no match at the end, try to find any JSON-like structure
     if (!jsonMatch) {
-      throw new Error('No JSON response found in AI stream')
+      const jsonPatterns = [
+        /\{[\s\S]*\}/,  // Any JSON object
+        /\{[\s\S]*?"message"[\s\S]*?\}/,  // JSON with message field
+        /\{[\s\S]*?"structured"[\s\S]*?\}/,  // JSON with structured field
+      ]
+      
+      for (const pattern of jsonPatterns) {
+        const match = fullContent.match(pattern)
+        if (match) {
+          jsonMatch = match
+          break
+        }
+      }
+    }
+    
+    if (!jsonMatch) {
+      console.error('No JSON found in response, full content:', fullContent)
+      // Create a fallback response
+      return {
+        message: fullContent,
+        structured: {
+          flowchart: undefined,
+          accounts: [],
+          rules: []
+        }
+      }
     }
 
     try {
-      return JSON.parse(jsonMatch[0])
+      const parsed = JSON.parse(jsonMatch[0])
+      // Ensure the response has the required structure
+      return {
+        message: parsed.message || fullContent,
+        structured: parsed.structured || {
+          flowchart: null,
+          accounts: [],
+          rules: []
+        }
+      }
     } catch (error) {
-      console.error('Failed to parse AI response:', fullContent)
-      throw new Error('Invalid JSON response from AI')
+      console.error('Failed to parse AI response:', jsonMatch[0])
+      console.error('Full content was:', fullContent)
+      // Return fallback response
+      return {
+        message: fullContent,
+        structured: {
+          flowchart: undefined,
+          accounts: [],
+          rules: []
+        }
+      }
     }
   }
 
