@@ -128,7 +128,7 @@ Company: ${context.company.name}`
 
   async generateSampleTransaction(
     scenarioDescription: string,
-    rules: AIResponse['structured']['rules'],
+    rules: AIResponse['structured']['rules'] | undefined,
     accounts: Account[]
   ): Promise<{
     description: string
