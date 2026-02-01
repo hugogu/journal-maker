@@ -4,6 +4,7 @@ import { sendMessageSchema } from '../../../utils/schemas'
 import { AppError, handleError, successResponse } from '../../../utils/error'
 import { aiService } from '../../../utils/ai-service'
 import { eq } from 'drizzle-orm'
+import { defineEventHandler, getRouterParam, readBody, setResponseStatus } from 'h3'
 
 export default defineEventHandler(async (event) => {
   try {

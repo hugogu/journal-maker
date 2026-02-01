@@ -13,7 +13,7 @@ export default defineNuxtConfig({
   css: ['~/assets/css/main.css'],
 
   postcss: {
-    plugins: {
+    plugins: {  
       tailwindcss: {},
       autoprefixer: {},
     },
@@ -33,9 +33,4 @@ export default defineNuxtConfig({
     }
   },
 
-  nitro: {
-    experimental: {
-      asyncContext: true
-    }
-  }
 })

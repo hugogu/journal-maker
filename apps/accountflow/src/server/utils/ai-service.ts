@@ -128,7 +128,7 @@ Company: ${context.company.name}`
 
   async generateSampleTransaction(
     scenarioDescription: string,
-    rules: AIResponse['structured']['rules'],
+    rules: (AIResponse['structured'] & { rules: any })['rules'] | undefined,
     accounts: Account[]
   ): Promise<{
     description: string
@@ -152,7 +152,7 @@ Respond in JSON format:
   ]
 }
 
-Rules: ${JSON.stringify(rules)}
+Rules: ${JSON.stringify(rules || [])}
 Available accounts: ${accounts.map(a => `${a.code} ${a.name}`).join(', ')}`
 
     const response = await client.chat.completions.create({

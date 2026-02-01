@@ -7,7 +7,6 @@ async function seed() {
   // Create default company
   const [company] = await db.insert(companies).values({
     name: 'Default Company',
-    code: 'DEFAULT',
     industry: 'Technology'
   }).onConflictDoNothing().returning()
 
@@ -33,9 +32,8 @@ async function seed() {
 
   // Create default accounts
   const defaultAccounts = [
-    { code: '1001', name: '库存现金', type: 'asset', direction: 'debit' },
+    { code: '1001', name: '现金', type: 'asset', direction: 'debit' },
     { code: '1002', name: '银行存款', type: 'asset', direction: 'debit' },
-    { code: '1122', name: '应收账款', type: 'asset', direction: 'debit' },
     { code: '2202', name: '应付账款', type: 'liability', direction: 'credit' },
     { code: '4001', name: '实收资本', type: 'equity', direction: 'credit' },
     { code: '6001', name: '主营业务收入', type: 'revenue', direction: 'credit' },
@@ -45,7 +43,10 @@ async function seed() {
   for (const acc of defaultAccounts) {
     await db.insert(accounts).values({
       companyId: company?.id || 1,
-      ...acc
+      code: acc.code,
+      name: acc.name,
+      type: acc.type as any,
+      direction: acc.direction as any
     }).onConflictDoNothing()
   }
 
