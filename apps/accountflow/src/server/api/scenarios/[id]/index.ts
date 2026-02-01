@@ -3,6 +3,7 @@ import { scenarios, journalRules, sampleTransactions, conversations, flowchartDa
 import { updateScenarioSchema, confirmScenarioSchema } from '../../../utils/schemas'
 import { AppError, handleError, successResponse } from '../../../utils/error'
 import { eq } from 'drizzle-orm'
+import { defineEventHandler, getRouterParam, getMethod, readBody, setResponseStatus } from 'h3'
 
 export default defineEventHandler(async (event) => {
   try {
