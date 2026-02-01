@@ -180,21 +180,22 @@ function generateMermaidCode(flowchart: any): string {
   
   flowchart.nodes.forEach((node: any) => {
     const safeLabel = escapeLabel(node.label)
-    const nodeId = `"${node.id}"`
+    const nodeId = node.id
     if (node.type === 'decision') {
-      result += `  ${nodeId}{{"${safeLabel}"}}\n`
+      result += `  ${nodeId}{${safeLabel}}\n`
     } else {
-      result += `  ${nodeId}["${safeLabel}"]\n`
+      result += `  ${nodeId}[${safeLabel}]\n`
     }
   })
   
   flowchart.edges.forEach((edge: any) => {
-    const fromId = `"${edge.from}"`
-    const toId = `"${edge.to}"`
-    const label = edge.label ? `|"${escapeLabel(edge.label)}"|` : ''
+    const fromId = edge.from
+    const toId = edge.to
+    const label = edge.label ? `|${escapeLabel(edge.label)}|` : ''
     result += `  ${fromId} -->${label} ${toId}\n`
   })
   
+  console.log('Generated Mermaid code:', result)
   return result
 }
 </script>
