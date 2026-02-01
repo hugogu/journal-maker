@@ -180,14 +180,18 @@ Company: ${context.company.name}`
     }
 
     // Extract JSON from the end of the response
+    // Look for JSON pattern more robustly
     let jsonMatch = fullContent.match(/\{[\s\S]*\}$/)
     
+    // If no match at the end, try to find any JSON-like structure
     if (!jsonMatch) {
       const jsonPatterns = [
         /\{[\s\S]*?\}/,  // Any JSON object (non-greedy)
         /\{[\s\S]*?"message"[\s\S]*?\}/,  // JSON with message field
         /\{[\s\S]*?"structured"[\s\S]*?\}/,  // JSON with structured field
         /\{[\s\S]*?"flowchart"[\s\S]*?\}/,  // JSON with flowchart field
+        /```json\s*\{[\s\S]*?\}\s*```/,  // JSON in code blocks
+        /\{[\s\S]*?"nodes"[\s\S]*?\}/,  // JSON with nodes array
       ]
       
       for (const pattern of jsonPatterns) {
@@ -196,6 +200,38 @@ Company: ${context.company.name}`
           // Find the last, most complete match
           jsonMatch = matches[matches.length - 1]
           break
+        }
+      }
+    }
+    
+    // Special handling for content that has both mermaid and JSON
+    if (!jsonMatch && fullContent.includes('```json')) {
+      const jsonBlockMatch = fullContent.match(/```json\s*\{[\s\S]*?\}\s*```/)
+      if (jsonBlockMatch) {
+        // Extract JSON from code block
+        const jsonContent = jsonBlockMatch[0].replace(/```json\s*/, '').replace(/```$/, '')
+        try {
+          const parsed = JSON.parse(jsonContent)
+          return {
+            message: parsed.message || fullContent,
+            structured: parsed.structured || {
+              flowchart: {
+                nodes: [
+                  { id: "start", type: "start", label: "开始" },
+                  { id: "process", type: "process", label: "业务处理" },
+                  { id: "end", type: "end", label: "结束" }
+                ],
+                edges: [
+                  { from: "start", to: "process", label: "" },
+                  { from: "process", to: "end", label: "" }
+                ]
+              },
+              accounts: parsed.structured?.accounts || [],
+              rules: parsed.structured?.rules || []
+            }
+          }
+        } catch (e) {
+          console.error('Failed to parse JSON from code block:', e)
         }
       }
     }
