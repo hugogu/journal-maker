@@ -38,11 +38,13 @@
 
         <div>
           <label class="label">模型</label>
-          <select v-model="config.model" class="input" required>
-            <option value="gpt-4">GPT-4</option>
-            <option value="gpt-4-turbo">GPT-4 Turbo</option>
-            <option value="gpt-3.5-turbo">GPT-3.5 Turbo</option>
-          </select>
+          <input 
+            v-model="config.model" 
+            type="text" 
+            class="input" 
+            placeholder="gpt-4, gpt-3.5-turbo, claude-3-opus, etc."
+            required
+          >
         </div>
 
         <div class="flex gap-4">

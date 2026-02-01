@@ -2,7 +2,7 @@ import { db } from '../../../db'
 import { conversations, scenarios, accounts } from '../../../db/schema'
 import { sendMessageSchema } from '../../../utils/schemas'
 import { AppError, handleError, successResponse } from '../../../utils/error'
-import { mockAIService } from '../../../utils/mock-ai'
+import { aiService } from '../../../utils/ai-service'
 import { eq } from 'drizzle-orm'
 
 export default defineEventHandler(async (event) => {
@@ -40,7 +40,7 @@ export default defineEventHandler(async (event) => {
     })
     
     // Call AI service
-    const aiResponse = await mockAIService.analyzeScenario(data.content, {
+    const aiResponse = await aiService.analyzeScenario(data.content, {
       company: { name: 'Company' }, // TODO: Get actual company
       accounts: allAccounts,
       templateScenario: templateScenario ? {

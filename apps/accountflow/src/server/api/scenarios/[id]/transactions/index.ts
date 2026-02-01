@@ -1,7 +1,7 @@
 import { db } from '../../../../db'
 import { scenarios, accounts, journalRules, sampleTransactions, conversations } from '../../../../db/schema'
 import { AppError, handleError, successResponse } from '../../../../utils/error'
-import { mockAIService } from '../../../../utils/mock-ai'
+import { aiService } from '../../../../utils/ai-service'
 import { eq } from 'drizzle-orm'
 import { createSampleTransactionSchema } from '../../../../utils/schemas'
 
@@ -40,7 +40,7 @@ export default defineEventHandler(async (event) => {
         })
         
         // Generate sample using AI
-        const generated = await mockAIService.generateSampleTransaction(
+        const generated = await aiService.generateSampleTransaction(
           scenario.description || scenario.name,
           rules.map(r => ({
             event: r.eventName,
