@@ -11,7 +11,7 @@
             class="inline-flex items-center px-2 py-1 bg-blue-100 text-blue-800 rounded-md cursor-pointer hover:bg-blue-200 transition-colors"
             @click="insertVariable(variable)"
           >
-            <code class="text-xs">{{ `{{${variable}}}` }}</code>
+            <code class="text-xs">{{ '{' + '{' + variable + '}' + '}' }}</code>
           </span>
         </div>
       </div>
@@ -119,7 +119,7 @@ const highlightedContent = computed(() => {
   // Highlight variables
   highlighted = highlighted.replace(
     /\{\{([^}]+)\}\}/g,
-    '<span class="bg-blue-100 text-blue-800 px-1 rounded">{{$1}}</span>'
+    '<span class="bg-blue-100 text-blue-800 px-1 rounded">{' + '{' + '$1' + '}' + '}</span>'
   )
   
   return highlighted
