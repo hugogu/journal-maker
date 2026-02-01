@@ -9,10 +9,10 @@
 
 **Purpose**: Project initialization and basic structure
 
-- [ ] T001 Create Nuxt 3 project structure in `apps/accountflow/`
-- [ ] T002 [P] Configure TypeScript strict mode and path aliases
-- [ ] T003 [P] Setup ESLint, Prettier, and lint-staged
-- [ ] T004 Configure TailwindCSS and base UI theme
+- [x] T001 Create Nuxt 3 project structure in `apps/accountflow/`
+- [x] T002 [P] Configure TypeScript strict mode and path aliases
+- [x] T003 [P] Setup ESLint, Prettier, and lint-staged
+- [x] T004 Configure TailwindCSS and base UI theme
 
 ---
 
@@ -22,13 +22,13 @@
 
 **⚠️ CRITICAL**: No user story work can begin until this phase is complete
 
-- [ ] T005 Setup PostgreSQL with Docker Compose
-- [ ] T006 [P] Configure drizzle-orm with database schema and migrations
-- [ ] T007 [P] Create base types (Account, Scenario, User, Company) in `src/types/`
-- [ ] T008 Implement Zod validation schemas for all entities
-- [ ] T009 Setup error handling middleware and API response utilities
-- [ ] T010 Configure environment variables and secrets management
-- [ ] T011 Create mock AI service for offline development
+- [x] T005 Setup PostgreSQL with Docker Compose
+- [x] T006 [P] Configure drizzle-orm with database schema and migrations
+- [x] T007 [P] Create base types (Account, Scenario, User, Company) in `src/types/`
+- [x] T008 Implement Zod validation schemas for all entities
+- [x] T009 Setup error handling middleware and API response utilities
+- [x] T010 Configure environment variables and secrets management
+- [x] T011 Create mock AI service for offline development
 
 **Checkpoint**: Foundation ready - user story implementation can now begin
 

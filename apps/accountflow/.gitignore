@@ -1,0 +1,71 @@
+# Dependencies
+node_modules/
+.pnp
+.pnp.js
+.pnpm-debug.log*
+.npm
+
+# Build outputs
+.output
+.nuxt
+.nitro
+cache
+.data
+dist
+build
+*.tsbuildinfo
+
+# Testing
+coverage
+*.lcov
+.nyc_output
+
+# Environment
+.env
+.env.local
+.env.*.local
+.env.development
+.env.test
+.env.production
+
+# Logs
+logs
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+lerna-debug.log*
+.pnpm-debug.log*
+
+# Editor directories and files
+.vscode/*
+!.vscode/extensions.json
+.idea
+.DS_Store
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.sw?
+
+# OS
+Thumbs.db
+Desktop.ini
+
+# Temporary files
+*.tmp
+*.temp
+*.cache
+
+# Database
+*.sqlite
+*.sqlite3
+*.db
+
+# Docker volumes
+postgres-data/
+
+# Misc
+*.local
+.vercel
+.netlify
