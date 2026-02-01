@@ -168,21 +168,29 @@ function scrollToBottom() {
 }
 
 function generateMermaidCode(flowchart: any): string {
+  // Escape special characters for Mermaid
+  const escapeLabel = (label: string): string => {
+    return label
+      .replace(/"/g, '\\"')
+      .replace(/\n/g, '\\n')
+  }
+  
   let result = 'graph TD\n'
   
   flowchart.nodes.forEach((node: any) => {
+    const safeLabel = escapeLabel(node.label)
     const nodeId = `"${node.id}"`
     if (node.type === 'decision') {
-      result += `  ${nodeId}{{"${node.label}"}}\n`
+      result += `  ${nodeId}{{"${safeLabel}"}}\n`
     } else {
-      result += `  ${nodeId}["${node.label}"]\n`
+      result += `  ${nodeId}["${safeLabel}"]\n`
     }
   })
   
   flowchart.edges.forEach((edge: any) => {
     const fromId = `"${edge.from}"`
     const toId = `"${edge.to}"`
-    const label = edge.label ? `|"${edge.label}"|` : ''
+    const label = edge.label ? `|"${escapeLabel(edge.label)}"|` : ''
     result += `  ${fromId} -->${label} ${toId}\n`
   })
   
