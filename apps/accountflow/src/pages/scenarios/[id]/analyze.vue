@@ -80,6 +80,7 @@
 <script setup lang="ts">
 import { ref, onMounted, nextTick, watch } from 'vue'
 import mermaid from 'mermaid'
+import { useRoute } from 'vue-router'
 
 const route = useRoute()
 const scenarioId = route.params.id as string
