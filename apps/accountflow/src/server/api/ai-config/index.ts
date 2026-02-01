@@ -17,16 +17,17 @@ export default defineEventHandler(async (event) => {
       const body = await readBody(event)
       const data = createAIConfigSchema.parse(body)
       
-      // Deactivate all other configs first
-      await db.update(aiConfigs)
-        .set({ isActive: false })
+      // Always use companyId 1 for personal use
+      const companyId = 1
       
-      // Get any existing config to update
-      const existing = await db.query.aiConfigs.findFirst()
+      // Check if config exists for companyId 1
+      const existing = await db.query.aiConfigs.findFirst({
+        where: eq(aiConfigs.companyId, companyId)
+      })
       
       let config
       if (existing) {
-        // Update existing
+        // Update existing config for companyId 1
         [config] = await db.update(aiConfigs)
           .set({
             apiEndpoint: data.apiEndpoint,
@@ -36,14 +37,14 @@ export default defineEventHandler(async (event) => {
             isActive: true,
             updatedAt: new Date()
           })
-          .where(eq(aiConfigs.id, existing.id))
+          .where(eq(aiConfigs.companyId, companyId))
           .returning()
       } else {
-        // Insert new - use a default companyId for schema compatibility
+        // Insert new config for companyId 1
         [config] = await db.insert(aiConfigs)
           .values({
             ...data,
-            companyId: 1,
+            companyId,
             isActive: true
           })
           .returning()
