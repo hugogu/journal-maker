@@ -204,6 +204,65 @@ Company: ${context.company.name}`
       }
     }
     
+    // Special handling for malformed mermaid blocks that can interfere with JSON parsing
+    if (!jsonMatch && fullContent.includes('`mermaid')) {
+      // Find where the malformed mermaid block starts
+      const mermaidStart = fullContent.indexOf('`mermaid')
+      if (mermaidStart !== -1) {
+        // Look for JSON after the mermaid block
+        const afterMermaid = fullContent.substring(mermaidStart)
+        
+        // Try to find JSON in the remaining content
+        const jsonPatterns = [
+          /```json\s*\{[\s\S]*?\}\s*```/,
+          /json\s*\{[\s\S]*?\}\s*`/,
+          /\{[\s\S]*?"message"[\s\S]*?"structured"[\s\S]*?\}/,
+          /\{[\s\S]*?"flowchart"[\s\S]*?"nodes"[\s\S]*?\}/,
+        ]
+        
+        for (const pattern of jsonPatterns) {
+          const jsonBlockMatch = afterMermaid.match(pattern)
+          if (jsonBlockMatch) {
+            let jsonContent = jsonBlockMatch[0]
+            
+            // Clean up the JSON string
+            jsonContent = jsonContent
+              .replace(/```json\s*/, '')
+              .replace(/json\s*/, '')
+              .replace(/```$/, '')
+              .replace(/`$/, '')
+              .trim()
+            
+            try {
+              console.log('Attempting to parse JSON after malformed mermaid:', jsonContent.substring(0, 100) + '...')
+              const parsed = JSON.parse(jsonContent)
+              return {
+                message: parsed.message || fullContent,
+                structured: parsed.structured || {
+                  flowchart: {
+                    nodes: [
+                      { id: "start", type: "start", label: "开始" },
+                      { id: "process", type: "process", label: "业务处理" },
+                      { id: "end", type: "end", label: "结束" }
+                    ],
+                    edges: [
+                      { from: "start", to: "process", label: "" },
+                      { from: "process", to: "end", label: "" }
+                    ]
+                  },
+                  accounts: parsed.structured?.accounts || [],
+                  rules: parsed.structured?.rules || []
+                }
+              }
+            } catch (e) {
+              console.error('Failed to parse JSON after malformed mermaid:', e)
+              console.error('JSON content was:', jsonContent)
+            }
+          }
+        }
+      }
+    }
+    
     // Special handling for content that has both mermaid and JSON
     if (!jsonMatch && (fullContent.includes('```json') || fullContent.includes('json'))) {
       // First try to find the JSON block specifically
