@@ -176,11 +176,17 @@ function generateMermaidCode(flowchart: any): string {
       .replace(/\n/g, ' ')
   }
   
+  // Avoid reserved keywords in Mermaid
+  const safeNodeId = (id: string): string => {
+    const reserved = ['end', 'start', 'subgraph', 'graph', 'style', 'class', 'click']
+    return reserved.includes(id.toLowerCase()) ? `node_${id}` : id
+  }
+  
   let result = 'graph TD\n'
   
   flowchart.nodes.forEach((node: any) => {
     const safeLabel = escapeLabel(node.label)
-    const nodeId = node.id
+    const nodeId = safeNodeId(node.id)
     if (node.type === 'decision') {
       result += `  ${nodeId}{${safeLabel}}\n`
     } else {
@@ -189,8 +195,8 @@ function generateMermaidCode(flowchart: any): string {
   })
   
   flowchart.edges.forEach((edge: any) => {
-    const fromId = edge.from
-    const toId = edge.to
+    const fromId = safeNodeId(edge.from)
+    const toId = safeNodeId(edge.to)
     const label = edge.label ? `|${escapeLabel(edge.label)}|` : ''
     result += `  ${fromId} -->${label} ${toId}\n`
   })
