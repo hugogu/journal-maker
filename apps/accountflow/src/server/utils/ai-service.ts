@@ -141,7 +141,8 @@ Analyze the user's business scenario and provide:
 3. Suggested accounting accounts to use
 4. Accounting rules/journal entries for the scenario
 
-Think step by step and provide your analysis. At the end, provide a JSON response with this structure:
+IMPORTANT: You must provide your analysis first, then end with a valid JSON response exactly in this format:
+
 {
   "message": "string - your complete analysis response",
   "structured": {
@@ -153,6 +154,8 @@ Think step by step and provide your analysis. At the end, provide a JSON respons
     "rules": [{"event": "string", "debit": "string", "credit": "string", "description": "string"}]
   }
 }
+
+Make sure the JSON is properly formatted and complete. The JSON should be the very last thing in your response.
 
 Available accounts: ${context.accounts.map(a => `${a.code} ${a.name} (${a.type})`).join(', ')}
 Company: ${context.company.name}`
@@ -177,21 +180,21 @@ Company: ${context.company.name}`
     }
 
     // Extract JSON from the end of the response
-    // Look for JSON pattern more robustly
     let jsonMatch = fullContent.match(/\{[\s\S]*\}$/)
     
-    // If no match at the end, try to find any JSON-like structure
     if (!jsonMatch) {
       const jsonPatterns = [
-        /\{[\s\S]*\}/,  // Any JSON object
+        /\{[\s\S]*?\}/,  // Any JSON object (non-greedy)
         /\{[\s\S]*?"message"[\s\S]*?\}/,  // JSON with message field
         /\{[\s\S]*?"structured"[\s\S]*?\}/,  // JSON with structured field
+        /\{[\s\S]*?"flowchart"[\s\S]*?\}/,  // JSON with flowchart field
       ]
       
       for (const pattern of jsonPatterns) {
-        const match = fullContent.match(pattern)
-        if (match) {
-          jsonMatch = match
+        const matches = fullContent.match(pattern)
+        if (matches && matches.length > 0) {
+          // Find the last, most complete match
+          jsonMatch = matches[matches.length - 1]
           break
         }
       }
@@ -199,11 +202,20 @@ Company: ${context.company.name}`
     
     if (!jsonMatch) {
       console.error('No JSON found in response, full content:', fullContent)
-      // Create a fallback response
       return {
         message: fullContent,
         structured: {
-          flowchart: undefined,
+          flowchart: {
+            nodes: [
+              { id: "start", type: "start", label: "开始" },
+              { id: "process", type: "process", label: "业务处理" },
+              { id: "end", type: "end", label: "结束" }
+            ],
+            edges: [
+              { from: "start", to: "process", label: "" },
+              { from: "process", to: "end", label: "" }
+            ]
+          },
           accounts: [],
           rules: []
         }
@@ -211,24 +223,48 @@ Company: ${context.company.name}`
     }
 
     try {
-      const parsed = JSON.parse(jsonMatch[0])
-      // Ensure the response has the required structure
-      return {
+      const jsonString = jsonMatch[0]
+      const parsed = JSON.parse(jsonString)
+      
+      const result = {
         message: parsed.message || fullContent,
         structured: parsed.structured || {
-          flowchart: null,
-          accounts: [],
-          rules: []
+          flowchart: {
+            nodes: [
+              { id: "start", type: "start", label: "开始" },
+              { id: "process", type: "process", label: "业务处理" },
+              { id: "end", type: "end", label: "结束" }
+            ],
+            edges: [
+              { from: "start", to: "process", label: "" },
+              { from: "process", to: "end", label: "" }
+            ]
+          },
+          accounts: parsed.structured?.accounts || [],
+          rules: parsed.structured?.rules || []
         }
       }
+      
+      console.log('Parsed AI response:', result)
+      
+      return result
     } catch (error) {
-      console.error('Failed to parse AI response:', jsonMatch[0])
+      console.error('Failed to parse AI response:', jsonMatch)
       console.error('Full content was:', fullContent)
-      // Return fallback response
       return {
         message: fullContent,
         structured: {
-          flowchart: undefined,
+          flowchart: {
+            nodes: [
+              { id: "start", type: "start", label: "开始" },
+              { id: "process", type: "process", label: "业务处理" },
+              { id: "end", type: "end", label: "结束" }
+            ],
+            edges: [
+              { from: "start", to: "process", label: "" },
+              { from: "process", to: "end", label: "" }
+            ]
+          },
           accounts: [],
           rules: []
         }
