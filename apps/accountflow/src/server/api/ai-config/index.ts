@@ -3,6 +3,7 @@ import { aiConfigs } from '../../db/schema'
 import { createAIConfigSchema, updateAIConfigSchema } from '../../utils/schemas'
 import { AppError, handleError, successResponse } from '../../utils/error'
 import { eq } from 'drizzle-orm'
+import { getMethod } from 'h3'
 
 export default defineEventHandler(async (event) => {
   try {
