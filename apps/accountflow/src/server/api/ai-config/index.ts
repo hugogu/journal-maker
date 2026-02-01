@@ -17,7 +17,26 @@ export default defineEventHandler(async (event) => {
       const body = await readBody(event)
       const data = createAIConfigSchema.parse(body)
       
-      const [config] = await db.insert(aiConfigs).values(data).returning()
+      // TODO: Get actual company ID from session
+      const companyId = 2 // Default to seeded company
+      
+      const [config] = await db.insert(aiConfigs)
+        .values({
+          ...data,
+          companyId,
+          isActive: true
+        })
+        .onConflictDoUpdate({
+          target: aiConfigs.companyId,
+          set: {
+            apiEndpoint: data.apiEndpoint,
+            apiKey: data.apiKey,
+            model: data.model,
+            systemPrompt: data.systemPrompt,
+            updatedAt: new Date()
+          }
+        })
+        .returning()
       return successResponse(config)
     }
 
