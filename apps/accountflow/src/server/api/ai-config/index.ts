@@ -20,6 +20,11 @@ export default defineEventHandler(async (event) => {
       // TODO: Get actual company ID from session
       const companyId = 2 // Default to seeded company
       
+      // Deactivate all other configs for this company first
+      await db.update(aiConfigs)
+        .set({ isActive: false })
+        .where(eq(aiConfigs.companyId, companyId))
+      
       const [config] = await db.insert(aiConfigs)
         .values({
           ...data,
@@ -33,6 +38,7 @@ export default defineEventHandler(async (event) => {
             apiKey: data.apiKey,
             model: data.model,
             systemPrompt: data.systemPrompt,
+            isActive: true,
             updatedAt: new Date()
           }
         })
