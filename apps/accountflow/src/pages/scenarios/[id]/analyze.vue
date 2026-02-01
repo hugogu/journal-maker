@@ -1,10 +1,13 @@
 <template>
-  <div class="h-[calc(100vh-8rem)]">
+  <div class="container mx-auto p-6 h-full">
     <div v-if="loading" class="flex items-center justify-center h-full">
-      <p class="text-gray-500">加载中...</p>
+      <div class="text-center">
+        <div class="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
+        <p class="text-gray-600">加载场景中...</p>
+      </div>
     </div>
     
-    <div v-else class="grid grid-cols-1 lg:grid-cols-2 gap-6 h-full">
+    <div v-else class="grid grid-cols-1 gap-6 h-full">
       <!-- Chat Section -->
       <div class="card flex flex-col h-full">
         <div class="border-b pb-4 mb-4">
@@ -26,7 +29,7 @@
                         class="ml-2 inline-block w-2 h-2 bg-blue-500 rounded-full animate-pulse"></span>
                 </div>
               </div>
-              <div class="message-content whitespace-pre-wrap ml-11">{{ message.content }}</div>
+              <div class="message-content" v-html="renderMarkdown(message.content)"></div>
             </div>
           </div>
           <div v-if="streaming" class="text-center text-gray-400 text-sm py-3">
@@ -44,6 +47,7 @@
             class="input flex-1 resize-none"
             placeholder="描述业务场景细节..."
             @keydown.enter.prevent="sendMessage"
+            :disabled="streaming"
           />
           <button 
             type="submit" 
@@ -54,44 +58,13 @@
           </button>
         </form>
       </div>
-      
-      <!-- Visualization Section -->
-      <div class="card flex flex-col h-full">
-        <h2 class="text-lg font-semibold mb-4">流程图</h2>
-        <div class="flex-1 bg-gray-50 rounded-lg p-4 overflow-auto">
-          <div 
-            v-if="flowchartCode" 
-            class="mermaid" 
-            v-html="renderedFlowchart"
-            @click="handleFlowchartClick"
-          />
-          <div v-else class="text-center text-gray-400 py-12">
-            开始对话后，AI 将生成流程图
-          </div>
-        </div>
-        
-        <div class="border-t pt-4 mt-4">
-          <h3 class="font-medium mb-2">建议科目</h3>
-          <div class="flex flex-wrap gap-2">
-            <span 
-              v-for="account in suggestedAccounts" 
-              :key="account.code"
-              class="px-2 py-1 bg-blue-100 text-blue-800 rounded text-sm"
-            >
-              {{ account.code }} {{ account.name }}
-            </span>
-            <span v-if="suggestedAccounts.length === 0" class="text-gray-400 text-sm">
-              暂无建议
-            </span>
-          </div>
-        </div>
-      </div>
     </div>
   </div>
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted, nextTick, watch } from 'vue'
+import { ref, onMounted, nextTick } from 'vue'
+import MarkdownIt from 'markdown-it'
 import mermaid from 'mermaid'
 import { useRoute } from 'vue-router'
 
@@ -101,58 +74,58 @@ const scenarioId = route.params.id as string
 interface Message {
   role: string
   content: string
-  structured?: any
 }
 
-interface Account {
-  code: string
-  name: string
+// Initialize markdown renderer
+const md = new MarkdownIt({
+  html: true,
+  linkify: true,
+  typographer: true
+})
+
+// Custom renderer for mermaid diagrams
+const defaultRender = md.renderer.rules.fence || function(tokens, idx, options, env, renderer) {
+  return renderer.renderToken(tokens, idx, options)
 }
 
-interface Scenario {
-  id: number
-  name: string
-  description: string
-  status: string
-  isTemplate?: boolean
-  createdAt: string
+md.renderer.rules.fence = function(tokens, idx, options, env, renderer) {
+  const token = tokens[idx]
+  const info = token.info ? token.info.trim() : ''
+  
+  if (info === 'mermaid') {
+    try {
+      // Generate unique ID for mermaid diagram
+      const diagramId = `mermaid-${Date.now()}-${idx}`
+      return `<div class="mermaid-container" id="${diagramId}">${token.content}</div>`
+    } catch (error) {
+      console.error('Mermaid rendering error:', error)
+      return `<pre><code>${token.content}</code></pre>`
+    }
+  }
+  
+  // Use default renderer for other fence blocks
+  return defaultRender(tokens, idx, options, env, renderer)
 }
 
 const loading = ref(true)
-const scenario = ref<Scenario | null>(null)
+const scenario = ref<any>(null)
 const messages = ref<Message[]>([])
 const inputMessage = ref('')
 const streaming = ref(false)
 const messagesContainer = ref<HTMLElement>()
-const flowchartCode = ref('')
-const renderedFlowchart = ref('')
-const suggestedAccounts = ref<Account[]>([])
-const flowchartLayout = ref<Record<string, { x: number; y: number }>>({})
 
 onMounted(async () => {
-  mermaid.initialize({ startOnLoad: false })
-  
   // Load scenario
-  const response = await $fetch<{ success: boolean; data: Scenario }>(`/api/scenarios/${scenarioId}`)
+  const response = await $fetch<{ success: boolean; data: any }>(`/api/scenarios/${scenarioId}`)
   if (response.success) {
     scenario.value = response.data
   }
   loading.value = false
 })
 
-watch(flowchartCode, async (newCode) => {
-  if (newCode) {
-    try {
-      const { svg } = await mermaid.render('mermaid-chart-' + scenarioId, newCode)
-      renderedFlowchart.value = svg
-    } catch (error) {
-      console.error('Mermaid rendering error:', error)
-      renderedFlowchart.value = '<div class="text-red-500">流程图渲染失败</div>'
-    }
-  } else {
-    renderedFlowchart.value = ''
-  }
-}, { immediate: true })
+function renderMarkdown(content: string): string {
+  return md.render(content)
+}
 
 async function sendMessage() {
   if (!inputMessage.value.trim()) return
@@ -171,7 +144,6 @@ async function sendMessage() {
     messages.value.push({
       role: 'assistant',
       content: '',
-      structured: undefined,
     })
     
     // Use fetch with streaming
@@ -200,6 +172,9 @@ async function sendMessage() {
       if (done) {
         streaming.value = false
         scrollToBottom()
+        // Render mermaid diagrams after message is complete
+        await nextTick()
+        renderMermaidDiagrams()
         break
       }
       
@@ -216,20 +191,13 @@ async function sendMessage() {
               messages.value[assistantMessageIndex].content = data.fullContent
               scrollToBottom()
             } else if (data.type === 'complete') {
-              // Update structured data
-              messages.value[assistantMessageIndex].structured = data.structured
-              
-              // Update flowchart and accounts
-              if (data.structured?.flowchart) {
-                flowchartCode.value = generateMermaidCode(data.structured.flowchart)
-              }
-              
-              if (data.structured?.accounts) {
-                suggestedAccounts.value = data.structured.accounts
-              }
+              // Update final message
+              messages.value[assistantMessageIndex].content = data.message
             } else if (data.type === 'done') {
               streaming.value = false
               scrollToBottom()
+              await nextTick()
+              renderMermaidDiagrams()
               return
             } else if (data.type === 'error') {
               messages.value[assistantMessageIndex].content = '抱歉，处理请求时出错：' + data.message
@@ -256,82 +224,28 @@ async function sendMessage() {
   }
 }
 
+function renderMermaidDiagrams() {
+  // Find all mermaid containers and render them
+  const containers = document.querySelectorAll('.mermaid-container')
+  containers.forEach(async (container) => {
+    try {
+      const content = container.textContent || ''
+      if (content.trim()) {
+        const { svg } = await mermaid.render('mermaid-' + Math.random().toString(36).substr(2, 9), content)
+        container.innerHTML = svg
+      }
+    } catch (error) {
+      console.error('Mermaid rendering error:', error)
+      const originalContent = container.textContent || ''
+      container.innerHTML = `<pre><code>${originalContent}</code></pre>`
+    }
+  })
+}
+
 function scrollToBottom() {
   if (messagesContainer.value) {
     messagesContainer.value.scrollTop = messagesContainer.value.scrollHeight
   }
-}
-
-function handleFlowchartClick(event: Event) {
-  const target = event.target as HTMLElement
-  
-  // Find the clicked node in the flowchart
-  if (target.classList.contains('node') || target.closest('.node')) {
-    const nodeElement = target.classList.contains('node') ? target : target.closest('.node')
-    if (nodeElement) {
-      const nodeId = nodeElement.getAttribute('id') || nodeElement.getAttribute('data-id')
-      if (nodeId) {
-        showNodeDetails(nodeId)
-      }
-    }
-  }
-}
-
-function showNodeDetails(nodeId: string) {
-  // Find corresponding journal entry or rule based on node ID
-  const nodeMessage = messages.value.find(msg => 
-    msg.structured?.flowchart?.nodes?.some((node: any) => node.id === nodeId)
-  )
-  
-  if (nodeMessage?.structured?.rules) {
-    const rule = nodeMessage.structured.rules.find((r: any) => 
-      r.event.toLowerCase().includes(nodeId.toLowerCase()) ||
-      r.debit.toLowerCase().includes(nodeId.toLowerCase()) ||
-      r.credit.toLowerCase().includes(nodeId.toLowerCase())
-    )
-    
-    if (rule) {
-      alert(`会计规则:\n事件: ${rule.event}\n借方: ${rule.debit}\n贷方: ${rule.credit}\n说明: ${rule.description}`)
-    }
-  }
-}
-
-function generateMermaidCode(flowchart: any): string {
-  // Escape special characters for Mermaid
-  const escapeLabel = (label: string): string => {
-    return label
-      .replace(/"/g, '#quot;')
-      .replace(/:/g, ' - ')
-      .replace(/\n/g, ' ')
-  }
-  
-  // Avoid reserved keywords in Mermaid
-  const safeNodeId = (id: string): string => {
-    const reserved = ['end', 'start', 'subgraph', 'graph', 'style', 'class', 'click']
-    return reserved.includes(id.toLowerCase()) ? `node_${id}` : id
-  }
-  
-  let result = 'graph TD\n'
-  
-  flowchart.nodes.forEach((node: any) => {
-    const safeLabel = escapeLabel(node.label)
-    const nodeId = safeNodeId(node.id)
-    if (node.type === 'decision') {
-      result += `  ${nodeId}{${safeLabel}}\n`
-    } else {
-      result += `  ${nodeId}[${safeLabel}]\n`
-    }
-  })
-  
-  flowchart.edges.forEach((edge: any) => {
-    const fromId = safeNodeId(edge.from)
-    const toId = safeNodeId(edge.to)
-    const label = edge.label ? `|${escapeLabel(edge.label)}|` : ''
-    result += `  ${fromId} -->${label} ${toId}\n`
-  })
-  
-  console.log('Generated Mermaid code:', result)
-  return result
 }
 </script>
 
@@ -346,5 +260,71 @@ function generateMermaidCode(flowchart: any): string {
 
 .message-content {
   @apply text-sm leading-relaxed text-gray-800;
+}
+
+/* Markdown styles */
+.message-content :deep(h1) {
+  @apply text-xl font-bold mb-4 mt-4 text-gray-900;
+}
+
+.message-content :deep(h2) {
+  @apply text-lg font-semibold mb-3 mt-3 text-gray-900;
+}
+
+.message-content :deep(h3) {
+  @apply text-base font-medium mb-2 mt-2 text-gray-900;
+}
+
+.message-content :deep(p) {
+  @apply mb-3 text-gray-700;
+}
+
+.message-content :deep(ul), .message-content :deep(ol) {
+  @apply mb-3 pl-5;
+}
+
+.message-content :deep(li) {
+  @apply mb-1 text-gray-700;
+}
+
+.message-content :deep(table) {
+  @apply w-full border-collapse border border-gray-300 mb-4;
+}
+
+.message-content :deep(th), .message-content :deep(td) {
+  @apply border border-gray-300 px-3 py-2 text-left;
+}
+
+.message-content :deep(th) {
+  @apply bg-gray-100 font-medium text-gray-900;
+}
+
+.message-content :deep(code) {
+  @apply bg-gray-100 text-gray-800 px-1 py-0.5 rounded text-sm;
+}
+
+.message-content :deep(pre) {
+  @apply bg-gray-900 text-gray-100 p-3 rounded-lg overflow-x-auto mb-4;
+}
+
+.message-content :deep(pre code) {
+  @apply bg-transparent p-0 text-sm;
+}
+
+.message-content :deep(blockquote) {
+  @apply border-l-4 border-gray-300 pl-4 italic text-gray-600 mb-4;
+}
+
+.message-content :deep(a) {
+  @apply text-blue-600 hover:text-blue-800 underline;
+}
+
+/* Mermaid container styles */
+.message-content :deep(.mermaid-container) {
+  @apply bg-white border border-gray-200 rounded-lg p-4 mb-4 overflow-x-auto;
+}
+
+.message-content :deep(.mermaid-container svg) {
+  @apply max-w-full;
 }
 </style>

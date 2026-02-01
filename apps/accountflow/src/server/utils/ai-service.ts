@@ -130,32 +130,25 @@ Company: ${context.company.name}`
     userInput: string,
     context: AIContext,
     onChunk: (chunk: string) => void
-  ): Promise<AIResponse> {
+  ): Promise<{ message: string }> {
     const client = await this.getClient()
     const model = await this.getModel()
     
     const systemPrompt = `You are an accounting expert helping analyze business scenarios. 
 Analyze the user's business scenario and provide:
 1. A helpful response explaining the accounting treatment
-2. A flowchart representation of the business process
+2. A flowchart representation of the business process using mermaid syntax
 3. Suggested accounting accounts to use
 4. Accounting rules/journal entries for the scenario
 
-IMPORTANT: You must provide your analysis first, then end with a valid JSON response exactly in this format:
+Please provide your analysis in markdown format. Include mermaid flowcharts using proper syntax with triple backticks:
+\`\`\`mermaid
+flowchart TD
+    A[Start] --> B[Process]
+    B --> C[End]
+\`\`\`
 
-{
-  "message": "string - your complete analysis response",
-  "structured": {
-    "flowchart": {
-      "nodes": [{"id": "string", "type": "start|process|decision|end", "label": "string"}],
-      "edges": [{"from": "string", "to": "string", "label": "string"}]
-    },
-    "accounts": [{"code": "string", "name": "string", "type": "asset|liability|equity|revenue|expense", "reason": "string"}],
-    "rules": [{"event": "string", "debit": "string", "credit": "string", "description": "string"}]
-  }
-}
-
-Make sure the JSON is properly formatted and complete. The JSON should be the very last thing in your response.
+Also include any tables, lists, or other markdown formatting as needed.
 
 Available accounts: ${context.accounts.map(a => `${a.code} ${a.name} (${a.type})`).join(', ')}
 Company: ${context.company.name}`
@@ -179,246 +172,8 @@ Company: ${context.company.name}`
       }
     }
 
-    // Extract JSON from the end of the response
-    // Look for JSON pattern more robustly
-    let jsonMatch = fullContent.match(/\{[\s\S]*\}$/)
-    
-    // If no match at the end, try to find any JSON-like structure
-    if (!jsonMatch) {
-      const jsonPatterns = [
-        /\{[\s\S]*?\}/,  // Any JSON object (non-greedy)
-        /\{[\s\S]*?"message"[\s\S]*?\}/,  // JSON with message field
-        /\{[\s\S]*?"structured"[\s\S]*?\}/,  // JSON with structured field
-        /\{[\s\S]*?"flowchart"[\s\S]*?\}/,  // JSON with flowchart field
-        /```json\s*\{[\s\S]*?\}\s*```/,  // JSON in code blocks
-        /\{[\s\S]*?"nodes"[\s\S]*?\}/,  // JSON with nodes array
-      ]
-      
-      for (const pattern of jsonPatterns) {
-        const matches = fullContent.match(pattern)
-        if (matches && matches.length > 0) {
-          // Find the last, most complete match
-          jsonMatch = matches[matches.length - 1]
-          break
-        }
-      }
-    }
-    
-    // Special handling for malformed mermaid blocks that can interfere with JSON parsing
-    if (!jsonMatch && fullContent.includes('`mermaid')) {
-      // Find where the malformed mermaid block starts
-      const mermaidStart = fullContent.indexOf('`mermaid')
-      if (mermaidStart !== -1) {
-        // Look for JSON after the mermaid block
-        const afterMermaid = fullContent.substring(mermaidStart)
-        
-        // Try to find JSON in the remaining content
-        const jsonPatterns = [
-          /```json\s*\{[\s\S]*?\}\s*```/,
-          /json\s*\{[\s\S]*?\}\s*`/,
-          /\{[\s\S]*?"message"[\s\S]*?"structured"[\s\S]*?\}/,
-          /\{[\s\S]*?"flowchart"[\s\S]*?"nodes"[\s\S]*?\}/,
-        ]
-        
-        for (const pattern of jsonPatterns) {
-          const jsonBlockMatch = afterMermaid.match(pattern)
-          if (jsonBlockMatch) {
-            let jsonContent = jsonBlockMatch[0]
-            
-            // Clean up the JSON string
-            jsonContent = jsonContent
-              .replace(/```json\s*/, '')
-              .replace(/json\s*/, '')
-              .replace(/```$/, '')
-              .replace(/`$/, '')
-              .trim()
-            
-            try {
-              console.log('Attempting to parse JSON after malformed mermaid:', jsonContent.substring(0, 100) + '...')
-              const parsed = JSON.parse(jsonContent)
-              return {
-                message: parsed.message || fullContent,
-                structured: parsed.structured || {
-                  flowchart: {
-                    nodes: [
-                      { id: "start", type: "start", label: "开始" },
-                      { id: "process", type: "process", label: "业务处理" },
-                      { id: "end", type: "end", label: "结束" }
-                    ],
-                    edges: [
-                      { from: "start", to: "process", label: "" },
-                      { from: "process", to: "end", label: "" }
-                    ]
-                  },
-                  accounts: parsed.structured?.accounts || [],
-                  rules: parsed.structured?.rules || []
-                }
-              }
-            } catch (e) {
-              console.error('Failed to parse JSON after malformed mermaid:', e)
-              console.error('JSON content was:', jsonContent)
-            }
-          }
-        }
-      }
-    }
-    
-    // Special handling for content that has both mermaid and JSON
-    if (!jsonMatch && (fullContent.includes('```json') || fullContent.includes('json'))) {
-      // First try to find the JSON block specifically
-      const jsonBlockMatch = fullContent.match(/```json\s*\{[\s\S]*?\}\s*```/)
-      if (jsonBlockMatch) {
-        let jsonContent = jsonBlockMatch[0]
-        
-        // Clean up the JSON string
-        jsonContent = jsonContent
-          .replace(/```json\s*/, '')
-          .replace(/```$/, '')
-          .trim()
-        
-        try {
-          console.log('Attempting to parse JSON from ```json block:', jsonContent.substring(0, 100) + '...')
-          const parsed = JSON.parse(jsonContent)
-          return {
-            message: parsed.message || fullContent,
-            structured: parsed.structured || {
-              flowchart: {
-                nodes: [
-                  { id: "start", type: "start", label: "开始" },
-                  { id: "process", type: "process", label: "业务处理" },
-                  { id: "end", type: "end", label: "结束" }
-                ],
-                edges: [
-                  { from: "start", to: "process", label: "" },
-                  { from: "process", to: "end", label: "" }
-                ]
-              },
-              accounts: parsed.structured?.accounts || [],
-              rules: parsed.structured?.rules || []
-            }
-          }
-        } catch (e) {
-          console.error('Failed to parse JSON from ```json block:', e)
-          console.error('JSON content was:', jsonContent)
-        }
-      }
-      
-      // Try other patterns as fallback
-      const jsonPatterns = [
-        /json\s*\{[\s\S]*?\}\s*`/,  // json without backticks
-        /\{[\s\S]*?"message"[\s\S]*?"structured"[\s\S]*?\}/,  // JSON with message and structured
-        /\{[\s\S]*?"flowchart"[\s\S]*?"nodes"[\s\S]*?\}/,  // JSON with flowchart nodes
-      ]
-      
-      for (const pattern of jsonPatterns) {
-        const jsonBlockMatch = fullContent.match(pattern)
-        if (jsonBlockMatch) {
-          let jsonContent = jsonBlockMatch[0]
-          
-          // Clean up the JSON string
-          jsonContent = jsonContent
-            .replace(/json\s*/, '')
-            .replace(/`$/, '')
-            .trim()
-          
-          try {
-            console.log('Attempting to parse JSON from pattern:', jsonContent.substring(0, 100) + '...')
-            const parsed = JSON.parse(jsonContent)
-            return {
-              message: parsed.message || fullContent,
-              structured: parsed.structured || {
-                flowchart: {
-                  nodes: [
-                    { id: "start", type: "start", label: "开始" },
-                    { id: "process", type: "process", label: "业务处理" },
-                    { id: "end", type: "end", label: "结束" }
-                  ],
-                  edges: [
-                    { from: "start", to: "process", label: "" },
-                    { from: "process", to: "end", label: "" }
-                  ]
-                },
-                accounts: parsed.structured?.accounts || [],
-                rules: parsed.structured?.rules || []
-              }
-            }
-          } catch (e) {
-            console.error('Failed to parse JSON from pattern:', e)
-            console.error('JSON content was:', jsonContent)
-          }
-        }
-      }
-    }
-    
-    if (!jsonMatch) {
-      console.error('No JSON found in response, full content:', fullContent)
-      return {
-        message: fullContent,
-        structured: {
-          flowchart: {
-            nodes: [
-              { id: "start", type: "start", label: "开始" },
-              { id: "process", type: "process", label: "业务处理" },
-              { id: "end", type: "end", label: "结束" }
-            ],
-            edges: [
-              { from: "start", to: "process", label: "" },
-              { from: "process", to: "end", label: "" }
-            ]
-          },
-          accounts: [],
-          rules: []
-        }
-      }
-    }
-
-    try {
-      const jsonString = jsonMatch[0]
-      const parsed = JSON.parse(jsonString)
-      
-      const result = {
-        message: parsed.message || fullContent,
-        structured: parsed.structured || {
-          flowchart: {
-            nodes: [
-              { id: "start", type: "start", label: "开始" },
-              { id: "process", type: "process", label: "业务处理" },
-              { id: "end", type: "end", label: "结束" }
-            ],
-            edges: [
-              { from: "start", to: "process", label: "" },
-              { from: "process", to: "end", label: "" }
-            ]
-          },
-          accounts: parsed.structured?.accounts || [],
-          rules: parsed.structured?.rules || []
-        }
-      }
-      
-      console.log('Parsed AI response:', result)
-      
-      return result
-    } catch (error) {
-      console.error('Failed to parse AI response:', jsonMatch)
-      console.error('Full content was:', fullContent)
-      return {
-        message: fullContent,
-        structured: {
-          flowchart: {
-            nodes: [
-              { id: "start", type: "start", label: "开始" },
-              { id: "process", type: "process", label: "业务处理" },
-              { id: "end", type: "end", label: "结束" }
-            ],
-            edges: [
-              { from: "start", to: "process", label: "" },
-              { from: "process", to: "end", label: "" }
-            ]
-          },
-          accounts: [],
-          rules: []
-        }
-      }
+    return {
+      message: fullContent
     }
   }
 

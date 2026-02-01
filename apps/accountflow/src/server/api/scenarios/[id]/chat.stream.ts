@@ -68,19 +68,19 @@ export default defineEventHandler(async (event) => {
             (chunk: string) => {
               fullMessage += chunk
               // Send chunk to client
-              const data = JSON.stringify({ 
+              const responseData = JSON.stringify({ 
                 type: 'chunk', 
                 content: chunk,
                 fullContent: fullMessage 
               })
-              controller.enqueue(`data: ${data}\n\n`)
+              controller.enqueue(`data: ${responseData}\n\n`)
             }
           )
           
-          // Send final structured data
+          // Send completion signal with final message
           const finalData = JSON.stringify({
             type: 'complete',
-            structured: aiResponse.structured
+            message: aiResponse.message
           })
           controller.enqueue(`data: ${finalData}\n\n`)
           
@@ -90,10 +90,10 @@ export default defineEventHandler(async (event) => {
             userId: 1, // system
             role: 'assistant',
             content: aiResponse.message,
-            structuredData: aiResponse.structured,
+            structuredData: null, // No structured data needed for markdown approach
           })
           
-          // Send completion signal
+          // Send done signal
           controller.enqueue(`data: ${JSON.stringify({ type: 'done' })}\n\n`)
           controller.close()
           
