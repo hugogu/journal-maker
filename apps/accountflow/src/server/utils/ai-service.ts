@@ -126,6 +126,57 @@ Company: ${context.company.name}`
     return JSON.parse(content)
   }
 
+  async analyzeScenarioStream(
+    userInput: string,
+    context: AIContext,
+    onChunk: (chunk: string) => void
+  ): Promise<{ message: string }> {
+    const client = await this.getClient()
+    const model = await this.getModel()
+    
+    const systemPrompt = `You are an accounting expert helping analyze business scenarios. 
+Analyze the user's business scenario and provide:
+1. A helpful response explaining the accounting treatment
+2. A flowchart representation of the business process using mermaid syntax
+3. Suggested accounting accounts to use
+4. Accounting rules/journal entries for the scenario
+
+Please provide your analysis in markdown format. Include mermaid flowcharts using proper syntax with triple backticks:
+\`\`\`mermaid
+flowchart TD
+    A[Start] --> B[Process]
+    B --> C[End]
+\`\`\`
+
+Also include any tables, lists, or other markdown formatting as needed.
+
+Available accounts: ${context.accounts.map(a => `${a.code} ${a.name} (${a.type})`).join(', ')}
+Company: ${context.company.name}`
+
+    const stream = await client.chat.completions.create({
+      model,
+      messages: [
+        { role: 'system', content: systemPrompt },
+        { role: 'user', content: userInput }
+      ],
+      stream: true,
+    })
+
+    let fullContent = ''
+    
+    for await (const chunk of stream) {
+      const content = chunk.choices[0]?.delta?.content || ''
+      if (content) {
+        fullContent += content
+        onChunk(content)
+      }
+    }
+
+    return {
+      message: fullContent
+    }
+  }
+
   async generateSampleTransaction(
     scenarioDescription: string,
     rules: (AIResponse['structured'] & { rules: any })['rules'] | undefined,

@@ -70,18 +70,15 @@
     <div class="card mt-6 space-y-4">
       <h2 class="text-lg font-semibold">系统 Prompt 模板</h2>
       
-      <div class="bg-gray-50 p-4 rounded-lg text-sm space-y-2">
-        <p class="text-gray-600">可用变量：</p>
-        <code class="text-blue-600" v-pre>{{company_info}}</code>
-        <code class="text-blue-600" v-pre>{{accounts}}</code>
-        <code class="text-blue-600" v-pre>{{template_scenario}}</code>
-      </div>
-
-      <textarea 
-        v-model="config.systemPrompt" 
-        rows="10" 
-        class="input font-mono text-sm"
-        placeholder="输入系统提示词模板..."
+      <PromptEditor 
+        v-model="config.systemPrompt"
+        :variables="{
+          company_info: '公司信息',
+          accounts: '会计科目列表',
+          template_scenario: '模板场景',
+          user_input: '用户输入',
+          conversation_history: '对话历史'
+        }"
       />
 
       <button 
