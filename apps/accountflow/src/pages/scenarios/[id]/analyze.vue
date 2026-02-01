@@ -166,15 +166,15 @@ function scrollToBottom() {
   }
 }
 
-function generateMermaidCode(flowchart: any) {
-  const lines = ['graph TD']
+function generateMermaidCode(flowchart: any): string {
+  let result = 'graph TD\n'
   
   flowchart.nodes.forEach((node: any) => {
     const nodeId = `"${node.id}"`
     if (node.type === 'decision') {
-      lines.push(`  ${nodeId}{{"${node.label}"}}`)
+      result += `  ${nodeId}{{"${node.label}"}}\n`
     } else {
-      lines.push(`  ${nodeId}["${node.label}"]`)
+      result += `  ${nodeId}["${node.label}"]\n`
     }
   })
   
@@ -182,9 +182,9 @@ function generateMermaidCode(flowchart: any) {
     const fromId = `"${edge.from}"`
     const toId = `"${edge.to}"`
     const label = edge.label ? `|"${edge.label}"|` : ''
-    lines.push(`  ${fromId} -->${label} ${toId}`)
+    result += `  ${fromId} -->${label} ${toId}\n`
   })
   
-  return lines.join('\n')
+  return result
 }
 </script>
