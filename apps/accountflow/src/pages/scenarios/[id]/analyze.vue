@@ -171,8 +171,9 @@ function generateMermaidCode(flowchart: any): string {
   // Escape special characters for Mermaid
   const escapeLabel = (label: string): string => {
     return label
-      .replace(/"/g, '\\"')
-      .replace(/\n/g, '\\n')
+      .replace(/"/g, '#quot;')
+      .replace(/:/g, ' - ')
+      .replace(/\n/g, ' ')
   }
   
   let result = 'graph TD\n'
