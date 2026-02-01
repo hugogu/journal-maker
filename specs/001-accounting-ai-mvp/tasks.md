@@ -124,13 +124,13 @@
 
 ### Implementation for User Story 5
 
-- [ ] T042 [P] Create SampleTransaction entity in database schema
-- [ ] T043 [P] Implement background AI service for sample generation
-- [ ] T044 [US5] Build sample transaction display page at `src/pages/scenarios/[id]/sample.vue`
-- [ ] T045 [US5] Create JournalEntryTable component with timeline view
-- [ ] T046 [US5] Implement auto-trigger on scenario confirmation
-- [ ] T047 [US5] Add expandable entry details with business context
-- [ ] T048 [US5] Create visual timeline of multi-step transactions
+- [x] T042 [P] Create SampleTransaction entity in database schema
+- [x] T043 [P] Implement background AI service for sample generation
+- [x] T044 [US5] Build sample transaction display page at `src/pages/scenarios/[id]/sample.vue`
+- [x] T045 [US5] Create JournalEntryTable component with timeline view
+- [x] T046 [US5] Implement auto-trigger on scenario confirmation
+- [x] T047 [US5] Add expandable entry details with business context
+- [x] T048 [US5] Create visual timeline of multi-step transactions
 
 **Checkpoint**: Sample transactions auto-generate and display beautifully
 
@@ -144,12 +144,12 @@
 
 ### Implementation for User Story 6
 
-- [ ] T049 [P] Implement JSON export service in `src/server/utils/export.ts`
-- [ ] T050 [P] Add Excel export with xlsx library
-- [ ] T051 [US6] Create export API endpoints `src/server/api/scenarios/[id]/export/`
-- [ ] T052 [US6] Add export buttons to scenario detail page
-- [ ] T053 [US6] Implement filename generation with scenario name and version
-- [ ] T054 [US6] Create export preview modal before download
+- [x] T049 [P] Implement JSON export service in `src/server/utils/export.ts`
+- [x] T050 [P] Add Excel export with xlsx library
+- [x] T051 [US6] Create export API endpoints `src/server/api/scenarios/[id]/export/`
+- [x] T052 [US6] Add export buttons to scenario detail page
+- [x] T053 [US6] Implement filename generation with scenario name and version
+- [x] T054 [US6] Create export preview modal before download
 
 **Checkpoint**: Users can export results in both formats
 
