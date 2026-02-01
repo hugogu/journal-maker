@@ -1,5 +1,5 @@
 import { z } from 'zod'
-import { AccountType, AccountDirection, UserRole, ScenarioStatus } from '~/types'
+import { AccountType, AccountDirection, UserRole, ScenarioStatus } from '../../types'
 
 // Company schemas
 export const createCompanySchema = z.object({

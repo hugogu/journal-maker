@@ -1,8 +1,8 @@
-import { db } from '../../db'
-import { conversations, scenarios, accounts } from '../../db/schema'
-import { sendMessageSchema } from '../../utils/schemas'
-import { AppError, handleError, successResponse } from '../../utils/error'
-import { mockAIService } from '../../utils/mock-ai'
+import { db } from '../../../db'
+import { conversations, scenarios, accounts } from '../../../db/schema'
+import { sendMessageSchema } from '../../../utils/schemas'
+import { AppError, handleError, successResponse } from '../../../utils/error'
+import { mockAIService } from '../../../utils/mock-ai'
 import { eq } from 'drizzle-orm'
 
 export default defineEventHandler(async (event) => {

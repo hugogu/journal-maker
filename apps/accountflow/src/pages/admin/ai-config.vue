@@ -70,9 +70,9 @@
       
       <div class="bg-gray-50 p-4 rounded-lg text-sm space-y-2">
         <p class="text-gray-600">可用变量：</p>
-        <code class="text-blue-600">{{ '{{company_info}}' }}</code>
-        <code class="text-blue-600">{{ '{{accounts}}' }}</code>
-        <code class="text-blue-600">{{ '{{template_scenario}}' }}</code>
+        <code class="text-blue-600" v-pre>{{company_info}}</code>
+        <code class="text-blue-600" v-pre>{{accounts}}</code>
+        <code class="text-blue-600" v-pre>{{template_scenario}}</code>
       </div>
 
       <textarea 

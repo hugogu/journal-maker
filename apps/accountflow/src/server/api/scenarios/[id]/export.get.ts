@@ -1,6 +1,6 @@
-import { db } from '../../db'
-import { scenarios, accounts, journalRules, sampleTransactions, conversations } from '../../db/schema'
-import { AppError, handleError, successResponse } from '../../utils/error'
+import { db } from '../../../db'
+import { scenarios, accounts, journalRules, sampleTransactions, conversations } from '../../../db/schema'
+import { AppError, handleError, successResponse } from '../../../utils/error'
 import { eq } from 'drizzle-orm'
 
 export default defineEventHandler(async (event) => {
