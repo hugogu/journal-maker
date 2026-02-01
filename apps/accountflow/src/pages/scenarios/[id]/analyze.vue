@@ -108,7 +108,8 @@ onMounted(async () => {
 watch(flowchartCode, async (code) => {
   if (code) {
     try {
-      const { svg } = await mermaid.render('flowchart', code)
+      const id = `flowchart-${Date.now()}`
+      const { svg } = await mermaid.render(id, code)
       renderedFlowchart.value = svg
     } catch (e) {
       console.error('Mermaid render error:', e)
