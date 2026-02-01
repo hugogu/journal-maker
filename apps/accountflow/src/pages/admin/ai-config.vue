@@ -112,8 +112,8 @@ const testStatus = ref<'idle' | 'connected' | 'error'>('idle')
 
 onMounted(async () => {
   // Load existing config - find the active one
-  const { data } = await $fetch('/api/ai-config')
-  const activeConfig = data?.find((c: any) => c.isActive) || data?.[0]
+  const response = await $fetch<{ success: boolean; data: any[] }>('/api/ai-config')
+  const activeConfig = response.data?.find((c: any) => c.isActive) || response.data?.[0]
   if (activeConfig) {
     config.value = {
       apiEndpoint: activeConfig.apiEndpoint,

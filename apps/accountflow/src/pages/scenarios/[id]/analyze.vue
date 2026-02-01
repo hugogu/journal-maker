@@ -84,21 +84,41 @@ import mermaid from 'mermaid'
 const route = useRoute()
 const scenarioId = route.params.id as string
 
+interface Message {
+  role: string
+  content: string
+  structured?: any
+}
+
+interface Account {
+  code: string
+  name: string
+}
+
+interface Scenario {
+  id: number
+  name: string
+  description: string
+  status: string
+  isTemplate?: boolean
+  createdAt: string
+}
+
 const loading = ref(true)
-const scenario = ref(null)
-const messages = ref([])
+const scenario = ref<Scenario | null>(null)
+const messages = ref<Message[]>([])
 const inputMessage = ref('')
 const streaming = ref(false)
 const messagesContainer = ref<HTMLElement>()
 const flowchartCode = ref('')
 const renderedFlowchart = ref('')
-const suggestedAccounts = ref([])
+const suggestedAccounts = ref<Account[]>([])
 
 onMounted(async () => {
   mermaid.initialize({ startOnLoad: false })
   
   // Load scenario
-  const response = await $fetch(`/api/scenarios/${scenarioId}`)
+  const response = await $fetch<{ success: boolean; data: Scenario }>(`/api/scenarios/${scenarioId}`)
   if (response.success) {
     scenario.value = response.data
   }
@@ -129,7 +149,7 @@ async function sendMessage() {
   scrollToBottom()
   
   try {
-    const response = await $fetch(`/api/scenarios/${scenarioId}/chat`, {
+    const response = await $fetch<{ success: boolean; data: { message: string; structured: any } }>(`/api/scenarios/${scenarioId}/chat`, {
       method: 'POST',
       body: { content: userMessage },
     })

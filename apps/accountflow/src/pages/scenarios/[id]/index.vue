@@ -68,12 +68,21 @@
 import { ref, onMounted } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 
+interface Scenario {
+  id: number
+  name: string
+  description?: string
+  status: string
+  isTemplate?: boolean
+  createdAt: string
+}
+
 const route = useRoute()
 const router = useRouter()
-const scenario = ref(null)
+const scenario = ref<Scenario | null>(null)
 
 onMounted(async () => {
-  const response = await $fetch(`/api/scenarios/${route.params.id}`)
+  const response = await $fetch<{ success: boolean; data: Scenario }>(`/api/scenarios/${route.params.id}`)
   if (response.success) {
     scenario.value = response.data
   }
@@ -93,6 +102,8 @@ function formatDate(date: string | Date) {
 }
 
 async function confirmScenario() {
+  if (!scenario.value) return
+  
   try {
     await $fetch(`/api/scenarios/${route.params.id}/confirm`, {
       method: 'POST'
@@ -100,6 +111,7 @@ async function confirmScenario() {
     scenario.value.status = 'confirmed'
     alert('场景已确认')
   } catch (e) {
+    console.error('Failed to confirm scenario:', e)
     alert('操作失败')
   }
 }
