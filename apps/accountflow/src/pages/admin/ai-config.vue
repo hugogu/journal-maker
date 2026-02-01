@@ -111,14 +111,15 @@ const savingPrompt = ref(false)
 const testStatus = ref<'idle' | 'connected' | 'error'>('idle')
 
 onMounted(async () => {
-  // Load existing config
+  // Load existing config - find the active one
   const { data } = await $fetch('/api/ai-config')
-  if (data?.[0]) {
+  const activeConfig = data?.find((c: any) => c.isActive) || data?.[0]
+  if (activeConfig) {
     config.value = {
-      apiEndpoint: data[0].apiEndpoint,
-      apiKey: data[0].apiKey,
-      model: data[0].model,
-      systemPrompt: data[0].systemPrompt,
+      apiEndpoint: activeConfig.apiEndpoint,
+      apiKey: activeConfig.apiKey,
+      model: activeConfig.model,
+      systemPrompt: activeConfig.systemPrompt,
     }
   }
 })
