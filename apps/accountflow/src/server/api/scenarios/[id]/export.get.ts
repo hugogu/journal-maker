@@ -64,15 +64,17 @@ export default defineEventHandler(async (event) => {
       })),
     }
     
+    const safeName = scenario.name.replace(/[^a-zA-Z0-9\-_]/g, '_')
+    
     if (format === 'json') {
       setHeader(event, 'Content-Type', 'application/json')
-      setHeader(event, 'Content-Disposition', `attachment; filename="${scenario.name}-export.json"`)
+      setHeader(event, 'Content-Disposition', `attachment; filename="${safeName}-export.json"`)
       return exportData
     }
     
     // Excel format - return JSON for now (Excel generation would need xlsx library)
     setHeader(event, 'Content-Type', 'application/json')
-    setHeader(event, 'Content-Disposition', `attachment; filename="${scenario.name}-export.json"`)
+    setHeader(event, 'Content-Disposition', `attachment; filename="${safeName}-export.json"`)
     return exportData
   } catch (error) {
     const { statusCode, body } = handleError(error)
