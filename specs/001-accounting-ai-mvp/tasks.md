@@ -42,12 +42,12 @@
 
 ### Implementation for User Story 1
 
-- [ ] T012 [P] Create Company entity and API endpoints in `src/server/api/config/`
-- [ ] T013 [P] Create AIConfig entity and encrypted storage in `src/server/db/`
-- [ ] T014 [US1] Implement admin AI config UI page at `src/pages/admin/ai-config.vue`
-- [ ] T015 [US1] Create AI connection test endpoint `src/server/api/ai/test.post.ts`
-- [ ] T016 [US1] Implement prompt template editor with variable highlighting
-- [ ] T017 [US1] Create template scenario creation flow at `src/pages/scenarios/new.vue`
+- [x] T012 [P] Create Company entity and API endpoints in `src/server/api/config/`
+- [x] T013 [P] Create AIConfig entity and encrypted storage in `src/server/db/`
+- [x] T014 [US1] Implement admin AI config UI page at `src/pages/admin/ai-config.vue`
+- [x] T015 [US1] Create AI connection test endpoint `src/server/api/ai/test.post.ts`
+- [x] T016 [US1] Implement prompt template editor with variable highlighting
+- [x] T017 [US1] Create template scenario creation flow at `src/pages/scenarios/new.vue`
 - [ ] T018 [US1] Add admin role-based access control middleware
 
 **Checkpoint**: Admin can configure AI and save a template scenario
@@ -62,13 +62,13 @@
 
 ### Implementation for User Story 2
 
-- [ ] T019 [P] Create Account entity and CRUD API in `src/server/api/accounts/`
-- [ ] T020 [P] Implement account validation (unique codes, referential integrity)
-- [ ] T021 [US2] Create account management page at `src/pages/accounts/index.vue`
-- [ ] T022 [US2] Build AccountPicker component in `src/components/accounting/AccountPicker.vue`
-- [ ] T023 [US2] Add account deletion protection (check usage in scenarios)
-- [ ] T024 [US2] Implement account list with filtering and sorting
-- [ ] T025 [US2] Create inline account editing in tables
+- [x] T019 [P] Create Account entity and CRUD API in `src/server/api/accounts/`
+- [x] T020 [P] Implement account validation (unique codes, referential integrity)
+- [x] T021 [US2] Create account management page at `src/pages/accounts/index.vue`
+- [x] T022 [US2] Build AccountPicker component in `src/components/accounting/AccountPicker.vue`
+- [x] T023 [US2] Add account deletion protection (check usage in scenarios)
+- [x] T024 [US2] Implement account list with filtering and sorting
+- [x] T025 [US2] Create inline account editing in tables
 
 **Checkpoint**: Users can fully manage shared accounts
 
@@ -82,15 +82,15 @@
 
 ### Implementation for User Story 3
 
-- [ ] T026 [P] Create Scenario entity and CRUD API in `src/server/api/scenarios/`
-- [ ] T027 [P] Implement Conversation entity for AI chat history
-- [ ] T028 [P] Build AI chat service with streaming (SSE) in `src/server/api/ai/`
-- [ ] T029 [US3] Create scenario creation form at `src/pages/scenarios/new.vue`
-- [ ] T030 [US3] Implement AI analysis page at `src/pages/scenarios/[id]/analyze.vue`
-- [ ] T031 [US3] Build chat interface component with streaming display
-- [ ] T032 [US3] Create AI response parser (structured data extraction)
-- [ ] T033 [US3] Implement scenario confirmation and persistence flow
-- [ ] T034 [US3] Add context assembly service (company + accounts + template)
+- [x] T026 [P] Create Scenario entity and CRUD API in `src/server/api/scenarios/`
+- [x] T027 [P] Implement Conversation entity for AI chat history
+- [x] T028 [P] Build AI chat service with streaming (SSE) in `src/server/api/ai/`
+- [x] T029 [US3] Create scenario creation form at `src/pages/scenarios/new.vue`
+- [x] T030 [US3] Implement AI analysis page at `src/pages/scenarios/[id]/analyze.vue`
+- [x] T031 [US3] Build chat interface component with streaming display
+- [x] T032 [US3] Create AI response parser (structured data extraction)
+- [x] T033 [US3] Implement scenario confirmation and persistence flow
+- [x] T034 [US3] Add context assembly service (company + accounts + template)
 
 **Checkpoint**: Product users can analyze scenarios with AI assistance
 
@@ -104,13 +104,13 @@
 
 ### Implementation for User Story 4
 
-- [ ] T035 [P] Create FlowchartData entity in database schema
-- [ ] T036 [P] Implement Mermaid syntax generator from AI structured output
-- [ ] T037 [US4] Build FlowchartViewer component with pan/zoom in `src/components/`
-- [ ] T038 [US4] Integrate flowchart rendering into analysis page
-- [ ] T039 [US4] Add node click handler to show corresponding journal entries
-- [ ] T040 [US4] Implement real-time flowchart updates on AI response
-- [ ] T041 [US4] Create flowchart layout persistence (manual adjustments)
+- [x] T035 [P] Create FlowchartData entity in database schema
+- [x] T036 [P] Implement Mermaid syntax generator from AI structured output
+- [x] T037 [US4] Build FlowchartViewer component with pan/zoom in `src/components/`
+- [x] T038 [US4] Integrate flowchart rendering into analysis page
+- [x] T039 [US4] Add node click handler to show corresponding journal entries
+- [x] T040 [US4] Implement real-time flowchart updates on AI response
+- [x] T041 [US4] Create flowchart layout persistence (manual adjustments)
 
 **Checkpoint**: Flowcharts render and update in real-time during analysis
 

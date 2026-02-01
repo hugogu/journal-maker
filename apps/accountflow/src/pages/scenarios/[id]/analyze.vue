@@ -51,7 +51,12 @@
       <div class="card flex flex-col h-full">
         <h2 class="text-lg font-semibold mb-4">流程图</h2>
         <div class="flex-1 bg-gray-50 rounded-lg p-4 overflow-auto">
-          <div v-if="flowchartCode" class="mermaid" v-html="renderedFlowchart" />
+          <div 
+            v-if="flowchartCode" 
+            class="mermaid" 
+            v-html="renderedFlowchart"
+            @click="handleFlowchartClick"
+          />
           <div v-else class="text-center text-gray-400 py-12">
             开始对话后，AI 将生成流程图
           </div>
@@ -114,6 +119,7 @@ const messagesContainer = ref<HTMLElement>()
 const flowchartCode = ref('')
 const renderedFlowchart = ref('')
 const suggestedAccounts = ref<Account[]>([])
+const flowchartLayout = ref<Record<string, { x: number; y: number }>>({})
 
 onMounted(async () => {
   mermaid.initialize({ startOnLoad: false })
@@ -126,17 +132,19 @@ onMounted(async () => {
   loading.value = false
 })
 
-watch(flowchartCode, async (code) => {
-  if (code) {
+watch(flowchartCode, async (newCode) => {
+  if (newCode) {
     try {
-      const id = `flowchart-${Date.now()}`
-      const { svg } = await mermaid.render(id, code)
+      const { svg } = await mermaid.render('mermaid-chart-' + scenarioId, newCode)
       renderedFlowchart.value = svg
-    } catch (e) {
-      console.error('Mermaid render error:', e)
+    } catch (error) {
+      console.error('Mermaid rendering error:', error)
+      renderedFlowchart.value = '<div class="text-red-500">流程图渲染失败</div>'
     }
+  } else {
+    renderedFlowchart.value = ''
   }
-})
+}, { immediate: true })
 
 async function sendMessage() {
   if (!inputMessage.value.trim()) return
@@ -185,6 +193,40 @@ async function sendMessage() {
 function scrollToBottom() {
   if (messagesContainer.value) {
     messagesContainer.value.scrollTop = messagesContainer.value.scrollHeight
+  }
+}
+
+function handleFlowchartClick(event: Event) {
+  const target = event.target as HTMLElement
+  
+  // Find the clicked node in the flowchart
+  if (target.classList.contains('node') || target.closest('.node')) {
+    const nodeElement = target.classList.contains('node') ? target : target.closest('.node')
+    if (nodeElement) {
+      const nodeId = nodeElement.getAttribute('id') || nodeElement.getAttribute('data-id')
+      if (nodeId) {
+        showNodeDetails(nodeId)
+      }
+    }
+  }
+}
+
+function showNodeDetails(nodeId: string) {
+  // Find corresponding journal entry or rule based on node ID
+  const nodeMessage = messages.value.find(msg => 
+    msg.structured?.flowchart?.nodes?.some((node: any) => node.id === nodeId)
+  )
+  
+  if (nodeMessage?.structured?.rules) {
+    const rule = nodeMessage.structured.rules.find((r: any) => 
+      r.event.toLowerCase().includes(nodeId.toLowerCase()) ||
+      r.debit.toLowerCase().includes(nodeId.toLowerCase()) ||
+      r.credit.toLowerCase().includes(nodeId.toLowerCase())
+    )
+    
+    if (rule) {
+      alert(`会计规则:\n事件: ${rule.event}\n借方: ${rule.debit}\n贷方: ${rule.credit}\n说明: ${rule.description}`)
+    }
   }
 }
 
