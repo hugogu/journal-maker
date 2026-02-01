@@ -12,20 +12,20 @@
           <p class="text-gray-600 text-sm">{{ scenario?.description }}</p>
         </div>
         
-        <div ref="messagesContainer" class="flex-1 overflow-y-auto space-y-4 mb-4">
-          <div 
-            v-for="(message, idx) in messages" 
-            :key="idx"
-            :class="message.role === 'user' ? 'ml-auto bg-blue-600 text-white' : 'bg-gray-100'"
-            class="max-w-[80%] rounded-lg p-3"
-          >
-            <p class="text-sm whitespace-pre-wrap">{{ message.content }}</p>
-            <div v-if="message.structured?.flowchart" class="mt-3">
-              <p class="text-xs opacity-75 mb-2">流程图已更新</p>
+        <div class="flex-1 overflow-y-auto" ref="messagesContainer">
+          <div v-for="(message, index) in messages" :key="index" class="mb-4">
+            <div :class="message.role === 'user' ? 'user-message' : 'assistant-message'">
+              <div class="font-medium text-sm mb-1">
+                {{ message.role === 'user' ? '你' : 'AI助手' }}
+              </div>
+              <div class="whitespace-pre-wrap text-sm">{{ message.content }}</div>
+              <div v-if="message.role === 'assistant' && streaming && index === messages.length - 1" class="inline-block ml-1">
+                <span class="animate-pulse">▊</span>
+              </div>
             </div>
           </div>
-          <div v-if="streaming" class="bg-gray-100 rounded-lg p-3 max-w-[80%]">
-            <p class="text-sm">AI 正在思考...</p>
+          <div v-if="streaming" class="text-center text-gray-400 text-sm py-2">
+            AI正在分析中...
           </div>
         </div>
         
@@ -158,32 +158,90 @@ async function sendMessage() {
   scrollToBottom()
   
   try {
-    const response = await $fetch<{ success: boolean; data: { message: string; structured: any } }>(`/api/scenarios/${scenarioId}/chat`, {
-      method: 'POST',
-      body: { content: userMessage },
+    // Create assistant message for streaming
+    const assistantMessageIndex = messages.value.length
+    messages.value.push({
+      role: 'assistant',
+      content: '',
+      structured: undefined,
     })
     
-    if (response.success) {
-      messages.value.push({
-        role: 'assistant',
-        content: response.data.message,
-        structured: response.data.structured,
-      })
+    // Use fetch with streaming
+    const response = await fetch(`/api/scenarios/${scenarioId}/chat.stream`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ content: userMessage }),
+    })
+    
+    if (!response.ok) {
+      throw new Error('Network response was not ok')
+    }
+    
+    const reader = response.body?.getReader()
+    const decoder = new TextDecoder()
+    
+    if (!reader) {
+      throw new Error('No response body')
+    }
+    
+    while (true) {
+      const { done, value } = await reader.read()
       
-      if (response.data.structured?.flowchart) {
-        flowchartCode.value = generateMermaidCode(response.data.structured.flowchart)
+      if (done) {
+        streaming.value = false
+        scrollToBottom()
+        break
       }
       
-      if (response.data.structured?.accounts) {
-        suggestedAccounts.value = response.data.structured.accounts
+      const chunk = decoder.decode(value, { stream: true })
+      const lines = chunk.split('\n')
+      
+      for (const line of lines) {
+        if (line.startsWith('data: ')) {
+          try {
+            const data = JSON.parse(line.slice(6))
+            
+            if (data.type === 'chunk') {
+              // Update message content in real-time
+              messages.value[assistantMessageIndex].content = data.fullContent
+              scrollToBottom()
+            } else if (data.type === 'complete') {
+              // Update structured data
+              messages.value[assistantMessageIndex].structured = data.structured
+              
+              // Update flowchart and accounts
+              if (data.structured?.flowchart) {
+                flowchartCode.value = generateMermaidCode(data.structured.flowchart)
+              }
+              
+              if (data.structured?.accounts) {
+                suggestedAccounts.value = data.structured.accounts
+              }
+            } else if (data.type === 'done') {
+              streaming.value = false
+              scrollToBottom()
+              return
+            } else if (data.type === 'error') {
+              messages.value[assistantMessageIndex].content = '抱歉，处理请求时出错：' + data.message
+              streaming.value = false
+              scrollToBottom()
+              return
+            }
+          } catch (e) {
+            console.error('Error parsing SSE data:', e)
+          }
+        }
       }
     }
+    
   } catch (e) {
+    console.error('Streaming error:', e)
     messages.value.push({
       role: 'assistant',
       content: '抱歉，处理请求时出错。请稍后重试。',
     })
-  } finally {
     streaming.value = false
     await nextTick()
     scrollToBottom()

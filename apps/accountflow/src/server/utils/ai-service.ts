@@ -126,6 +126,70 @@ Company: ${context.company.name}`
     return JSON.parse(content)
   }
 
+  async analyzeScenarioStream(
+    userInput: string,
+    context: AIContext,
+    onChunk: (chunk: string) => void
+  ): Promise<AIResponse> {
+    const client = await this.getClient()
+    const model = await this.getModel()
+    
+    const systemPrompt = `You are an accounting expert helping analyze business scenarios. 
+Analyze the user's business scenario and provide:
+1. A helpful response explaining the accounting treatment
+2. A flowchart representation of the business process
+3. Suggested accounting accounts to use
+4. Accounting rules/journal entries for the scenario
+
+Think step by step and provide your analysis. At the end, provide a JSON response with this structure:
+{
+  "message": "string - your complete analysis response",
+  "structured": {
+    "flowchart": {
+      "nodes": [{"id": "string", "type": "start|process|decision|end", "label": "string"}],
+      "edges": [{"from": "string", "to": "string", "label": "string"}]
+    },
+    "accounts": [{"code": "string", "name": "string", "type": "asset|liability|equity|revenue|expense", "reason": "string"}],
+    "rules": [{"event": "string", "debit": "string", "credit": "string", "description": "string"}]
+  }
+}
+
+Available accounts: ${context.accounts.map(a => `${a.code} ${a.name} (${a.type})`).join(', ')}
+Company: ${context.company.name}`
+
+    const stream = await client.chat.completions.create({
+      model,
+      messages: [
+        { role: 'system', content: systemPrompt },
+        { role: 'user', content: userInput }
+      ],
+      stream: true,
+    })
+
+    let fullContent = ''
+    
+    for await (const chunk of stream) {
+      const content = chunk.choices[0]?.delta?.content || ''
+      if (content) {
+        fullContent += content
+        onChunk(content)
+      }
+    }
+
+    // Extract JSON from the end of the response
+    const jsonMatch = fullContent.match(/\{[\s\S]*\}$/)
+    if (!jsonMatch) {
+      throw new Error('No JSON response found in AI stream')
+    }
+
+    try {
+      return JSON.parse(jsonMatch[0])
+    } catch (error) {
+      console.error('Failed to parse AI response:', fullContent)
+      throw new Error('Invalid JSON response from AI')
+    }
+  }
+
   async generateSampleTransaction(
     scenarioDescription: string,
     rules: (AIResponse['structured'] & { rules: any })['rules'] | undefined,
