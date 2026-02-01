@@ -17,32 +17,37 @@ export default defineEventHandler(async (event) => {
       const body = await readBody(event)
       const data = createAIConfigSchema.parse(body)
       
-      // TODO: Get actual company ID from session
-      const companyId = 2 // Default to seeded company
-      
-      // Deactivate all other configs for this company first
+      // Deactivate all other configs first
       await db.update(aiConfigs)
         .set({ isActive: false })
-        .where(eq(aiConfigs.companyId, companyId))
       
-      const [config] = await db.insert(aiConfigs)
-        .values({
-          ...data,
-          companyId,
-          isActive: true
-        })
-        .onConflictDoUpdate({
-          target: aiConfigs.companyId,
-          set: {
+      // Get any existing config to update
+      const existing = await db.query.aiConfigs.findFirst()
+      
+      let config
+      if (existing) {
+        // Update existing
+        [config] = await db.update(aiConfigs)
+          .set({
             apiEndpoint: data.apiEndpoint,
             apiKey: data.apiKey,
             model: data.model,
             systemPrompt: data.systemPrompt,
             isActive: true,
             updatedAt: new Date()
-          }
-        })
-        .returning()
+          })
+          .where(eq(aiConfigs.id, existing.id))
+          .returning()
+      } else {
+        // Insert new - use a default companyId for schema compatibility
+        [config] = await db.insert(aiConfigs)
+          .values({
+            ...data,
+            companyId: 1,
+            isActive: true
+          })
+          .returning()
+      }
       return successResponse(config)
     }
 
