@@ -1,5 +1,5 @@
 import { defineEventHandler, createError, getRouterParam, readBody } from 'h3'
-import { createConversationMessage } from '../../../db/queries/conversations'
+import { createConversationMessage } from '../../../../db/queries/conversations'
 import { z } from 'zod'
 
 const messageSchema = z.object({

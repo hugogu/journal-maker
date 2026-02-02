@@ -1,5 +1,5 @@
 import { defineEventHandler, createError, getRouterParam } from 'h3'
-import { getConversationMessages } from '../../../db/queries/conversations'
+import { getConversationMessages } from '../../../../db/queries/conversations'
 
 export default defineEventHandler(async (event) => {
   try {
