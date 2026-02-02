@@ -4,6 +4,7 @@ import { aiProviders, userPreferences, companyProfile } from '../db/schema'
 import { eq, and } from 'drizzle-orm'
 import { createAIAdapter, type AIProviderAdapter, type ChatMessage } from './ai-adapters'
 import { decrypt } from './encryption'
+import { getActivePromptContent } from '../db/queries/prompts'
 
 interface AIContext {
   company: {
@@ -192,31 +193,28 @@ export class AIService {
     const company = await this.getCompanyContext()
     const accountsList = context.accounts.map(a => `${a.code} ${a.name} (${a.type})`).join(', ')
     
-    let prompt = `You are an accounting expert helping analyze business scenarios. 
-Analyze the user's business scenario and provide:
-1. A helpful response explaining the accounting treatment
-2. A flowchart representation of the business process
-3. Suggested accounting accounts to use
-4. Accounting rules/journal entries for the scenario
-
-Available accounts: ${accountsList}
-Company: ${company.name}`
-
-    if (company.businessModel) {
-      prompt += `\nBusiness Model: ${company.businessModel}`
+    // Try to get active prompt template from database
+    const activePromptContent = await getActivePromptContent('scenario_analysis')
+    
+    if (activePromptContent) {
+      // Replace variables in the prompt template
+      let prompt = activePromptContent
+        .replace(/\{\{accounts\}\}/g, accountsList)
+        .replace(/\{\{companyName\}\}/g, company.name)
+        .replace(/\{\{businessModel\}\}/g, company.businessModel || '')
+        .replace(/\{\{industry\}\}/g, company.industry || '')
+        .replace(/\{\{accountingPreference\}\}/g, company.accountingPreference || '')
+      
+      if (context.currentScenario) {
+        prompt = prompt
+          .replace(/\{\{scenarioName\}\}/g, context.currentScenario.name)
+          .replace(/\{\{scenarioDescription\}\}/g, context.currentScenario.description || '')
+      }
+      
+      return prompt
     }
-    if (company.industry) {
-      prompt += `\nIndustry: ${company.industry}`
-    }
-    if (company.accountingPreference) {
-      prompt += `\nAccounting Preference: ${company.accountingPreference}`
-    }
-
-    if (context.currentScenario) {
-      prompt += `\nCurrent Scenario: ${context.currentScenario.name} - ${context.currentScenario.description || 'No description'}`
-    }
-
-    return prompt
+    
+    throw new Error('No active prompt template found for scenario_analysis. Please configure one in Admin > Prompts.')
   }
 
   /**
@@ -226,40 +224,28 @@ Company: ${company.name}`
     const company = await this.getCompanyContext()
     const accountsList = context.accounts.map(a => `${a.code} ${a.name} (${a.type})`).join(', ')
     
-    let prompt = `You are an accounting expert helping analyze business scenarios. 
-Analyze the user's business scenario and provide:
-1. A helpful response explaining the accounting treatment
-2. A flowchart representation of the business process using mermaid syntax
-3. Suggested accounting accounts to use
-4. Accounting rules/journal entries for the scenario
-
-Please provide your analysis in markdown format. Include mermaid flowcharts using proper syntax with triple backticks:
-\`\`\`mermaid
-flowchart TD
-    A[Start] --> B[Process]
-    B --> C[End]
-\`\`\`
-
-IMPORTANT: When creating mermaid flowchart nodes, avoid using square brackets [], parentheses (), or other special characters in node labels. Use simple descriptive text instead.
-
-Available accounts: ${accountsList}
-Company: ${company.name}`
-
-    if (company.businessModel) {
-      prompt += `\nBusiness Model: ${company.businessModel}`
+    // Try to get active prompt template from database
+    const activePromptContent = await getActivePromptContent('scenario_analysis')
+    
+    if (activePromptContent) {
+      // Replace variables in the prompt template
+      let prompt = activePromptContent
+        .replace(/\{\{accounts\}\}/g, accountsList)
+        .replace(/\{\{companyName\}\}/g, company.name)
+        .replace(/\{\{businessModel\}\}/g, company.businessModel || '')
+        .replace(/\{\{industry\}\}/g, company.industry || '')
+        .replace(/\{\{accountingPreference\}\}/g, company.accountingPreference || '')
+      
+      if (context.currentScenario) {
+        prompt = prompt
+          .replace(/\{\{scenarioName\}\}/g, context.currentScenario.name)
+          .replace(/\{\{scenarioDescription\}\}/g, context.currentScenario.description || '')
+      }
+      
+      return prompt
     }
-    if (company.industry) {
-      prompt += `\nIndustry: ${company.industry}`
-    }
-    if (company.accountingPreference) {
-      prompt += `\nAccounting Preference: ${company.accountingPreference}`
-    }
-
-    if (context.currentScenario) {
-      prompt += `\nCurrent Scenario: ${context.currentScenario.name} - ${context.currentScenario.description || 'No description'}`
-    }
-
-    return prompt
+    
+    throw new Error('No active prompt template found for scenario_analysis. Please configure one in Admin > Prompts.')
   }
 
   /**

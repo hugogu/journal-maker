@@ -142,8 +142,8 @@
 - [X] T054 Create Company API endpoints in `src/server/api/company/index.put.ts` (update)
 - [X] T055 Create Company composable in `src/composables/useCompanyProfile.ts`
 - [X] T056 Create Company settings page in `src/pages/admin/company-profile.vue`
-- [ ] T057 Update AI service in `src/server/utils/ai-service.ts` to inject company context into prompts
-- [ ] T058 Add company info display in `src/pages/admin/index.vue` dashboard
+- [X] T057 Update AI service in `src/server/utils/ai-service.ts` to inject company context into prompts
+- [X] T058 Add company info display in `src/pages/admin/index.vue` dashboard
 
 **Checkpoint**: User Story 3 complete - company info maintained and injected into AI context
 
