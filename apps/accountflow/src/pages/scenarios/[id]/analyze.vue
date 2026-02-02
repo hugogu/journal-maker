@@ -220,8 +220,11 @@ async function sendMessage() {
             } else if (data.type === 'done') {
               streaming.value = false
               scrollToBottom()
+              // Wait for DOM to fully update before rendering mermaid
               await nextTick()
-              renderMermaidDiagrams()
+              setTimeout(() => {
+                renderMermaidDiagrams()
+              }, 100)
               // Save final assistant message to database
               await saveMessage({
                 role: 'assistant',
@@ -268,35 +271,50 @@ function copyMessage(content: string) {
 }
 
 function renderMermaidDiagrams() {
-  // Initialize mermaid if not already done
+  // Initialize mermaid
   mermaid.initialize({
     startOnLoad: false,
     theme: 'default',
+    securityLevel: 'loose',
     flowchart: {
       useMaxWidth: true,
-      htmlLabels: true
+      htmlLabels: true,
+      curve: 'basis'
     }
   })
   
   // Find all mermaid containers and render them
   const containers = document.querySelectorAll('.mermaid-container')
-  containers.forEach(async (container) => {
+  console.log(`Found ${containers.length} mermaid containers`)
+  
+  containers.forEach(async (container, index) => {
     try {
-      // Get content from data attribute (avoid HTML escaping issues)
       const encodedContent = container.getAttribute('data-content')
-      let content = encodedContent ? decodeURIComponent(encodedContent) : ''
-      
-      if (content.trim()) {
-        const diagramId = 'mermaid-' + Math.random().toString(36).substr(2, 9)
-        const { svg } = await mermaid.render(diagramId, content.trim())
-        container.innerHTML = svg
+      if (!encodedContent) {
+        console.warn(`Container ${index}: no data-content found`)
+        return
       }
+      
+      const content = decodeURIComponent(encodedContent)
+      console.log(`Container ${index} content (first 100 chars):`, content.substring(0, 100))
+      
+      if (!content.trim()) {
+        console.warn(`Container ${index}: empty content`)
+        return
+      }
+      
+      const diagramId = `mermaid-${Date.now()}-${index}`
+      console.log(`Rendering diagram ${diagramId}`)
+      
+      const { svg } = await mermaid.render(diagramId, content.trim())
+      container.innerHTML = svg
+      console.log(`Diagram ${diagramId} rendered successfully`)
     } catch (error) {
-      console.error('Mermaid rendering error:', error)
-      // Show original content if rendering fails
+      console.error(`Mermaid rendering error for container ${index}:`, error)
+      // Show error message in container
       const encodedContent = container.getAttribute('data-content')
       if (encodedContent) {
-        container.innerHTML = `<pre><code>${decodeURIComponent(encodedContent)}</code></pre>`
+        container.innerHTML = `<div class="text-red-500 text-sm">图表渲染失败</div><pre class="bg-gray-100 p-2 mt-2 text-xs overflow-x-auto"><code>${decodeURIComponent(encodedContent)}</code></pre>`
       }
     }
   })
