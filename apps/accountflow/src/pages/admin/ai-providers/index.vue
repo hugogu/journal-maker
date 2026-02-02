@@ -26,6 +26,7 @@
         <div class="space-y-2 text-sm text-gray-600">
           <div><span class="font-medium">类型:</span> {{ provider.type }}</div>
           <div><span class="font-medium">端点:</span> {{ provider.apiEndpoint }}</div>
+          <div><span class="font-medium">默认模型:</span> {{ provider.defaultModel || '未设置' }}</div>
           <div><span class="font-medium">模型数:</span> {{ provider.models?.length || 0 }}</div>
         </div>
       </div>
@@ -54,13 +55,13 @@
             <input v-model="form.apiEndpoint" type="url" class="input" placeholder="https://api.openai.com/v1" required />
           </div>
           <div>
-            <label class="label">API Key <span class="text-red-500">*</span></label>
-            <input v-model="form.apiKey" type="password" class="input" placeholder="sk-..." required />
+            <label class="label">API Key {{ editingProvider ? '(留空则不修改)' : '*' }}</label>
+            <input v-model="form.apiKey" type="password" class="input" placeholder="sk-..." :required="!editingProvider" />
           </div>
           <div>
-            <label class="label">测试模型 <span class="text-red-500">*</span></label>
-            <input v-model="form.model" type="text" class="input" placeholder="gpt-4, gpt-3.5-turbo..." required />
-            <p class="text-xs text-gray-500 mt-1">用于测试连接的模型名称</p>
+            <label class="label">默认模型 <span class="text-red-500">*</span></label>
+            <input v-model="form.defaultModel" type="text" class="input" placeholder="gpt-4, gpt-3.5-turbo..." required />
+            <p class="text-xs text-gray-500 mt-1">用于测试连接和分析时使用的默认模型</p>
           </div>
           <div class="flex items-center justify-between">
             <div class="flex items-center gap-2">
@@ -95,7 +96,7 @@ const form = reactive({
   type: 'openai' as const,
   apiEndpoint: '',
   apiKey: '',
-  model: 'gpt-4',
+  defaultModel: 'gpt-4',
   isDefault: false
 })
 
@@ -107,7 +108,7 @@ function editProvider(provider: any) {
   form.type = provider.type
   form.apiEndpoint = provider.apiEndpoint
   form.apiKey = '' // Don't show existing key
-  form.model = 'gpt-4'
+  form.defaultModel = provider.defaultModel || 'gpt-4'
   form.isDefault = provider.isDefault
   testResult.value = false
 }
@@ -119,7 +120,7 @@ function closeModal() {
   form.type = 'openai'
   form.apiEndpoint = ''
   form.apiKey = ''
-  form.model = 'gpt-4'
+  form.defaultModel = 'gpt-4'
   form.isDefault = false
   testResult.value = false
   testSuccess.value = false
@@ -135,7 +136,7 @@ async function testConnection() {
         providerType: form.type,
         apiEndpoint: form.apiEndpoint,
         apiKey: form.apiKey,
-        model: form.model
+        model: form.defaultModel
       }
     })
     testSuccess.value = true

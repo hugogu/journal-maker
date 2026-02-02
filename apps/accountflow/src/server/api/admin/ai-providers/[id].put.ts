@@ -6,7 +6,8 @@ import { z } from 'zod'
 const updateSchema = z.object({
   name: z.string().min(1).max(100).optional(),
   apiEndpoint: z.string().min(1).max(500).optional(),
-  apiKey: z.string().min(1).optional(),
+  apiKey: z.string().optional(), // Optional - if empty, won't overwrite existing key
+  defaultModel: z.string().optional(),
   isDefault: z.boolean().optional(),
   status: z.enum(['active', 'inactive']).optional(),
 })
@@ -23,9 +24,17 @@ export default defineEventHandler(async (event) => {
     const body = await readBody(event)
     const data = updateSchema.parse(body)
 
-    // Encrypt API key if provided
-    const updateData: any = { ...data }
-    if (data.apiKey) {
+    // Prepare update data - only encrypt apiKey if provided and not empty
+    const updateData: any = { 
+      name: data.name,
+      apiEndpoint: data.apiEndpoint,
+      defaultModel: data.defaultModel,
+      isDefault: data.isDefault,
+      status: data.status,
+    }
+    
+    // Only update apiKey if provided and not empty
+    if (data.apiKey && data.apiKey.trim() !== '') {
       updateData.apiKey = encrypt(data.apiKey)
     }
 

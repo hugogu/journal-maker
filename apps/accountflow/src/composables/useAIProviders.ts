@@ -29,6 +29,7 @@ export const useAIProviders = () => {
     type: 'openai' | 'azure' | 'ollama' | 'custom'
     apiEndpoint: string
     apiKey: string
+    defaultModel?: string
     isDefault?: boolean
   }) => {
     loading.value = true
@@ -47,6 +48,7 @@ export const useAIProviders = () => {
     name: string
     apiEndpoint: string
     apiKey: string
+    defaultModel: string
     isDefault: boolean
     status: 'active' | 'inactive'
   }>) => {

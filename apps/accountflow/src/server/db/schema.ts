@@ -180,6 +180,7 @@ export const aiProviders = pgTable('ai_providers', {
   type: providerTypeEnum('type').notNull(),
   apiEndpoint: varchar('api_endpoint', { length: 500 }).notNull(),
   apiKey: varchar('api_key', { length: 500 }).notNull(),
+  defaultModel: varchar('default_model', { length: 100 }),
   isDefault: boolean('is_default').default(false).notNull(),
   status: providerStatusEnum('status').default('active').notNull(),
   lastModelFetch: timestamp('last_model_fetch'),

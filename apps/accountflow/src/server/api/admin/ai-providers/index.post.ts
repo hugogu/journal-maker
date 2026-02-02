@@ -8,6 +8,7 @@ const createProviderSchema = z.object({
   type: z.enum(['openai', 'azure', 'ollama', 'custom']),
   apiEndpoint: z.string().min(1).max(500),
   apiKey: z.string().min(1),
+  defaultModel: z.string().optional(),
   isDefault: z.boolean().optional(),
 })
 
@@ -24,6 +25,7 @@ export default defineEventHandler(async (event) => {
       type: data.type,
       apiEndpoint: data.apiEndpoint,
       apiKey: encryptedKey,
+      defaultModel: data.defaultModel,
       isDefault: data.isDefault,
     })
 

@@ -40,6 +40,7 @@ export async function createAIProvider(data: {
   type: 'openai' | 'azure' | 'ollama' | 'custom'
   apiEndpoint: string
   apiKey: string
+  defaultModel?: string | null
   isDefault?: boolean
 }) {
   const [provider] = await db.insert(aiProviders)
@@ -48,6 +49,7 @@ export async function createAIProvider(data: {
       type: data.type,
       apiEndpoint: data.apiEndpoint,
       apiKey: data.apiKey,
+      defaultModel: data.defaultModel || null,
       isDefault: data.isDefault ?? false,
       status: 'active' as const
     })
@@ -62,12 +64,22 @@ export async function updateAIProvider(
     name: string
     apiEndpoint: string
     apiKey: string
+    defaultModel: string | null
     isDefault: boolean
     status: 'active' | 'inactive'
   }>
 ) {
+  // Filter out undefined values and apiKey if empty (don't overwrite existing key)
+  const updateData: any = {}
+  if (data.name !== undefined) updateData.name = data.name
+  if (data.apiEndpoint !== undefined) updateData.apiEndpoint = data.apiEndpoint
+  if (data.apiKey !== undefined && data.apiKey !== '') updateData.apiKey = data.apiKey
+  if (data.defaultModel !== undefined) updateData.defaultModel = data.defaultModel
+  if (data.isDefault !== undefined) updateData.isDefault = data.isDefault
+  if (data.status !== undefined) updateData.status = data.status
+  
   const [updated] = await db.update(aiProviders)
-    .set({ ...data, updatedAt: new Date() })
+    .set({ ...updateData, updatedAt: new Date() })
     .where(eq(aiProviders.id, id))
     .returning()
   return updated

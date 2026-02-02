@@ -143,7 +143,12 @@ export class AIService {
       apiKey,
     })
 
-    // If no model specified, fetch available models and use first one
+    // If no model specified, use provider's default model
+    if (!model) {
+      model = provider.defaultModel || undefined
+    }
+
+    // If still no model, try to fetch available models and use first one
     if (!model) {
       try {
         const models = await adapter.fetchModels()
