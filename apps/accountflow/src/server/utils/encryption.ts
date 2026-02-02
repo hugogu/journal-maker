@@ -1,7 +1,7 @@
 import crypto from 'crypto'
 
 // Default encryption key for development (32 characters)
-const DEFAULT_KEY = 'accountflow-dev-key-for-32-chars-'
+const DEFAULT_KEY = 'accountflow-dev-key-for-32-chars'
 
 const ENCRYPTION_KEY = process.env.AI_KEY_ENCRYPTION_SECRET || DEFAULT_KEY
 

@@ -269,19 +269,37 @@ function copyMessage(content: string) {
 }
 
 function renderMermaidDiagrams() {
+  // Initialize mermaid if not already done
+  mermaid.initialize({
+    startOnLoad: false,
+    theme: 'default',
+    flowchart: {
+      useMaxWidth: true,
+      htmlLabels: true
+    }
+  })
+  
   // Find all mermaid containers and render them
   const containers = document.querySelectorAll('.mermaid-container')
   containers.forEach(async (container) => {
     try {
-      const content = container.textContent || ''
+      // Get the raw content - it's in the textContent but may need decoding
+      let content = container.textContent || ''
+      
+      // If content is wrapped in code block, extract it
+      const codeElement = container.querySelector('code')
+      if (codeElement) {
+        content = codeElement.textContent || ''
+      }
+      
       if (content.trim()) {
-        const { svg } = await mermaid.render('mermaid-' + Math.random().toString(36).substr(2, 9), content)
+        const diagramId = 'mermaid-' + Math.random().toString(36).substr(2, 9)
+        const { svg } = await mermaid.render(diagramId, content.trim())
         container.innerHTML = svg
       }
     } catch (error) {
       console.error('Mermaid rendering error:', error)
-      const originalContent = container.textContent || ''
-      container.innerHTML = `<pre><code>${originalContent}</code></pre>`
+      // Keep the original content as pre/code if rendering fails
     }
   })
 }

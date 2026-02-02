@@ -1,13 +1,13 @@
 import { db } from '../index'
 import { conversationMessages } from '../schema'
-import { eq, desc } from 'drizzle-orm'
+import { eq, asc } from 'drizzle-orm'
 import type { ConversationMessage } from '../types'
 
 // Get all messages for a scenario
 export async function getConversationMessages(scenarioId: number) {
   return db.query.conversationMessages.findMany({
     where: eq(conversationMessages.scenarioId, scenarioId),
-    orderBy: desc(conversationMessages.timestamp)
+    orderBy: asc(conversationMessages.timestamp)
   })
 }
 
