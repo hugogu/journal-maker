@@ -162,12 +162,9 @@ async function sendMessage() {
   scrollToBottom()
   
   try {
-    // Create assistant message for streaming
-    const assistantMessageIndex = messages.value.length
-    messages.value.push({
-      role: 'assistant',
-      content: '',
-    })
+    // Create assistant message for streaming - store direct reference
+    const assistantMessage = { role: 'assistant' as const, content: '' }
+    messages.value.push(assistantMessage)
     
     // Use fetch with streaming
     const response = await fetch(`/api/scenarios/${scenarioId}/chat.stream`, {
@@ -214,12 +211,12 @@ async function sendMessage() {
             if (data.type === 'chunk') {
               // Update message content in real-time
               fullContent = data.fullContent
-              messages.value[assistantMessageIndex].content = data.fullContent
+              assistantMessage.content = data.fullContent
               scrollToBottom()
             } else if (data.type === 'complete') {
               // Update final message
               fullContent = data.message
-              messages.value[assistantMessageIndex].content = data.message
+              assistantMessage.content = data.message
             } else if (data.type === 'done') {
               streaming.value = false
               scrollToBottom()
@@ -228,17 +225,17 @@ async function sendMessage() {
               // Save final assistant message to database
               await saveMessage({
                 role: 'assistant',
-                content: fullContent || messages.value[assistantMessageIndex].content
+                content: fullContent || assistantMessage.content
               })
               return
             } else if (data.type === 'error') {
-              messages.value[assistantMessageIndex].content = '抱歉，处理请求时出错：' + data.message
+              assistantMessage.content = '抱歉，处理请求时出错：' + data.message
               streaming.value = false
               scrollToBottom()
               // Save error message to database
               await saveMessage({
                 role: 'assistant',
-                content: messages.value[assistantMessageIndex].content
+                content: assistantMessage.content
               })
               return
             }
