@@ -21,12 +21,12 @@
 
 **Purpose**: Database schema changes required before any user story implementation
 
-- [ ] T001 [P] Create migration for Prompt tables in `src/server/db/migrations/002_add_prompt_tables.sql`
-- [ ] T002 [P] Create migration for AIProvider tables in `src/server/db/migrations/002_add_ai_provider_tables.sql`
-- [ ] T003 [P] Create migration for CompanyProfile table in `src/server/db/migrations/002_add_company_profile.sql`
-- [ ] T004 Create migration for ConversationMessages table in `src/server/db/migrations/002_add_conversation_messages.sql`
-- [ ] T005 [P] Create migration for ConversationShares table in `src/server/db/migrations/002_add_conversation_shares.sql`
-- [ ] T006 [P] Create migration for UserPreferences table in `src/server/db/migrations/002_add_user_preferences.sql`
+- [X] T001 [P] Create migration for Prompt tables in `src/server/db/migrations/002_add_prompt_tables.sql`
+- [X] T002 [P] Create migration for AIProvider tables in `src/server/db/migrations/002_add_ai_provider_tables.sql`
+- [X] T003 [P] Create migration for CompanyProfile table in `src/server/db/migrations/002_add_company_profile.sql`
+- [X] T004 Create migration for ConversationMessages table in `src/server/db/migrations/002_add_conversation_messages.sql`
+- [X] T005 [P] Create migration for ConversationShares table in `src/server/db/migrations/002_add_conversation_shares.sql`
+- [X] T006 [P] Create migration for UserPreferences table in `src/server/db/migrations/002_add_user_preferences.sql`
 
 **Checkpoint**: Database migrations ready - can be applied to development database
 
@@ -38,15 +38,15 @@
 
 **⚠️ CRITICAL**: No user story work can begin until this phase is complete
 
-- [ ] T007 Update Drizzle schema in `src/server/db/schema.ts` with all new tables and enums
-- [ ] T008 Create database types file in `src/server/db/types.ts` for TypeScript type inference
-- [ ] T009 [P] Create encryption utility in `src/server/utils/encryption.ts` for API key storage
-- [ ] T010 Create base AI Provider adapter interface in `src/server/utils/ai-adapters/base.ts`
-- [ ] T011 [P] Create OpenAI adapter in `src/server/utils/ai-adapters/openai.ts`
-- [ ] T012 [P] Create Azure OpenAI adapter in `src/server/utils/ai-adapters/azure.ts`
-- [ ] T013 [P] Create Ollama adapter in `src/server/utils/ai-adapters/ollama.ts`
-- [ ] T014 Create AI Provider factory in `src/server/utils/ai-adapters/index.ts`
-- [ ] T015 Update AI service in `src/server/utils/ai-service.ts` to support multiple providers
+- [X] T007 Update Drizzle schema in `src/server/db/schema.ts` with all new tables and enums
+- [X] T008 Create database types file in `src/server/db/types.ts` for TypeScript type inference
+- [X] T009 [P] Create encryption utility in `src/server/utils/encryption.ts` for API key storage
+- [X] T010 Create base AI Provider adapter interface in `src/server/utils/ai-adapters/base.ts`
+- [X] T011 [P] Create OpenAI adapter in `src/server/utils/ai-adapters/openai.ts`
+- [X] T012 [P] Create Azure OpenAI adapter in `src/server/utils/ai-adapters/azure.ts`
+- [X] T013 [P] Create Ollama adapter in `src/server/utils/ai-adapters/ollama.ts`
+- [X] T014 Create AI Provider factory in `src/server/utils/ai-adapters/index.ts`
+- [X] T015 Update AI service in `src/server/utils/ai-service.ts` to support multiple providers
 
 **Checkpoint**: Foundation ready - database schema and AI adapter infrastructure complete
 
@@ -60,19 +60,19 @@
 
 ### Implementation for User Story 1
 
-- [ ] T016 [P] Create PromptTemplate table queries in `src/server/db/queries/prompts.ts`
-- [ ] T017 Create Prompt API endpoints in `src/server/api/prompts/index.get.ts` (list)
-- [ ] T018 Create Prompt API endpoints in `src/server/api/prompts/[id].get.ts` (detail)
-- [ ] T019 Create Prompt API endpoints in `src/server/api/prompts/index.post.ts` (create)
-- [ ] T020 Create Prompt API endpoints in `src/server/api/prompts/[id]/versions.post.ts` (create version)
-- [ ] T021 Create Prompt API endpoints in `src/server/api/prompts/[id]/activate.put.ts` (activate version)
-- [ ] T022 Create AI generate Prompt endpoint in `src/server/api/prompts/generate.post.ts`
-- [ ] T023 Create Prompt composable in `src/composables/usePrompts.ts`
-- [ ] T024 Create Prompt list page in `src/pages/admin/prompts/index.vue`
-- [ ] T025 Create Prompt editor page in `src/pages/admin/prompts/[id].vue`
+- [X] T016 [P] Create PromptTemplate table queries in `src/server/db/queries/prompts.ts`
+- [X] T017 Create Prompt API endpoints in `src/server/api/prompts/index.get.ts` (list)
+- [X] T018 Create Prompt API endpoints in `src/server/api/prompts/[id].get.ts` (detail)
+- [X] T019 Create Prompt API endpoints in `src/server/api/prompts/index.post.ts` (create)
+- [X] T020 Create Prompt API endpoints in `src/server/api/prompts/[id]/versions.post.ts` (create version)
+- [X] T021 Create Prompt API endpoints in `src/server/api/prompts/[id]/activate.put.ts` (activate version)
+- [X] T022 Create AI generate Prompt endpoint in `src/server/api/prompts/generate.post.ts`
+- [X] T023 Create Prompt composable in `src/composables/usePrompts.ts`
+- [X] T024 Create Prompt list page in `src/pages/admin/prompts/index.vue`
+- [X] T025 Create Prompt editor page in `src/pages/admin/prompts/[id].vue`
 - [ ] T026 [P] Create Prompt version viewer component in `src/components/prompt/VersionViewer.vue`
 - [ ] T027 [P] Create Prompt diff viewer component in `src/components/prompt/DiffViewer.vue`
-- [ ] T028 Create Prompt variable highlighter/editor in `src/components/prompt/PromptEditor.vue`
+- [X] T028 Create Prompt variable highlighter/editor in `src/components/prompt/PromptEditor.vue`
 
 **Checkpoint**: User Story 1 complete - admins can fully manage versioned Prompts
 
@@ -86,17 +86,17 @@
 
 ### Implementation for User Story 2
 
-- [ ] T029 [P] Create AIProvider table queries in `src/server/db/queries/ai-providers.ts`
-- [ ] T030 Create AI Model cache queries in `src/server/db/queries/ai-models.ts`
-- [ ] T031 Create AI Provider API endpoints in `src/server/api/ai-providers/index.get.ts` (list)
-- [ ] T032 Create AI Provider API endpoints in `src/server/api/ai-providers/[id].get.ts` (detail)
-- [ ] T033 Create AI Provider API endpoints in `src/server/api/ai-providers/index.post.ts` (create)
-- [ ] T034 Create AI Provider API endpoints in `src/server/api/ai-providers/[id].put.ts` (update)
-- [ ] T035 Create AI Provider API endpoints in `src/server/api/ai-providers/[id].delete.ts` (delete)
-- [ ] T036 Create AI Provider refresh models endpoint in `src/server/api/ai-providers/[id]/refresh-models.post.ts`
-- [ ] T037 Create user preferences API in `src/server/api/user/preferences/ai.get.ts` and `ai.put.ts`
-- [ ] T038 Create AI Provider composable in `src/composables/useAIProviders.ts`
-- [ ] T039 Create AI Provider management page in `src/pages/admin/ai-config.vue` (refactor existing)
+- [X] T029 [P] Create AIProvider table queries in `src/server/db/queries/ai-providers.ts`
+- [X] T030 Create AI Model cache queries in `src/server/db/queries/ai-models.ts`
+- [X] T031 Create AI Provider API endpoints in `src/server/api/ai-providers/index.get.ts` (list)
+- [X] T032 Create AI Provider API endpoints in `src/server/api/ai-providers/[id].get.ts` (detail)
+- [X] T033 Create AI Provider API endpoints in `src/server/api/ai-providers/index.post.ts` (create)
+- [X] T034 Create AI Provider API endpoints in `src/server/api/ai-providers/[id].put.ts` (update)
+- [X] T035 Create AI Provider API endpoints in `src/server/api/ai-providers/[id].delete.ts` (delete)
+- [X] T036 Create AI Provider refresh models endpoint in `src/server/api/ai-providers/[id]/refresh-models.post.ts`
+- [X] T037 Create user preferences API in `src/server/api/user/preferences/ai.get.ts` and `ai.put.ts`
+- [X] T038 Create AI Provider composable in `src/composables/useAIProviders.ts`
+- [X] T039 Create AI Provider management page in `src/pages/admin/ai-config.vue` (refactor existing)
 - [ ] T040 Create Provider/Model selector component in `src/components/ai-config/ProviderModelSelector.vue`
 - [ ] T041 Add Provider/Model selector to analysis page in `src/pages/scenarios/[id]/analyze.vue`
 
@@ -114,13 +114,13 @@
 
 ### Implementation for User Story 6
 
-- [ ] T042 Create ConversationMessages table queries in `src/server/db/queries/conversation-messages.ts`
+- [X] T042 Create ConversationMessages table queries in `src/server/db/queries/conversation-messages.ts`
 - [ ] T043 Create conversation migration API in `src/server/api/conversations/migrate-from-localstorage.post.ts`
-- [ ] T044 Create conversation messages API in `src/server/api/scenarios/[id]/conversations/index.get.ts`
-- [ ] T045 Create conversation messages API in `src/server/api/scenarios/[id]/conversations/messages.post.ts`
-- [ ] T046 Update chat streaming API in `src/server/api/scenarios/[id]/chat.stream.ts` to persist to DB
-- [ ] T047 Update chat post API in `src/server/api/scenarios/[id]/chat.post.ts` to persist to DB
-- [ ] T048 Update conversation composable in `src/composables/useConversation.ts` to use database
+- [X] T044 Create conversation messages API in `src/server/api/scenarios/[id]/conversations/index.get.ts`
+- [X] T045 Create conversation messages API in `src/server/api/scenarios/[id]/conversations/messages.post.ts`
+- [X] T046 Update chat streaming API in `src/server/api/scenarios/[id]/chat.stream.ts` to persist to DB
+- [X] T047 Update chat post API in `src/server/api/scenarios/[id]/chat.post.ts` to persist to DB
+- [X] T048 Update conversation composable in `src/composables/useConversation.ts` to use database
 - [ ] T049 Create localStorage migration composable in `src/composables/useLocalStorageMigration.ts`
 - [ ] T050 Add migration prompt UI in `src/components/conversation/LocalStorageMigration.vue`
 - [ ] T051 Update analyze page in `src/pages/scenarios/[id]/analyze.vue` to load from database
@@ -137,11 +137,11 @@
 
 ### Implementation for User Story 3
 
-- [ ] T052 Create CompanyProfile table queries in `src/server/db/queries/company-profile.ts`
-- [ ] T053 Create Company API endpoints in `src/server/api/company/index.get.ts` (get)
-- [ ] T054 Create Company API endpoints in `src/server/api/company/index.put.ts` (update)
-- [ ] T055 Create Company composable in `src/composables/useCompany.ts`
-- [ ] T056 Create Company settings page in `src/pages/admin/company.vue`
+- [X] T052 Create CompanyProfile table queries in `src/server/db/queries/company-profile.ts`
+- [X] T053 Create Company API endpoints in `src/server/api/company/index.get.ts` (get)
+- [X] T054 Create Company API endpoints in `src/server/api/company/index.put.ts` (update)
+- [X] T055 Create Company composable in `src/composables/useCompanyProfile.ts`
+- [X] T056 Create Company settings page in `src/pages/admin/company-profile.vue`
 - [ ] T057 Update AI service in `src/server/utils/ai-service.ts` to inject company context into prompts
 - [ ] T058 Add company info display in `src/pages/admin/index.vue` dashboard
 
