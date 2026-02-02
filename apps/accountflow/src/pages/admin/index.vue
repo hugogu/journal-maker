@@ -31,20 +31,6 @@
         </div>
       </NuxtLink>
       
-      <NuxtLink to="/admin/ai-providers" class="card hover:shadow-md transition-shadow">
-        <div class="flex items-center gap-4">
-          <div class="w-12 h-12 bg-orange-100 rounded-lg flex items-center justify-center">
-            <svg class="w-6 h-6 text-orange-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z" />
-            </svg>
-          </div>
-          <div>
-            <h2 class="text-lg font-semibold">AI Provider 管理</h2>
-            <p class="text-gray-600 text-sm">管理多个AI服务提供商</p>
-          </div>
-        </div>
-      </NuxtLink>
-      
       <NuxtLink to="/accounts" class="card hover:shadow-md transition-shadow">
         <div class="flex items-center gap-4">
           <div class="w-12 h-12 bg-green-100 rounded-lg flex items-center justify-center">

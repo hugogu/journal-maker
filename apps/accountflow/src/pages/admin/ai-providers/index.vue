@@ -57,9 +57,19 @@
             <label class="label">API Key <span class="text-red-500">*</span></label>
             <input v-model="form.apiKey" type="password" class="input" placeholder="sk-..." required />
           </div>
-          <div class="flex items-center gap-2">
-            <input v-model="form.isDefault" type="checkbox" id="isDefault" />
-            <label for="isDefault">设为默认 Provider</label>
+          <div>
+            <label class="label">测试模型 <span class="text-red-500">*</span></label>
+            <input v-model="form.model" type="text" class="input" placeholder="gpt-4, gpt-3.5-turbo..." required />
+            <p class="text-xs text-gray-500 mt-1">用于测试连接的模型名称</p>
+          </div>
+          <div class="flex items-center justify-between">
+            <div class="flex items-center gap-2">
+              <input v-model="form.isDefault" type="checkbox" id="isDefault" />
+              <label for="isDefault">设为默认 Provider</label>
+            </div>
+            <button type="button" @click="testConnection" :disabled="testing" class="text-sm text-blue-600 hover:text-blue-800">
+              {{ testing ? '测试中...' : testResult ? (testSuccess ? '✓ 连接成功' : '✗ 连接失败') : '测试连接' }}
+            </button>
           </div>
           <div class="flex gap-4 pt-4">
             <button type="submit" class="btn-primary" :disabled="saving">{{ saving ? '保存中...' : '保存' }}</button>
@@ -77,11 +87,15 @@ const { providers, loading, error, fetchProviders, createProvider, updateProvide
 const showCreateModal = ref(false)
 const editingProvider = ref<any>(null)
 const saving = ref(false)
+const testing = ref(false)
+const testResult = ref(false)
+const testSuccess = ref(false)
 const form = reactive({
   name: '',
   type: 'openai' as const,
   apiEndpoint: '',
   apiKey: '',
+  model: 'gpt-4',
   isDefault: false
 })
 
@@ -93,7 +107,9 @@ function editProvider(provider: any) {
   form.type = provider.type
   form.apiEndpoint = provider.apiEndpoint
   form.apiKey = '' // Don't show existing key
+  form.model = 'gpt-4'
   form.isDefault = provider.isDefault
+  testResult.value = false
 }
 
 function closeModal() {
@@ -103,7 +119,34 @@ function closeModal() {
   form.type = 'openai'
   form.apiEndpoint = ''
   form.apiKey = ''
+  form.model = 'gpt-4'
   form.isDefault = false
+  testResult.value = false
+  testSuccess.value = false
+}
+
+async function testConnection() {
+  testing.value = true
+  testResult.value = false
+  try {
+    const result = await $fetch('/api/ai/test-connection', {
+      method: 'POST',
+      body: {
+        providerType: form.type,
+        apiEndpoint: form.apiEndpoint,
+        apiKey: form.apiKey,
+        model: form.model
+      }
+    })
+    testSuccess.value = true
+    alert('连接测试成功！')
+  } catch (e: any) {
+    testSuccess.value = false
+    alert('连接测试失败：' + (e?.data?.message || '请检查配置'))
+  } finally {
+    testing.value = false
+    testResult.value = true
+  }
 }
 
 async function saveProvider() {
