@@ -3,7 +3,7 @@
     <h1 class="text-2xl font-bold mb-6">管理后台</h1>
     
     <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-      <NuxtLink to="/admin/ai-config" class="card hover:shadow-md transition-shadow">
+      <NuxtLink to="/admin/ai-providers" class="card hover:shadow-md transition-shadow">
         <div class="flex items-center gap-4">
           <div class="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center">
             <svg class="w-6 h-6 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -11,7 +11,7 @@
             </svg>
           </div>
           <div>
-            <h2 class="text-lg font-semibold">AI 配置</h2>
+            <h2 class="text-lg font-semibold">AI Provider 管理</h2>
             <p class="text-gray-600 text-sm">配置AI服务连接参数</p>
           </div>
         </div>
@@ -27,6 +27,20 @@
           <div>
             <h2 class="text-lg font-semibold">Prompt 管理</h2>
             <p class="text-gray-600 text-sm">管理Prompt模板和版本</p>
+          </div>
+        </div>
+      </NuxtLink>
+      
+      <NuxtLink to="/admin/ai-providers" class="card hover:shadow-md transition-shadow">
+        <div class="flex items-center gap-4">
+          <div class="w-12 h-12 bg-orange-100 rounded-lg flex items-center justify-center">
+            <svg class="w-6 h-6 text-orange-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z" />
+            </svg>
+          </div>
+          <div>
+            <h2 class="text-lg font-semibold">AI Provider 管理</h2>
+            <p class="text-gray-600 text-sm">管理多个AI服务提供商</p>
           </div>
         </div>
       </NuxtLink>
