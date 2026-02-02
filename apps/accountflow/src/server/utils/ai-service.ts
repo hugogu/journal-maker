@@ -1,14 +1,17 @@
-import OpenAI from 'openai'
 import type { Account } from '../../types'
 import { db } from '../db'
-import { aiConfigs } from '../db/schema'
-import { eq } from 'drizzle-orm'
+import { aiProviders, userPreferences, companyProfile } from '../db/schema'
+import { eq, and } from 'drizzle-orm'
+import { createAIAdapter, type AIProviderAdapter, type ChatMessage } from './ai-adapters'
+import { decrypt } from './encryption'
 
 interface AIContext {
   company: {
     name: string
     description?: string
     industry?: string
+    businessModel?: string
+    accountingPreference?: string
   }
   accounts: Account[]
   templateScenario?: {
@@ -56,35 +59,134 @@ interface AIResponse {
   }
 }
 
+interface RequestLog {
+  systemPrompt: string
+  contextMessages: ChatMessage[]
+  fullPrompt: string
+  variables: Record<string, string>
+}
+
+interface ResponseStats {
+  model: string
+  providerId: string
+  providerName: string
+  inputTokens: number
+  outputTokens: number
+  totalTokens: number
+  durationMs: number
+}
+
+export interface AnalysisResult {
+  message: string
+  structured?: AIResponse['structured']
+  requestLog: RequestLog
+  responseStats: ResponseStats
+}
+
 export class AIService {
-  private async getClient() {
-    const config = await db.query.aiConfigs.findFirst({
-      where: eq(aiConfigs.isActive, true)
-    })
-    
-    if (!config) {
-      throw new Error('AI configuration not found. Please configure AI settings in Admin > AI Config.')
+  /**
+   * Get AI provider adapter for a user
+   * If userId is provided, uses user's preferences; otherwise uses default provider
+   */
+  private async getAdapter(userId?: number): Promise<{
+    adapter: AIProviderAdapter
+    model: string
+    providerId: string
+    providerName: string
+  }> {
+    let providerId: number | undefined
+    let model: string | undefined
+    let providerName = 'Default'
+
+    // Check user preferences if userId provided
+    if (userId) {
+      const prefs = await db.query.userPreferences.findFirst({
+        where: eq(userPreferences.userId, userId)
+      })
+      if (prefs?.preferredProviderId) {
+        providerId = prefs.preferredProviderId
+        model = prefs.preferredModel || undefined
+      }
     }
-    
-    if (!config.apiKey || config.apiKey.trim() === '') {
-      throw new Error('API Key is empty. Please configure a valid API key in Admin > AI Config.')
+
+    // Get provider details
+    let provider
+    if (providerId) {
+      provider = await db.query.aiProviders.findFirst({
+        where: eq(aiProviders.id, providerId)
+      })
     }
-    
-    return new OpenAI({
-      apiKey: config.apiKey,
-      baseURL: config.apiEndpoint,
+
+    // Fall back to default provider
+    if (!provider) {
+      provider = await db.query.aiProviders.findFirst({
+        where: and(
+          eq(aiProviders.isDefault, true),
+          eq(aiProviders.status, 'active')
+        )
+      })
+    }
+
+    if (!provider) {
+      throw new Error('No active AI provider configured. Please configure AI settings in Admin > AI Config.')
+    }
+
+    // Decrypt API key
+    const apiKey = decrypt(provider.apiKey)
+
+    // Create adapter
+    const adapter = createAIAdapter({
+      providerId: String(provider.id),
+      providerName: provider.name,
+      providerType: provider.type as 'openai' | 'azure' | 'ollama' | 'custom',
+      apiEndpoint: provider.apiEndpoint,
+      apiKey,
     })
+
+    // If no model specified, fetch available models and use first one
+    if (!model) {
+      try {
+        const models = await adapter.fetchModels()
+        model = models[0]?.id
+      } catch (e) {
+        // If can't fetch models, use a default
+        model = 'gpt-4'
+      }
+    }
+
+    return {
+      adapter,
+      model: model || 'gpt-4',
+      providerId: String(provider.id),
+      providerName: provider.name
+    }
   }
 
-  private async getModel() {
-    const config = await db.query.aiConfigs.findFirst({
-      where: eq(aiConfigs.isActive, true)
-    })
-    return config?.model || 'gpt-4'
+  /**
+   * Get company profile for prompt context
+   */
+  private async getCompanyContext(): Promise<AIContext['company']> {
+    const profile = await db.query.companyProfile.findFirst()
+    
+    if (!profile) {
+      return { name: 'Default Company' }
+    }
+
+    return {
+      name: profile.name,
+      businessModel: profile.businessModel || undefined,
+      industry: profile.industry || undefined,
+      accountingPreference: profile.accountingPreference || undefined,
+    }
   }
 
-  private buildAnalyzePrompt(context: AIContext): string {
+  /**
+   * Build system prompt with all context
+   */
+  private async buildSystemPrompt(context: AIContext): Promise<string> {
+    const company = await this.getCompanyContext()
     const accountsList = context.accounts.map(a => `${a.code} ${a.name} (${a.type})`).join(', ')
+    
     let prompt = `You are an accounting expert helping analyze business scenarios. 
 Analyze the user's business scenario and provide:
 1. A helpful response explaining the accounting treatment
@@ -92,21 +194,18 @@ Analyze the user's business scenario and provide:
 3. Suggested accounting accounts to use
 4. Accounting rules/journal entries for the scenario
 
-Respond in JSON format with the following structure:
-{
-  "message": "string - your analysis response",
-  "structured": {
-    "flowchart": {
-      "nodes": [{"id": "string", "type": "start|process|decision|end", "label": "string"}],
-      "edges": [{"from": "string", "to": "string", "label": "string"}]
-    },
-    "accounts": [{"code": "string", "name": "string", "type": "asset|liability|equity|revenue|expense", "reason": "string"}],
-    "rules": [{"event": "string", "debit": "string", "credit": "string", "description": "string"}]
-  }
-}
-
 Available accounts: ${accountsList}
-Company: ${context.company.name}`
+Company: ${company.name}`
+
+    if (company.businessModel) {
+      prompt += `\nBusiness Model: ${company.businessModel}`
+    }
+    if (company.industry) {
+      prompt += `\nIndustry: ${company.industry}`
+    }
+    if (company.accountingPreference) {
+      prompt += `\nAccounting Preference: ${company.accountingPreference}`
+    }
 
     if (context.currentScenario) {
       prompt += `\nCurrent Scenario: ${context.currentScenario.name} - ${context.currentScenario.description || 'No description'}`
@@ -115,9 +214,14 @@ Company: ${context.company.name}`
     return prompt
   }
 
-  private buildStreamPrompt(context: AIContext): string {
+  /**
+   * Build streaming system prompt
+   */
+  private async buildStreamSystemPrompt(context: AIContext): Promise<string> {
+    const company = await this.getCompanyContext()
     const accountsList = context.accounts.map(a => `${a.code} ${a.name} (${a.type})`).join(', ')
-    const basePrompt = `You are an accounting expert helping analyze business scenarios. 
+    
+    let prompt = `You are an accounting expert helping analyze business scenarios. 
 Analyze the user's business scenario and provide:
 1. A helpful response explaining the accounting treatment
 2. A flowchart representation of the business process using mermaid syntax
@@ -131,137 +235,164 @@ flowchart TD
     B --> C[End]
 \`\`\`
 
-IMPORTANT: When creating mermaid flowchart nodes, avoid using square brackets [], parentheses (), or other special characters in node labels. Use simple descriptive text instead. For example, use "BankAccount" instead of "Bank[Account]" or "Bank(Account)".
-
-Also include any tables, lists, or other markdown formatting as needed.
+IMPORTANT: When creating mermaid flowchart nodes, avoid using square brackets [], parentheses (), or other special characters in node labels. Use simple descriptive text instead.
 
 Available accounts: ${accountsList}
-Company: ${context.company.name}`
+Company: ${company.name}`
+
+    if (company.businessModel) {
+      prompt += `\nBusiness Model: ${company.businessModel}`
+    }
+    if (company.industry) {
+      prompt += `\nIndustry: ${company.industry}`
+    }
+    if (company.accountingPreference) {
+      prompt += `\nAccounting Preference: ${company.accountingPreference}`
+    }
 
     if (context.currentScenario) {
-      return basePrompt + `\nCurrent Scenario: ${context.currentScenario.name} - ${context.currentScenario.description || 'No description'}`
+      prompt += `\nCurrent Scenario: ${context.currentScenario.name} - ${context.currentScenario.description || 'No description'}`
     }
-    return basePrompt
+
+    return prompt
   }
+
+  /**
+   * Analyze scenario (non-streaming)
+   */
   async analyzeScenario(
     userInput: string,
-    context: AIContext
-  ): Promise<AIResponse> {
-    const client = await this.getClient()
-    const model = await this.getModel()
-    
-    const systemPrompt = this.buildAnalyzePrompt(context)
-
-    const response = await client.chat.completions.create({
-      model,
-      messages: [
-        { role: 'system', content: systemPrompt },
-        { role: 'user', content: userInput }
-      ],
-      response_format: { type: 'json_object' }
-    })
-
-    const content = response.choices[0]?.message?.content
-    if (!content) {
-      throw new Error('No response from AI')
-    }
-
-    return JSON.parse(content)
-  }
-
-  async analyzeScenarioStream(
-    userInput: string,
     context: AIContext,
-    onChunk: (chunk: string) => void
-  ): Promise<{ message: string }> {
-    const client = await this.getClient()
-    const model = await this.getModel()
+    userId?: number
+  ): Promise<AnalysisResult> {
+    const startTime = Date.now()
+    const { adapter, model, providerId, providerName } = await this.getAdapter(userId)
     
-    const systemPrompt = this.buildStreamPrompt(context)
+    const systemPrompt = await this.buildSystemPrompt(context)
+    const messages: ChatMessage[] = [
+      { role: 'system', content: systemPrompt },
+      { role: 'user', content: userInput }
+    ]
 
-    const stream = await client.chat.completions.create({
+    const response = await adapter.chatCompletion({
       model,
-      messages: [
-        { role: 'system', content: systemPrompt },
-        { role: 'user', content: userInput }
-      ],
-      stream: true,
+      messages,
+      temperature: 0.7,
     })
 
-    let fullContent = ''
-    
-    for await (const chunk of stream) {
-      const content = chunk.choices[0]?.delta?.content || ''
-      if (content) {
-        fullContent += content
-        onChunk(content)
-      }
+    const durationMs = Date.now() - startTime
+
+    let structured: AIResponse['structured'] | undefined
+    try {
+      const parsed = JSON.parse(response.content)
+      structured = parsed.structured
+    } catch (e) {
+      // Not JSON format, that's ok
     }
 
     return {
-      message: fullContent
+      message: response.content,
+      structured,
+      requestLog: {
+        systemPrompt,
+        contextMessages: messages,
+        fullPrompt: `${systemPrompt}\n\nUser: ${userInput}`,
+        variables: {},
+      },
+      responseStats: {
+        model: response.model,
+        providerId,
+        providerName,
+        inputTokens: response.usage?.promptTokens || 0,
+        outputTokens: response.usage?.completionTokens || 0,
+        totalTokens: response.usage?.totalTokens || 0,
+        durationMs,
+      },
     }
   }
 
-  async generateSampleTransaction(
-    scenarioDescription: string,
-    rules: (AIResponse['structured'] & { rules: any })['rules'] | undefined,
-    accounts: Account[]
-  ): Promise<{
-    description: string
-    entries: Array<{
-      accountCode: string
-      accountName: string
-      debit?: number
-      credit?: number
-      description: string
-    }>
-  }> {
-    const client = await this.getClient()
-    const model = await this.getModel()
+  /**
+   * Analyze scenario with streaming
+   */
+  async analyzeScenarioStream(
+    userInput: string,
+    context: AIContext,
+    onChunk: (chunk: string) => void,
+    userId?: number
+  ): Promise<AnalysisResult> {
+    const startTime = Date.now()
+    const { adapter, model, providerId, providerName } = await this.getAdapter(userId)
     
-    const accountsList = accounts.map(a => `${a.code} ${a.name}`).join(', ')
-    const systemPrompt = `Generate a realistic sample transaction based on the scenario description and accounting rules.
-Respond in JSON format:
-{
-  "description": "string - transaction description",
-  "entries": [
-    {"accountCode": "string", "accountName": "string", "debit": number, "credit": number, "description": "string"}
-  ]
-}
+    const systemPrompt = await this.buildStreamSystemPrompt(context)
+    const messages: ChatMessage[] = [
+      { role: 'system', content: systemPrompt },
+      { role: 'user', content: userInput }
+    ]
 
-Rules: ${JSON.stringify(rules || [])}
-Available accounts: ${accountsList}`
+    let fullContent = ''
+    let finalModel = model
+    let usage = { promptTokens: 0, completionTokens: 0, totalTokens: 0 }
 
-    const response = await client.chat.completions.create({
-      model,
-      messages: [
-        { role: 'system', content: systemPrompt },
-        { role: 'user', content: `Generate a sample transaction for: ${scenarioDescription}` }
-      ],
-      response_format: { type: 'json_object' }
-    })
+    await adapter.streamChatCompletion(
+      {
+        model,
+        messages,
+        temperature: 0.7,
+      },
+      (chunk) => {
+        fullContent += chunk.content
+        if (chunk.model) finalModel = chunk.model
+        if (chunk.usage) usage = chunk.usage
+        onChunk(chunk.content)
+      }
+    )
 
-    const content = response.choices[0]?.message?.content
-    if (!content) {
-      throw new Error('No response from AI')
+    const durationMs = Date.now() - startTime
+
+    return {
+      message: fullContent,
+      requestLog: {
+        systemPrompt,
+        contextMessages: messages,
+        fullPrompt: `${systemPrompt}\n\nUser: ${userInput}`,
+        variables: {},
+      },
+      responseStats: {
+        model: finalModel,
+        providerId,
+        providerName,
+        inputTokens: usage.promptTokens,
+        outputTokens: usage.completionTokens,
+        totalTokens: usage.totalTokens,
+        durationMs,
+      },
     }
-
-    return JSON.parse(content)
   }
 
-  async testConnection(apiEndpoint: string, apiKey: string, model: string): Promise<boolean> {
-    const client = new OpenAI({
-      apiKey,
-      baseURL: apiEndpoint,
-    })
-
+  /**
+   * Test connection to a provider
+   */
+  async testConnection(
+    providerType: string,
+    apiEndpoint: string,
+    apiKey: string,
+    model: string
+  ): Promise<boolean> {
     try {
-      await client.chat.completions.create({
+      const adapter = createAIAdapter({
+        providerId: 'test',
+        providerName: 'Test',
+        providerType: providerType as 'openai' | 'azure' | 'ollama' | 'custom',
+        apiEndpoint,
+        apiKey,
+      })
+
+      await adapter.chatCompletion({
         model,
         messages: [{ role: 'user', content: 'Hi' }],
-        max_tokens: 5
+        maxTokens: 5,
       })
+
       return true
     } catch (error) {
       return false

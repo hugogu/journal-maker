@@ -1,10 +1,26 @@
 import { pgTable, serial, varchar, text, timestamp, integer, boolean, jsonb, pgEnum, index, unique } from 'drizzle-orm/pg-core'
+import { relations } from 'drizzle-orm'
 
 // Enums
 export const userRoleEnum = pgEnum('user_role', ['admin', 'product'])
 export const scenarioStatusEnum = pgEnum('scenario_status', ['draft', 'confirmed', 'archived'])
 export const accountTypeEnum = pgEnum('account_type', ['asset', 'liability', 'equity', 'revenue', 'expense'])
 export const accountDirectionEnum = pgEnum('account_direction', ['debit', 'credit', 'both'])
+
+// NEW: Prompt Management Enums
+export const promptScenarioTypeEnum = pgEnum('prompt_scenario_type', [
+  'scenario_analysis',
+  'sample_generation',
+  'prompt_generation',
+  'flowchart_generation'
+])
+
+// NEW: AI Provider Enums
+export const providerTypeEnum = pgEnum('provider_type', ['openai', 'azure', 'ollama', 'custom'])
+export const providerStatusEnum = pgEnum('provider_status', ['active', 'inactive', 'error'])
+
+// NEW: Conversation Message Enum
+export const messageRoleEnum = pgEnum('message_role', ['user', 'assistant', 'system'])
 
 // Company table
 export const companies = pgTable('companies', {
@@ -146,3 +162,130 @@ export const accountMappings = pgTable('account_mappings', {
 }, (table) => [
   unique('idx_account_mappings_scenario_account').on(table.scenarioId, table.accountId),
 ])
+
+// NEW: Prompt Management Tables
+export const promptTemplates = pgTable('prompt_templates', {
+  id: serial('id').primaryKey(),
+  scenarioType: promptScenarioTypeEnum('scenario_type').notNull().unique(),
+  name: varchar('name', { length: 100 }).notNull(),
+  description: text('description'),
+  activeVersionId: integer('active_version_id'),
+  createdAt: timestamp('created_at').defaultNow().notNull(),
+  updatedAt: timestamp('updated_at').defaultNow().notNull(),
+})
+
+export const promptVersions = pgTable('prompt_versions', {
+  id: serial('id').primaryKey(),
+  templateId: integer('template_id').notNull().references(() => promptTemplates.id, { onDelete: 'cascade' }),
+  versionNumber: integer('version_number').notNull(),
+  content: text('content').notNull(),
+  variables: jsonb('variables').default([]),
+  createdBy: integer('created_by').references(() => users.id),
+  createdAt: timestamp('created_at').defaultNow().notNull(),
+}, (table) => [
+  unique('idx_prompt_versions_template_version').on(table.templateId, table.versionNumber),
+])
+
+// NEW: AI Provider Tables
+export const aiProviders = pgTable('ai_providers', {
+  id: serial('id').primaryKey(),
+  name: varchar('name', { length: 100 }).notNull(),
+  type: providerTypeEnum('type').notNull(),
+  apiEndpoint: varchar('api_endpoint', { length: 500 }).notNull(),
+  apiKey: varchar('api_key', { length: 500 }).notNull(),
+  isDefault: boolean('is_default').default(false).notNull(),
+  status: providerStatusEnum('status').default('active').notNull(),
+  lastModelFetch: timestamp('last_model_fetch'),
+  createdAt: timestamp('created_at').defaultNow().notNull(),
+  updatedAt: timestamp('updated_at').defaultNow().notNull(),
+}, (table) => [
+  index('idx_ai_providers_status').on(table.status),
+])
+
+export const aiModels = pgTable('ai_models', {
+  id: serial('id').primaryKey(),
+  providerId: integer('provider_id').notNull().references(() => aiProviders.id, { onDelete: 'cascade' }),
+  name: varchar('name', { length: 100 }).notNull(),
+  capabilities: jsonb('capabilities').default({}),
+  cachedAt: timestamp('cached_at').defaultNow().notNull(),
+}, (table) => [
+  unique('idx_ai_models_provider_name').on(table.providerId, table.name),
+])
+
+// NEW: Company Profile Table
+export const companyProfile = pgTable('company_profile', {
+  id: serial('id').primaryKey(),
+  name: varchar('name', { length: 100 }).notNull(),
+  businessModel: text('business_model'),
+  industry: varchar('industry', { length: 50 }),
+  accountingPreference: text('accounting_preference'),
+  notes: text('notes'),
+  updatedAt: timestamp('updated_at').defaultNow().notNull(),
+})
+
+// NEW: Conversation Messages Table (replaces localStorage)
+export const conversationMessages = pgTable('conversation_messages', {
+  id: serial('id').primaryKey(),
+  scenarioId: integer('scenario_id').notNull().references(() => scenarios.id, { onDelete: 'cascade' }),
+  role: messageRoleEnum('role').notNull(),
+  content: text('content').notNull(),
+  timestamp: timestamp('timestamp').defaultNow().notNull(),
+  requestLog: jsonb('request_log'),
+  responseStats: jsonb('response_stats'),
+  createdAt: timestamp('created_at').defaultNow().notNull(),
+}, (table) => [
+  index('idx_conversation_messages_scenario_id').on(table.scenarioId),
+  index('idx_conversation_messages_timestamp').on(table.timestamp),
+])
+
+// NEW: Conversation Shares Table
+export const conversationShares = pgTable('conversation_shares', {
+  id: serial('id').primaryKey(),
+  scenarioId: integer('scenario_id').notNull().references(() => scenarios.id, { onDelete: 'cascade' }),
+  shareToken: varchar('share_token', { length: 64 }).notNull().unique(),
+  createdAt: timestamp('created_at').defaultNow().notNull(),
+  revokedAt: timestamp('revoked_at'),
+  isRevoked: boolean('is_revoked').default(false).notNull(),
+}, (table) => [
+  index('idx_conversation_shares_token').on(table.shareToken),
+])
+
+// NEW: User Preferences Table
+export const userPreferences = pgTable('user_preferences', {
+  id: serial('id').primaryKey(),
+  userId: integer('user_id').notNull().unique().references(() => users.id, { onDelete: 'cascade' }),
+  preferredProviderId: integer('preferred_provider_id').references(() => aiProviders.id),
+  preferredModel: varchar('preferred_model', { length: 100 }),
+  updatedAt: timestamp('updated_at').defaultNow().notNull(),
+})
+
+// Relations
+export const promptTemplatesRelations = relations(promptTemplates, ({ one, many }) => ({
+  activeVersion: one(promptVersions, {
+    fields: [promptTemplates.activeVersionId],
+    references: [promptVersions.id],
+  }),
+  versions: many(promptVersions),
+}))
+
+export const promptVersionsRelations = relations(promptVersions, ({ one }) => ({
+  template: one(promptTemplates, {
+    fields: [promptVersions.templateId],
+    references: [promptTemplates.id],
+  }),
+  createdBy: one(users, {
+    fields: [promptVersions.createdBy],
+    references: [users.id],
+  }),
+}))
+
+export const aiProvidersRelations = relations(aiProviders, ({ many }) => ({
+  models: many(aiModels),
+}))
+
+export const aiModelsRelations = relations(aiModels, ({ one }) => ({
+  provider: one(aiProviders, {
+    fields: [aiModels.providerId],
+    references: [aiProviders.id],
+  }),
+}))
