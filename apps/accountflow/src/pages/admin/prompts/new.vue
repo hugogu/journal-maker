@@ -34,6 +34,9 @@
           <button type="button" @click="showGenerateModal = true" class="text-sm text-blue-600 hover:text-blue-800">
             🤖 AI 生成
           </button>
+          <button type="button" @click="openPreview" class="text-sm text-green-600 hover:text-green-800">
+            👁 预览效果
+          </button>
         </div>
         <textarea v-model="form.initialContent" rows="12" class="input font-mono text-sm" placeholder="输入 Prompt 内容..." required />
         <p class="text-xs text-gray-500 mt-1">使用 {{variableName}} 语法定义变量</p>
@@ -69,12 +72,35 @@
         </div>
       </div>
     </div>
+    <!-- Preview Modal -->
+    <div v-if="showPreviewModal" class="fixed inset-0 bg-black/50 flex items-center justify-center p-4 z-50">
+      <div class="bg-white rounded-lg max-w-4xl w-full max-h-[90vh] overflow-y-auto p-6">
+        <h3 class="text-lg font-semibold mb-4">Prompt 预览效果</h3>
+        <div v-if="previewLoading" class="text-center py-8">加载中...</div>
+        <div v-else-if="previewResult" class="space-y-4">
+          <div class="bg-gray-50 rounded p-4">
+            <h4 class="font-medium mb-2 text-sm text-gray-600">渲染后内容</h4>
+            <pre class="whitespace-pre-wrap text-sm">{{ previewResult.rendered }}</pre>
+          </div>
+          <div v-if="previewResult.usedVars.length" class="text-sm">
+            <span class="text-green-600">已使用变量:</span> {{ previewResult.usedVars.join(', ') }}
+          </div>
+          <div v-if="previewResult.unrenderedVars.length" class="text-sm">
+            <span class="text-yellow-600">未渲染变量:</span> {{ previewResult.unrenderedVars.join(', ') }}
+          </div>
+        </div>
+        <div class="flex justify-end mt-4">
+          <button @click="showPreviewModal = false" class="btn-secondary">关闭</button>
+        </div>
+      </div>
+    </div>
   </div>
 </template>
 
 <script setup lang="ts">
 const router = useRouter()
 const { createTemplate, generatePrompt: generate } = usePrompts()
+const { previewPrompt, previewLoading, previewResult } = usePromptPreview()
 
 const form = reactive({
   scenarioType: 'scenario_analysis',
@@ -87,6 +113,16 @@ const submitting = ref(false)
 const showGenerateModal = ref(false)
 const generateDescription = ref('')
 const generating = ref(false)
+const showPreviewModal = ref(false)
+
+async function openPreview() {
+  if (!form.initialContent.trim()) {
+    alert('请先输入 Prompt 内容')
+    return
+  }
+  await previewPrompt(form.initialContent)
+  showPreviewModal.value = true
+}
 
 async function handleSubmit() {
   submitting.value = true

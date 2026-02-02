@@ -21,6 +21,9 @@
             <button @click="save" class="btn-primary" :disabled="saving || !hasChanges">
               {{ saving ? '保存中...' : '保存' }}
             </button>
+            <button @click="openPreview" class="btn-secondary">
+              {{ previewLoading ? '预览中...' : '预览效果' }}
+            </button>
             <button @click="showAIChat = true" class="btn-secondary">
               AI 生成新版本
             </button>
@@ -84,6 +87,28 @@
         </div>
       </div>
     </div>
+    <!-- Preview Modal -->
+    <div v-if="showPreviewModal" class="fixed inset-0 bg-black/50 flex items-center justify-center p-4 z-50">
+      <div class="bg-white rounded-lg max-w-4xl w-full max-h-[90vh] overflow-y-auto p-6">
+        <h3 class="text-lg font-semibold mb-4">Prompt 预览效果</h3>
+        <div v-if="previewLoading" class="text-center py-8">加载中...</div>
+        <div v-else-if="previewResult" class="space-y-4">
+          <div class="bg-gray-50 rounded p-4">
+            <h4 class="font-medium mb-2 text-sm text-gray-600">渲染后内容</h4>
+            <pre class="whitespace-pre-wrap text-sm">{{ previewResult.rendered }}</pre>
+          </div>
+          <div v-if="previewResult.usedVars.length" class="text-sm">
+            <span class="text-green-600">已使用变量:</span> {{ previewResult.usedVars.join(', ') }}
+          </div>
+          <div v-if="previewResult.unrenderedVars.length" class="text-sm">
+            <span class="text-yellow-600">未渲染变量:</span> {{ previewResult.unrenderedVars.join(', ') }}
+          </div>
+        </div>
+        <div class="flex justify-end mt-4">
+          <button @click="showPreviewModal = false" class="btn-secondary">关闭</button>
+        </div>
+      </div>
+    </div>
   </div>
 </template>
 
@@ -91,6 +116,7 @@
 const route = useRoute()
 const id = parseInt(route.params.id as string, 10)
 const { currentTemplate: template, loading, error, fetchTemplate, createVersion, activateVersion, generatePrompt } = usePrompts()
+const { previewPrompt, previewLoading, previewResult } = usePromptPreview()
 
 const editContent = ref('')
 const originalContent = ref('')
@@ -101,8 +127,14 @@ const chatInput = ref('')
 const chatting = ref(false)
 const generatedContent = ref('')
 const showCompare = ref(false)
+const showPreviewModal = ref(false)
 
 const hasChanges = computed(() => editContent.value !== originalContent.value)
+
+async function openPreview() {
+  await previewPrompt(editContent.value)
+  showPreviewModal.value = true
+}
 
 onMounted(async () => {
   await fetchTemplate(id)
