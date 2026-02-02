@@ -1,0 +1,1 @@
+ALTER TABLE "ai_configs" ALTER COLUMN "system_prompt" DROP NOT NULL;

@@ -4,6 +4,7 @@ node_modules/
 .pnp.js
 .pnpm-debug.log*
 .npm
+package-lock.json
 
 # Build outputs
 .output

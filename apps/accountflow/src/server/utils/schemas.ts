@@ -25,7 +25,7 @@ export const createAIConfigSchema = z.object({
   apiEndpoint: z.string().url(),
   apiKey: z.string().min(1),
   model: z.string().min(1),
-  systemPrompt: z.string().min(1),
+  systemPrompt: z.string(),
 })
 
 export const updateAIConfigSchema = createAIConfigSchema.partial()
