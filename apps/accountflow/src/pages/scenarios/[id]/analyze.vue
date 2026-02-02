@@ -82,37 +82,7 @@ import { useRoute } from 'vue-router'
 
 const route = useRoute()
 const scenarioId = route.params.id as string
-
-interface Message {
-  role: string
-  content: string
-  timestamp?: number
-}
-
-// Storage key for this scenario's messages
-const getStorageKey = () => `scenario-messages-${scenarioId}`
-
-// Load messages from localStorage
-const loadMessages = (): Message[] => {
-  try {
-    const stored = localStorage.getItem(getStorageKey())
-    if (stored) {
-      return JSON.parse(stored)
-    }
-  } catch (e) {
-    console.error('Failed to load messages from localStorage:', e)
-  }
-  return []
-}
-
-// Save messages to localStorage
-const saveMessages = (messages: Message[]) => {
-  try {
-    localStorage.setItem(getStorageKey(), JSON.stringify(messages))
-  } catch (e) {
-    console.error('Failed to save messages to localStorage:', e)
-  }
-}
+const { messages, loading: conversationLoading, loadMessages, saveMessage } = useConversation(parseInt(scenarioId, 10))
 
 // Initialize markdown renderer
 const md = new MarkdownIt({
@@ -147,7 +117,6 @@ md.renderer.rules.fence = function(tokens, idx, options, env, renderer) {
 
 const loading = ref(true)
 const scenario = ref<any>(null)
-const messages = ref<Message[]>([])
 const inputMessage = ref('')
 const streaming = ref(false)
 const messagesContainer = ref<HTMLElement>()
@@ -159,8 +128,8 @@ onMounted(async () => {
     scenario.value = response.data
   }
   
-  // Load messages from localStorage
-  messages.value = loadMessages()
+  // Load messages from API (with auto-migration from localStorage)
+  await loadMessages()
   
   // Render mermaid diagrams for loaded messages
   if (messages.value.length > 0) {
@@ -179,13 +148,13 @@ async function sendMessage() {
   if (!inputMessage.value.trim()) return
   
   const userMessage = inputMessage.value
-  const userMessageWithTimestamp = { role: 'user', content: userMessage, timestamp: Date.now() }
-  messages.value.push(userMessageWithTimestamp)
+  const userMessageData = { role: 'user' as const, content: userMessage }
+  messages.value.push(userMessageData)
   inputMessage.value = ''
   streaming.value = true
   
-  // Save to localStorage
-  saveMessages(messages.value)
+  // Save to database
+  await saveMessage(userMessageData)
   
   await nextTick()
   scrollToBottom()
@@ -196,7 +165,6 @@ async function sendMessage() {
     messages.value.push({
       role: 'assistant',
       content: '',
-      timestamp: Date.now(),
     })
     
     // Use fetch with streaming
@@ -218,6 +186,8 @@ async function sendMessage() {
     if (!reader) {
       throw new Error('No response body')
     }
+    
+    let fullContent = ''
     
     while (true) {
       const { done, value } = await reader.read()
@@ -241,27 +211,33 @@ async function sendMessage() {
             
             if (data.type === 'chunk') {
               // Update message content in real-time
+              fullContent = data.fullContent
               messages.value[assistantMessageIndex].content = data.fullContent
               scrollToBottom()
             } else if (data.type === 'complete') {
               // Update final message
+              fullContent = data.message
               messages.value[assistantMessageIndex].content = data.message
-              // Save to localStorage
-              saveMessages(messages.value)
             } else if (data.type === 'done') {
               streaming.value = false
               scrollToBottom()
               await nextTick()
               renderMermaidDiagrams()
-              // Save final messages to localStorage
-              saveMessages(messages.value)
+              // Save final assistant message to database
+              await saveMessage({
+                role: 'assistant',
+                content: fullContent || messages.value[assistantMessageIndex].content
+              })
               return
             } else if (data.type === 'error') {
               messages.value[assistantMessageIndex].content = '抱歉，处理请求时出错：' + data.message
               streaming.value = false
               scrollToBottom()
-              // Save to localStorage
-              saveMessages(messages.value)
+              // Save error message to database
+              await saveMessage({
+                role: 'assistant',
+                content: messages.value[assistantMessageIndex].content
+              })
               return
             }
           } catch (e) {
@@ -273,11 +249,11 @@ async function sendMessage() {
     
   } catch (e) {
     console.error('Streaming error:', e)
-    const errorMessage = { role: 'assistant', content: '抱歉，处理请求时出错。请稍后重试。', timestamp: Date.now() }
+    const errorMessage = { role: 'assistant' as const, content: '抱歉，处理请求时出错。请稍后重试。' }
     messages.value.push(errorMessage)
     streaming.value = false
-    // Save to localStorage
-    saveMessages(messages.value)
+    // Save error message to database
+    await saveMessage(errorMessage)
     await nextTick()
     scrollToBottom()
   }
