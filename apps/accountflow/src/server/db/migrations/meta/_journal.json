@@ -36,6 +36,13 @@
       "when": 1770014401840,
       "tag": "004_drop_ai_configs",
       "breakpoints": true
+    },
+    {
+      "idx": 5,
+      "version": "7",
+      "when": 1770014401841,
+      "tag": "005_add_default_model",
+      "breakpoints": true
     }
   ]
 }
