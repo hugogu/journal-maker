@@ -20,6 +20,10 @@ interface AIContext {
       creditAccount?: string
     }>
   }
+  currentScenario?: {
+    name: string
+    description?: string
+  }
 }
 
 interface AIResponse {
@@ -79,14 +83,9 @@ export class AIService {
     return config?.model || 'gpt-4'
   }
 
-  async analyzeScenario(
-    userInput: string,
-    context: AIContext
-  ): Promise<AIResponse> {
-    const client = await this.getClient()
-    const model = await this.getModel()
-    
-    const systemPrompt = `You are an accounting expert helping analyze business scenarios. 
+  private buildAnalyzePrompt(context: AIContext): string {
+    const accountsList = context.accounts.map(a => `${a.code} ${a.name} (${a.type})`).join(', ')
+    let prompt = `You are an accounting expert helping analyze business scenarios. 
 Analyze the user's business scenario and provide:
 1. A helpful response explaining the accounting treatment
 2. A flowchart representation of the business process
@@ -106,8 +105,52 @@ Respond in JSON format with the following structure:
   }
 }
 
-Available accounts: ${context.accounts.map(a => `${a.code} ${a.name} (${a.type})`).join(', ')}
+Available accounts: ${accountsList}
 Company: ${context.company.name}`
+
+    if (context.currentScenario) {
+      prompt += `\nCurrent Scenario: ${context.currentScenario.name} - ${context.currentScenario.description || 'No description'}`
+    }
+
+    return prompt
+  }
+
+  private buildStreamPrompt(context: AIContext): string {
+    const accountsList = context.accounts.map(a => `${a.code} ${a.name} (${a.type})`).join(', ')
+    const basePrompt = `You are an accounting expert helping analyze business scenarios. 
+Analyze the user's business scenario and provide:
+1. A helpful response explaining the accounting treatment
+2. A flowchart representation of the business process using mermaid syntax
+3. Suggested accounting accounts to use
+4. Accounting rules/journal entries for the scenario
+
+Please provide your analysis in markdown format. Include mermaid flowcharts using proper syntax with triple backticks:
+\`\`\`mermaid
+flowchart TD
+    A[Start] --> B[Process]
+    B --> C[End]
+\`\`\`
+
+IMPORTANT: When creating mermaid flowchart nodes, avoid using square brackets [], parentheses (), or other special characters in node labels. Use simple descriptive text instead. For example, use "BankAccount" instead of "Bank[Account]" or "Bank(Account)".
+
+Also include any tables, lists, or other markdown formatting as needed.
+
+Available accounts: ${accountsList}
+Company: ${context.company.name}`
+
+    if (context.currentScenario) {
+      return basePrompt + `\nCurrent Scenario: ${context.currentScenario.name} - ${context.currentScenario.description || 'No description'}`
+    }
+    return basePrompt
+  }
+  async analyzeScenario(
+    userInput: string,
+    context: AIContext
+  ): Promise<AIResponse> {
+    const client = await this.getClient()
+    const model = await this.getModel()
+    
+    const systemPrompt = this.buildAnalyzePrompt(context)
 
     const response = await client.chat.completions.create({
       model,
@@ -134,24 +177,7 @@ Company: ${context.company.name}`
     const client = await this.getClient()
     const model = await this.getModel()
     
-    const systemPrompt = `You are an accounting expert helping analyze business scenarios. 
-Analyze the user's business scenario and provide:
-1. A helpful response explaining the accounting treatment
-2. A flowchart representation of the business process using mermaid syntax
-3. Suggested accounting accounts to use
-4. Accounting rules/journal entries for the scenario
-
-Please provide your analysis in markdown format. Include mermaid flowcharts using proper syntax with triple backticks:
-\`\`\`mermaid
-flowchart TD
-    A[Start] --> B[Process]
-    B --> C[End]
-\`\`\`
-
-Also include any tables, lists, or other markdown formatting as needed.
-
-Available accounts: ${context.accounts.map(a => `${a.code} ${a.name} (${a.type})`).join(', ')}
-Company: ${context.company.name}`
+    const systemPrompt = this.buildStreamPrompt(context)
 
     const stream = await client.chat.completions.create({
       model,
@@ -194,6 +220,7 @@ Company: ${context.company.name}`
     const client = await this.getClient()
     const model = await this.getModel()
     
+    const accountsList = accounts.map(a => `${a.code} ${a.name}`).join(', ')
     const systemPrompt = `Generate a realistic sample transaction based on the scenario description and accounting rules.
 Respond in JSON format:
 {
@@ -204,7 +231,7 @@ Respond in JSON format:
 }
 
 Rules: ${JSON.stringify(rules || [])}
-Available accounts: ${accounts.map(a => `${a.code} ${a.name}`).join(', ')}`
+Available accounts: ${accountsList}`
 
     const response = await client.chat.completions.create({
       model,

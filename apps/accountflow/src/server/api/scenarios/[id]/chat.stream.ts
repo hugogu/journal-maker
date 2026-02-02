@@ -63,7 +63,11 @@ export default defineEventHandler(async (event) => {
                 name: templateScenario.name,
                 description: templateScenario.description || undefined,
                 rules: []
-              } : undefined
+              } : undefined,
+              currentScenario: {
+                name: scenario.name,
+                description: scenario.description || undefined
+              }
             },
             (chunk: string) => {
               fullMessage += chunk
