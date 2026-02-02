@@ -81,7 +81,8 @@ apps/accountflow/
 │   │   ├── useAI.ts        # AI对话管理
 │   │   ├── useAccounts.ts  # 科目CRUD
 │   │   ├── useScenarios.ts # 场景管理
-│   │   └── useFlowchart.ts # 流程图数据转换
+│   │   ├── useFlowchart.ts # 流程图数据转换
+│   │   └── useLocalStorage.ts # 浏览器本地存储管理
 │   ├── pages/              # Nuxt页面
 │   │   ├── index.vue       # 首页/场景列表
 │   │   ├── admin/
@@ -89,8 +90,8 @@ apps/accountflow/
 │   │   │   └── accounts.vue
 │   │   ├── scenarios/
 │   │   │   ├── [id]/
-│   │   │   │   ├── index.vue    # 场景详情
-│   │   │   │   └── analyze.vue  # AI分析页面
+│   │   │   │   ├── index.vue    # 场景详情（支持编辑描述）
+│   │   │   │   └── analyze.vue  # AI分析页面（含localStorage持久化）
 │   │   │   └── new.vue
 │   │   └── accounts/
 │   │       └── index.vue   # 科目管理(共享)
