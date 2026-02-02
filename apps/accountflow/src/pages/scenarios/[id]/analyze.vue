@@ -209,9 +209,9 @@ async function sendMessage() {
             const data = JSON.parse(line.slice(6))
             
             if (data.type === 'chunk') {
-              // Update message content in real-time
-              fullContent = data.fullContent
-              assistantMessage.content = data.fullContent
+              // Append chunk content in real-time
+              fullContent += data.content
+              assistantMessage.content = fullContent
               scrollToBottom()
             } else if (data.type === 'complete') {
               // Update final message

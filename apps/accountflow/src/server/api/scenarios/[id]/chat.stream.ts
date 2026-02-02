@@ -71,11 +71,10 @@ export default defineEventHandler(async (event) => {
             },
             (chunk: string) => {
               fullMessage += chunk
-              // Send chunk to client
+              // Send only the chunk delta to client
               const responseData = JSON.stringify({ 
                 type: 'chunk', 
-                content: chunk,
-                fullContent: fullMessage 
+                content: chunk
               })
               controller.enqueue(`data: ${responseData}\n\n`)
             }
