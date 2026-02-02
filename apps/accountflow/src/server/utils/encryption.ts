@@ -1,9 +1,12 @@
 import crypto from 'crypto'
 
-const ENCRYPTION_KEY = process.env.AI_KEY_ENCRYPTION_SECRET
+// Default encryption key for development (32 characters)
+const DEFAULT_KEY = 'accountflow-dev-key-32-chars-long!'
 
-if (!ENCRYPTION_KEY || ENCRYPTION_KEY.length !== 32) {
-  console.warn('AI_KEY_ENCRYPTION_SECRET should be 32 characters for AES-256 encryption')
+const ENCRYPTION_KEY = process.env.AI_KEY_ENCRYPTION_SECRET || DEFAULT_KEY
+
+if (!process.env.AI_KEY_ENCRYPTION_SECRET) {
+  console.warn('AI_KEY_ENCRYPTION_SECRET not set, using default development key. Please set a custom key in production!')
 }
 
 const ALGORITHM = 'aes-256-gcm'

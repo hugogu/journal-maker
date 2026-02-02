@@ -54,14 +54,51 @@ npm run dev
 # 数据库
 DATABASE_URL=postgresql://postgres:postgres@localhost:5432/accountflow
 
-# AI配置
-OPENAI_API_KEY=your-api-key
-OPENAI_API_ENDPOINT=https://api.openai.com/v1
-OPENAI_MODEL=gpt-4
+# AI Provider加密密钥（重要）
+# 用于加密存储AI Provider的API密钥
+# 必须是32字符的字符串
+# 开发环境可不设置，会使用默认值
+# 生产环境必须设置自定义密钥
+AI_KEY_ENCRYPTION_SECRET=your-32-character-secret-key-here
 
 # 开发模式
 MOCK_AI=true  # 使用模拟AI服务，无需真实API Key
 ```
+
+#### AI_KEY_ENCRYPTION_SECRET 配置说明
+
+**作用**：用于加密存储在数据库中的AI Provider API密钥。
+
+**npm run 模式配置**：
+```bash
+# 方式1: 设置环境变量
+export AI_KEY_ENCRYPTION_SECRET="your-32-character-secret-key-here"
+npm run dev
+
+# 方式2: 写入 .env 文件
+echo "AI_KEY_ENCRYPTION_SECRET=your-32-character-secret-key-here" >> .env
+npm run dev
+```
+
+**Docker 模式配置**：
+```bash
+# 方式1: 在 docker-compose.yml 中设置
+# 编辑 docker-compose.yml，在 app 服务的 environment 中添加：
+#   - AI_KEY_ENCRYPTION_SECRET=your-32-character-secret-key-here
+
+# 方式2: 使用 .env 文件
+# 创建 .env 文件，添加 AI_KEY_ENCRYPTION_SECRET=your-32-character-secret-key-here
+# docker-compose 会自动读取
+
+# 启动
+docker-compose up -d
+```
+
+**安全提示**：
+- 密钥必须是**32个字符**（支持字母、数字、符号）
+- 生产环境**必须**设置自定义密钥，不要使用默认值
+- 更改密钥后，已存储的API密钥将无法解密，需要重新配置
+- 请妥善保管密钥，丢失后无法恢复已加密的API密钥
 
 ### Docker部署
 
