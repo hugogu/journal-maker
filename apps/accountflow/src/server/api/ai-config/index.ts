@@ -18,17 +18,22 @@ export default defineEventHandler(async (event) => {
       const body = await readBody(event)
       const data = createAIConfigSchema.parse(body)
       
-      // Always use companyId 1 for personal use
-      const companyId = 1
+      // Get the first available company (for personal use)
+      const company = await db.query.companies.findFirst()
+      if (!company) {
+        throw new AppError(400, 'No company found. Please create a company first.')
+      }
       
-      // Check if config exists for companyId 1
+      const companyId = company.id
+      
+      // Check if config exists for this company
       const existing = await db.query.aiConfigs.findFirst({
         where: eq(aiConfigs.companyId, companyId)
       })
       
       let config
       if (existing) {
-        // Update existing config for companyId 1
+        // Update existing config for this company
         [config] = await db.update(aiConfigs)
           .set({
             apiEndpoint: data.apiEndpoint,
@@ -41,7 +46,7 @@ export default defineEventHandler(async (event) => {
           .where(eq(aiConfigs.companyId, companyId))
           .returning()
       } else {
-        // Insert new config for companyId 1
+        // Insert new config for this company
         [config] = await db.insert(aiConfigs)
           .values({
             ...data,

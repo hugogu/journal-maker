@@ -1,11 +1,41 @@
 <template>
   <div v-if="scenario" class="max-w-4xl mx-auto">
     <div class="flex items-center justify-between mb-6">
-      <div>
+      <div class="flex-1">
         <h1 class="text-2xl font-bold">{{ scenario.name }}</h1>
-        <p class="text-gray-600 mt-1">{{ scenario.description || '暂无描述' }}</p>
+        <div class="mt-2">
+          <p v-if="!editingDescription" class="text-gray-600">{{ scenario.description || '暂无描述' }}</p>
+          <div v-else class="flex gap-2">
+            <textarea 
+              v-model="editDescription" 
+              rows="2" 
+              class="input flex-1"
+              placeholder="描述业务场景的背景、参与方、业务流程..."
+            />
+            <button 
+              class="btn-primary"
+              :disabled="saving"
+              @click="saveDescription"
+            >
+              {{ saving ? '保存中...' : '保存' }}
+            </button>
+            <button 
+              class="btn-secondary"
+              @click="cancelEdit"
+            >
+              取消
+            </button>
+          </div>
+        </div>
       </div>
       <div class="flex gap-3">
+        <button 
+          v-if="!editingDescription"
+          class="btn-secondary"
+          @click="startEditDescription"
+        >
+          编辑描述
+        </button>
         <button class="btn-secondary" @click="exportData('json')">
           导出 JSON
         </button>
@@ -80,6 +110,9 @@ interface Scenario {
 const route = useRoute()
 const router = useRouter()
 const scenario = ref<Scenario | null>(null)
+const editingDescription = ref(false)
+const editDescription = ref('')
+const saving = ref(false)
 
 onMounted(async () => {
   const response = await $fetch<{ success: boolean; data: Scenario }>(`/api/scenarios/${route.params.id}`)
@@ -119,5 +152,37 @@ async function confirmScenario() {
 function exportData(format: string) {
   const url = `/api/scenarios/${route.params.id}/export?format=${format}`
   window.open(url, '_blank')
+}
+
+function startEditDescription() {
+  editingDescription.value = true
+  editDescription.value = scenario.value?.description || ''
+}
+
+function cancelEdit() {
+  editingDescription.value = false
+  editDescription.value = ''
+}
+
+async function saveDescription() {
+  if (!scenario.value) return
+  
+  saving.value = true
+  try {
+    await $fetch(`/api/scenarios/${route.params.id}`, {
+      method: 'PUT',
+      body: {
+        description: editDescription.value
+      }
+    })
+    scenario.value.description = editDescription.value
+    editingDescription.value = false
+    alert('描述已更新')
+  } catch (e) {
+    console.error('Failed to update description:', e)
+    alert('更新失败')
+  } finally {
+    saving.value = false
+  }
 }
 </script>

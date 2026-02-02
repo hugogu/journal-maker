@@ -36,7 +36,7 @@ export const aiConfigs = pgTable('ai_configs', {
   apiEndpoint: varchar('api_endpoint', { length: 500 }).notNull(),
   apiKey: varchar('api_key', { length: 500 }).notNull(),
   model: varchar('model', { length: 100 }).notNull(),
-  systemPrompt: text('system_prompt').notNull(),
+  systemPrompt: text('system_prompt'),
   isActive: boolean('is_active').default(true).notNull(),
   createdAt: timestamp('created_at').defaultNow().notNull(),
   updatedAt: timestamp('updated_at').defaultNow().notNull(),

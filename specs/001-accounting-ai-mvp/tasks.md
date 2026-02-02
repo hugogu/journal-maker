@@ -168,6 +168,10 @@
 - [x] T061 Validate quickstart.md instructions work end-to-end
 - [x] T062 Add helpful empty states and onboarding hints
 - [x] T063 Performance optimization: query optimization, lazy loading
+- [x] T064 [US3] Add scenario description editing on scenario detail page
+- [x] T065 [US3] Implement localStorage persistence for AI conversation history
+- [x] T066 [US3] Add copy button to each message for easy content copying
+- [x] T067 [P] Pass current scenario description as context to AI service
 
 ---
 
@@ -215,14 +219,14 @@ Phase 1 (Setup) → Phase 2 (Foundational) → Parallel User Stories (3,4,5,6)
 | Foundational | 7 | 11 |
 | US1 (Admin) | 7 | 18 |
 | US2 (Accounts) | 7 | 25 |
-| US3 (Analysis) | 9 | 34 |
-| US4 (Flowchart) | 7 | 41 |
-| US5 (Sample) | 7 | 48 |
-| US6 (Export) | 6 | 54 |
-| Polish | 9 | **63** |
+| US3 (Analysis) | 13 | 38 |
+| US4 (Flowchart) | 7 | 45 |
+| US5 (Sample) | 7 | 52 |
+| US6 (Export) | 6 | 58 |
+| Polish | 13 | **71** |
 
-**Estimated MVP completion**: Tasks T001-T034 (34 tasks)  
-**Full feature completion**: All 63 tasks
+**Estimated MVP completion**: Tasks T001-T038 (38 tasks)  
+**Full feature completion**: All 71 tasks
 
 ---
 
@@ -233,3 +237,10 @@ Phase 1 (Setup) → Phase 2 (Foundational) → Parallel User Stories (3,4,5,6)
 - Tests are omitted per spec - can be added if requested
 - Each user story should be independently testable when complete
 - Commit after each task or logical group
+
+### Recently Implemented Features (2025-02-02)
+
+1. **Scenario Description Editing** (T064): Users can now edit scenario descriptions on the detail page, and the updated description is passed as context to AI analysis
+2. **Conversation Persistence** (T065): AI conversation history is now saved to browser localStorage and automatically restored on page refresh
+3. **Message Copy Function** (T066): Each message in the chat interface now has a copy button for easy content copying
+4. **Enhanced AI Context** (T067): Current scenario description is now included in the AI service context for more accurate analysis
