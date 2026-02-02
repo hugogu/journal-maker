@@ -123,6 +123,16 @@ const inputMessage = ref('')
 const streaming = ref(false)
 const messagesContainer = ref<HTMLElement>()
 
+// Watch messages and render mermaid when they change
+watch(() => messages.value.length, async (newLength, oldLength) => {
+  if (newLength > 0 && newLength !== oldLength) {
+    await nextTick()
+    setTimeout(() => {
+      renderMermaidDiagrams()
+    }, 50)
+  }
+}, { immediate: true })
+
 onMounted(async () => {
   // Load scenario
   const response = await $fetch<{ success: boolean; data: any }>(`/api/scenarios/${scenarioId}`)
