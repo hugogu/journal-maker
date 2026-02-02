@@ -31,9 +31,10 @@ export const createAIConfigSchema = z.object({
 export const updateAIConfigSchema = createAIConfigSchema.partial()
 
 export const testAIConnectionSchema = z.object({
+  providerId: z.number().int().positive().optional(),
   providerType: z.enum(['openai', 'azure', 'ollama', 'custom']).optional(),
   apiEndpoint: z.string().url(),
-  apiKey: z.string().min(1),
+  apiKey: z.string().optional(),
   model: z.string().min(1),
 })
 

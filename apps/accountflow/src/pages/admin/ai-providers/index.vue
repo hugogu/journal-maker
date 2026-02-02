@@ -130,14 +130,22 @@ async function testConnection() {
   testing.value = true
   testResult.value = false
   try {
+    const body: any = {
+      providerType: form.type,
+      apiEndpoint: form.apiEndpoint,
+      model: form.defaultModel
+    }
+    
+    // If editing and apiKey is empty, pass providerId to use stored key
+    if (editingProvider.value && !form.apiKey) {
+      body.providerId = editingProvider.value.id
+    } else {
+      body.apiKey = form.apiKey
+    }
+    
     const result = await $fetch('/api/ai/test-connection', {
       method: 'POST',
-      body: {
-        providerType: form.type,
-        apiEndpoint: form.apiEndpoint,
-        apiKey: form.apiKey,
-        model: form.defaultModel
-      }
+      body
     })
     testSuccess.value = true
     alert('连接测试成功！')
