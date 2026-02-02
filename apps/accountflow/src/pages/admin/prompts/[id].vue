@@ -1,129 +1,87 @@
 <template>
-  <div class="max-w-4xl mx-auto">
+  <div class="max-w-6xl mx-auto">
     <div class="flex items-center justify-between mb-6">
       <h1 class="text-2xl font-bold">编辑 Prompt 模板</h1>
-      <NuxtLink to="/admin/prompts" class="btn-secondary">
-        返回列表
-      </NuxtLink>
+      <NuxtLink to="/admin/prompts" class="btn-secondary">返回列表</NuxtLink>
     </div>
 
-    <div v-if="loading" class="text-center py-8">
-      <div class="text-gray-600">加载中...</div>
+    <div v-if="loading" class="text-center py-8"><div class="text-gray-600">加载中...</div></div>
+    <div v-else-if="error" class="text-center py-8 text-red-600">{{ error }}</div>
+
+    <div v-else-if="template" class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+      <!-- Left: Editor -->
+      <div class="space-y-6">
+        <div class="card">
+          <div class="flex items-center justify-between mb-4">
+            <h2 class="text-lg font-semibold">{{ template.name }}</h2>
+            <span class="text-sm text-gray-500">v{{ template.activeVersion?.versionNumber || '未激活' }}</span>
+          </div>
+          <textarea v-model="editContent" rows="20" class="input font-mono text-sm w-full" />
+          <div class="flex gap-4 mt-4">
+            <button @click="save" class="btn-primary" :disabled="saving || !hasChanges">
+              {{ saving ? '保存中...' : '保存' }}
+            </button>
+            <button @click="showAIChat = true" class="btn-secondary">
+              AI 生成新版本
+            </button>
+          </div>
+        </div>
+
+        <!-- Version History (Bottom) -->
+        <div class="card">
+          <h2 class="text-lg font-semibold mb-4">版本历史</h2>
+          <table class="w-full text-sm">
+            <thead><tr class="border-b"><th class="text-left py-2">版本</th><th class="text-left py-2">时间</th><th class="text-right py-2">操作</th></tr></thead>
+            <tbody>
+              <tr v-for="v in template.versions" :key="v.id" class="border-b">
+                <td class="py-2">
+                  <span v-if="template.activeVersion?.id === v.id" class="text-green-600 font-medium">v{{ v.versionNumber }} (当前)</span>
+                  <span v-else>v{{ v.versionNumber }}</span>
+                </td>
+                <td class="py-2 text-gray-600">{{ formatDate(v.createdAt) }}</td>
+                <td class="py-2 text-right">
+                  <button v-if="template.activeVersion?.id !== v.id" @click="activateV(v.id)" class="text-blue-600 hover:text-blue-800 text-sm">激活</button>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- Right: AI Chat Panel -->
+      <div v-if="showAIChat" class="card h-fit">
+        <div class="flex items-center justify-between mb-4">
+          <h2 class="text-lg font-semibold">AI 生成助手</h2>
+          <button @click="showAIChat = false" class="text-gray-500 hover:text-gray-700">✕</button>
+        </div>
+        <div class="bg-gray-50 rounded p-3 mb-4 h-64 overflow-y-auto space-y-3">
+          <div v-for="(msg, i) in chatMessages" :key="i" :class="msg.role === 'user' ? 'text-right' : 'text-left'">
+            <span :class="msg.role === 'user' ? 'bg-blue-100 text-blue-800' : 'bg-gray-200 text-gray-800'" class="inline-block px-3 py-2 rounded text-sm">{{ msg.content }}</span>
+          </div>
+        </div>
+        <div class="flex gap-2">
+          <input v-model="chatInput" @keyup.enter="sendChat" class="input flex-1 text-sm" placeholder="描述你想要的 Prompt..." />
+          <button @click="sendChat" class="btn-primary" :disabled="chatting">发送</button>
+        </div>
+        <div class="mt-4 flex gap-2">
+          <button v-if="generatedContent" @click="applyGenerated" class="btn-primary text-sm">应用生成内容</button>
+          <button v-if="generatedContent" @click="compareWithCurrent" class="btn-secondary text-sm">对比当前</button>
+        </div>
+      </div>
     </div>
 
-    <div v-else-if="error" class="text-center py-8 text-red-600">
-      {{ error }}
-    </div>
-
-    <div v-else-if="template" class="space-y-6">
-      <!-- Template Info -->
-      <div class="card">
-        <h2 class="text-lg font-semibold mb-4">模板信息</h2>
+    <!-- Compare Modal -->
+    <div v-if="showCompare" class="fixed inset-0 bg-black/50 flex items-center justify-center p-4 z-50">
+      <div class="bg-white rounded-lg max-w-4xl w-full max-h-[90vh] overflow-y-auto p-6">
+        <h3 class="text-lg font-semibold mb-4">版本对比</h3>
         <div class="grid grid-cols-2 gap-4">
-          <div>
-            <label class="label">场景类型</label>
-            <div class="px-3 py-2 bg-gray-100 rounded">
-              {{ formatScenarioType(template.scenarioType) }}
-            </div>
-          </div>
-          <div>
-            <label class="label">当前版本</label>
-            <div class="px-3 py-2 bg-gray-100 rounded">
-              <span v-if="template.activeVersion" class="text-green-600">
-                v{{ template.activeVersion.versionNumber }}
-              </span>
-              <span v-else class="text-gray-400">未激活</span>
-            </div>
-          </div>
+          <div><h4 class="font-medium mb-2">当前版本</h4><pre class="bg-gray-100 p-3 rounded text-xs overflow-auto max-h-96">{{ editContent }}</pre></div>
+          <div><h4 class="font-medium mb-2 text-green-600">AI 生成</h4><pre class="bg-green-50 p-3 rounded text-xs overflow-auto max-h-96">{{ generatedContent }}</pre></div>
         </div>
-      </div>
-
-      <!-- Version List -->
-      <div class="card">
-        <h2 class="text-lg font-semibold mb-4">版本历史</h2>
-        <table class="w-full">
-          <thead>
-            <tr class="border-b">
-              <th class="text-left py-2 px-4">版本号</th>
-              <th class="text-left py-2 px-4">创建时间</th>
-              <th class="text-left py-2 px-4">创建者</th>
-              <th class="text-right py-2 px-4">操作</th>
-            </tr>
-          </thead>
-          <tbody>
-            <tr v-for="version in template.versions" :key="version.id" class="border-b">
-              <td class="py-2 px-4">
-                <span v-if="template.activeVersion?.id === version.id" class="text-green-600 font-medium">
-                  v{{ version.versionNumber }} (当前)
-                </span>
-                <span v-else>v{{ version.versionNumber }}</span>
-              </td>
-              <td class="py-2 px-4 text-gray-600">{{ formatDate(version.createdAt) }}</td>
-              <td class="py-2 px-4">{{ version.createdBy?.name || '-' }}</td>
-              <td class="py-2 px-4 text-right">
-                <button 
-                  v-if="template.activeVersion?.id !== version.id"
-                  @click="activateVersion(version.id)"
-                  class="text-blue-600 hover:text-blue-800"
-                  :disabled="activating"
-                >
-                  激活
-                </button>
-              </td>
-            </tr>
-          </tbody>
-        </table>
-      </div>
-
-      <!-- Create New Version -->
-      <div class="card">
-        <h2 class="text-lg font-semibold mb-4">创建新版本</h2>
-        <div class="space-y-4">
-          <textarea
-            v-model="newVersionContent"
-            rows="10"
-            class="input font-mono text-sm"
-            placeholder="输入 Prompt 内容..."
-          />
-          <div class="flex gap-4">
-            <button 
-              @click="createVersion"
-              class="btn-primary"
-              :disabled="!newVersionContent || creating"
-            >
-              {{ creating ? '创建中...' : '创建版本' }}
-            </button>
-            <button 
-              @click="showGenerateModal = true"
-              class="btn-secondary"
-            >
-              AI 生成
-            </button>
-          </div>
+        <div class="flex justify-end gap-4 mt-4">
+          <button @click="showCompare = false" class="btn-secondary">取消</button>
+          <button @click="applyGenerated" class="btn-primary">应用</button>
         </div>
-      </div>
-    </div>
-  </div>
-
-  <!-- Generate Modal -->
-  <div v-if="showGenerateModal" class="fixed inset-0 bg-black/50 flex items-center justify-center p-4">
-    <div class="bg-white rounded-lg max-w-2xl w-full max-h-[90vh] overflow-y-auto p-6">
-      <h3 class="text-lg font-semibold mb-4">AI 生成 Prompt</h3>
-      <textarea
-        v-model="generateDescription"
-        rows="4"
-        class="input mb-4"
-        placeholder="描述你想要的 Prompt 功能..."
-      />
-      <div class="flex justify-end gap-4">
-        <button @click="showGenerateModal = false" class="btn-secondary">取消</button>
-        <button 
-          @click="generatePrompt" 
-          class="btn-primary"
-          :disabled="!generateDescription || generating"
-        >
-          {{ generating ? '生成中...' : '生成' }}
-        </button>
       </div>
     </div>
   </div>
@@ -132,64 +90,57 @@
 <script setup lang="ts">
 const route = useRoute()
 const id = parseInt(route.params.id as string, 10)
+const { currentTemplate: template, loading, error, fetchTemplate, createVersion, activateVersion, generatePrompt } = usePrompts()
 
-const { currentTemplate: template, loading, error, fetchTemplate, createVersion: createNewVersion, activateVersion: activate, generatePrompt: generate } = usePrompts()
+const editContent = ref('')
+const originalContent = ref('')
+const saving = ref(false)
+const showAIChat = ref(false)
+const chatMessages = ref([{role: 'assistant' as const, content: '你好！我是 Prompt 生成助手。请描述你想要的 Prompt 功能，我会帮你生成。'}])
+const chatInput = ref('')
+const chatting = ref(false)
+const generatedContent = ref('')
+const showCompare = ref(false)
 
-const newVersionContent = ref('')
-const creating = ref(false)
-const activating = ref(false)
-const showGenerateModal = ref(false)
-const generateDescription = ref('')
-const generating = ref(false)
+const hasChanges = computed(() => editContent.value !== originalContent.value)
 
-onMounted(() => {
-  fetchTemplate(id)
+onMounted(async () => {
+  await fetchTemplate(id)
+  if (template.value?.activeVersion?.content) {
+    editContent.value = template.value.activeVersion.content
+    originalContent.value = template.value.activeVersion.content
+  }
 })
 
-async function createVersion() {
-  creating.value = true
+async function save() {
+  if (!hasChanges.value) return
+  saving.value = true
   try {
-    await createNewVersion(id, newVersionContent.value)
-    newVersionContent.value = ''
-  } finally {
-    creating.value = false
-  }
+    await createVersion(id, editContent.value)
+    originalContent.value = editContent.value
+  } finally { saving.value = false }
 }
 
-async function activateVersion(versionId: number) {
-  activating.value = true
-  try {
-    await activate(id, versionId)
-  } finally {
-    activating.value = false
-  }
+async function activateV(versionId: number) {
+  await activateVersion(id, versionId)
 }
 
-async function generatePrompt() {
-  generating.value = true
+async function sendChat() {
+  if (!chatInput.value.trim()) return
+  chatting.value = true
+  chatMessages.value.push({role: 'user', content: chatInput.value})
+  const userMsg = chatInput.value
+  chatInput.value = ''
   try {
-    const result = await generate(generateDescription.value, template.value?.scenarioType || 'scenario_analysis')
-    if (result) {
-      newVersionContent.value = result.generatedContent
-      showGenerateModal.value = false
-      generateDescription.value = ''
+    const result = await generatePrompt(userMsg, template.value?.scenarioType || 'scenario_analysis')
+    if (result?.generatedContent) {
+      generatedContent.value = result.generatedContent
+      chatMessages.value.push({role: 'assistant', content: '已生成 Prompt，请查看右侧按钮操作。'})
     }
-  } finally {
-    generating.value = false
-  }
+  } finally { chatting.value = false }
 }
 
-function formatScenarioType(type: string): string {
-  const map: Record<string, string> = {
-    'scenario_analysis': '场景分析',
-    'sample_generation': '示例生成',
-    'prompt_generation': 'Prompt生成',
-    'flowchart_generation': '流程图生成'
-  }
-  return map[type] || type
-}
-
-function formatDate(date: Date | string): string {
-  return new Date(date).toLocaleString('zh-CN')
-}
+function applyGenerated() { editContent.value = generatedContent.value; showCompare.value = false }
+function compareWithCurrent() { showCompare.value = true }
+function formatDate(d: Date|string) { return new Date(d).toLocaleString('zh-CN') }
 </script>

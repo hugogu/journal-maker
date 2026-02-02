@@ -12,7 +12,21 @@
           </div>
           <div>
             <h2 class="text-lg font-semibold">AI 配置</h2>
-            <p class="text-gray-600 text-sm">配置AI服务连接和Prompt模板</p>
+            <p class="text-gray-600 text-sm">配置AI服务连接参数</p>
+          </div>
+        </div>
+      </NuxtLink>
+      
+      <NuxtLink to="/admin/prompts" class="card hover:shadow-md transition-shadow">
+        <div class="flex items-center gap-4">
+          <div class="w-12 h-12 bg-indigo-100 rounded-lg flex items-center justify-center">
+            <svg class="w-6 h-6 text-indigo-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 10h.01M12 10h.01M16 10h.01M9 16H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-5l-5 5v-5z" />
+            </svg>
+          </div>
+          <div>
+            <h2 class="text-lg font-semibold">Prompt 管理</h2>
+            <p class="text-gray-600 text-sm">管理Prompt模板和版本</p>
           </div>
         </div>
       </NuxtLink>
