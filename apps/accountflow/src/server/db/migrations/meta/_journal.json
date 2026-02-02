@@ -15,6 +15,13 @@
       "when": 1769994846311,
       "tag": "0001_absent_multiple_man",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1770014401838,
+      "tag": "0002_majestic_daimon_hellstrom",
+      "breakpoints": true
     }
   ]
 }
