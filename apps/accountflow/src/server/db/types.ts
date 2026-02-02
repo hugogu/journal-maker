@@ -5,7 +5,6 @@ import type { InferSelectModel, InferInsertModel } from 'drizzle-orm'
 import type {
   companies,
   users,
-  aiConfigs,
   accounts,
   scenarios,
   journalRules,
@@ -30,9 +29,6 @@ export type NewCompany = InferInsertModel<typeof companies>
 
 export type User = InferSelectModel<typeof users>
 export type NewUser = InferInsertModel<typeof users>
-
-export type AIConfig = InferSelectModel<typeof aiConfigs>
-export type NewAIConfig = InferInsertModel<typeof aiConfigs>
 
 export type Account = InferSelectModel<typeof accounts>
 export type NewAccount = InferInsertModel<typeof accounts>

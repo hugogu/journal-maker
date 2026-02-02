@@ -45,19 +45,6 @@ export const users = pgTable('users', {
   index('idx_users_company_id').on(table.companyId),
 ])
 
-// AI Config table
-export const aiConfigs = pgTable('ai_configs', {
-  id: serial('id').primaryKey(),
-  companyId: integer('company_id').references(() => companies.id).notNull().unique(),
-  apiEndpoint: varchar('api_endpoint', { length: 500 }).notNull(),
-  apiKey: varchar('api_key', { length: 500 }).notNull(),
-  model: varchar('model', { length: 100 }).notNull(),
-  systemPrompt: text('system_prompt'),
-  isActive: boolean('is_active').default(true).notNull(),
-  createdAt: timestamp('created_at').defaultNow().notNull(),
-  updatedAt: timestamp('updated_at').defaultNow().notNull(),
-})
-
 // Accounts table (shared)
 export const accounts = pgTable('accounts', {
   id: serial('id').primaryKey(),

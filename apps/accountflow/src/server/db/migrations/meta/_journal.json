@@ -29,6 +29,13 @@
       "when": 1770014401839,
       "tag": "003_init_builtin_prompts",
       "breakpoints": true
+    },
+    {
+      "idx": 4,
+      "version": "7",
+      "when": 1770014401840,
+      "tag": "004_drop_ai_configs",
+      "breakpoints": true
     }
   ]
 }
