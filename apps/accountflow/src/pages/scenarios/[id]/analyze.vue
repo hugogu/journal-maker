@@ -18,16 +18,28 @@
         <div class="flex-1 overflow-y-auto" ref="messagesContainer">
           <div v-for="(message, index) in messages" :key="index" class="mb-4">
             <div :class="message.role === 'user' ? 'user-message' : 'assistant-message'">
-              <div class="flex items-center mb-2">
-                <div class="w-8 h-8 rounded-full flex items-center justify-center text-white text-sm font-medium mr-3"
-                     :class="message.role === 'user' ? 'bg-blue-500' : 'bg-gray-500'">
-                  {{ message.role === 'user' ? '你' : 'AI' }}
+              <div class="flex items-center mb-2 justify-between">
+                <div class="flex items-center">
+                  <div class="w-8 h-8 rounded-full flex items-center justify-center text-white text-sm font-medium mr-3"
+                       :class="message.role === 'user' ? 'bg-blue-500' : 'bg-gray-500'">
+                    {{ message.role === 'user' ? '你' : 'AI' }}
+                  </div>
+                  <div class="font-medium text-sm">
+                    {{ message.role === 'user' ? '用户' : 'AI助手' }}
+                    <span v-if="message.role === 'assistant' && streaming && index === messages.length - 1" 
+                          class="ml-2 inline-block w-2 h-2 bg-blue-500 rounded-full animate-pulse"></span>
+                  </div>
                 </div>
-                <div class="font-medium text-sm">
-                  {{ message.role === 'user' ? '用户' : 'AI助手' }}
-                  <span v-if="message.role === 'assistant' && streaming && index === messages.length - 1" 
-                        class="ml-2 inline-block w-2 h-2 bg-blue-500 rounded-full animate-pulse"></span>
-                </div>
+                <button 
+                  v-if="message.content"
+                  @click="copyMessage(message.content)"
+                  class="text-gray-400 hover:text-gray-600 p-1 rounded hover:bg-gray-100"
+                  title="复制内容"
+                >
+                  <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"></path>
+                  </svg>
+                </button>
               </div>
               <div class="message-content" v-html="renderMarkdown(message.content)"></div>
             </div>
@@ -74,6 +86,32 @@ const scenarioId = route.params.id as string
 interface Message {
   role: string
   content: string
+  timestamp?: number
+}
+
+// Storage key for this scenario's messages
+const getStorageKey = () => `scenario-messages-${scenarioId}`
+
+// Load messages from localStorage
+const loadMessages = (): Message[] => {
+  try {
+    const stored = localStorage.getItem(getStorageKey())
+    if (stored) {
+      return JSON.parse(stored)
+    }
+  } catch (e) {
+    console.error('Failed to load messages from localStorage:', e)
+  }
+  return []
+}
+
+// Save messages to localStorage
+const saveMessages = (messages: Message[]) => {
+  try {
+    localStorage.setItem(getStorageKey(), JSON.stringify(messages))
+  } catch (e) {
+    console.error('Failed to save messages to localStorage:', e)
+  }
 }
 
 // Initialize markdown renderer
@@ -120,6 +158,16 @@ onMounted(async () => {
   if (response.success) {
     scenario.value = response.data
   }
+  
+  // Load messages from localStorage
+  messages.value = loadMessages()
+  
+  // Render mermaid diagrams for loaded messages
+  if (messages.value.length > 0) {
+    await nextTick()
+    renderMermaidDiagrams()
+  }
+  
   loading.value = false
 })
 
@@ -131,9 +179,13 @@ async function sendMessage() {
   if (!inputMessage.value.trim()) return
   
   const userMessage = inputMessage.value
-  messages.value.push({ role: 'user', content: userMessage })
+  const userMessageWithTimestamp = { role: 'user', content: userMessage, timestamp: Date.now() }
+  messages.value.push(userMessageWithTimestamp)
   inputMessage.value = ''
   streaming.value = true
+  
+  // Save to localStorage
+  saveMessages(messages.value)
   
   await nextTick()
   scrollToBottom()
@@ -144,6 +196,7 @@ async function sendMessage() {
     messages.value.push({
       role: 'assistant',
       content: '',
+      timestamp: Date.now(),
     })
     
     // Use fetch with streaming
@@ -193,16 +246,22 @@ async function sendMessage() {
             } else if (data.type === 'complete') {
               // Update final message
               messages.value[assistantMessageIndex].content = data.message
+              // Save to localStorage
+              saveMessages(messages.value)
             } else if (data.type === 'done') {
               streaming.value = false
               scrollToBottom()
               await nextTick()
               renderMermaidDiagrams()
+              // Save final messages to localStorage
+              saveMessages(messages.value)
               return
             } else if (data.type === 'error') {
               messages.value[assistantMessageIndex].content = '抱歉，处理请求时出错：' + data.message
               streaming.value = false
               scrollToBottom()
+              // Save to localStorage
+              saveMessages(messages.value)
               return
             }
           } catch (e) {
@@ -214,14 +273,23 @@ async function sendMessage() {
     
   } catch (e) {
     console.error('Streaming error:', e)
-    messages.value.push({
-      role: 'assistant',
-      content: '抱歉，处理请求时出错。请稍后重试。',
-    })
+    const errorMessage = { role: 'assistant', content: '抱歉，处理请求时出错。请稍后重试。', timestamp: Date.now() }
+    messages.value.push(errorMessage)
     streaming.value = false
+    // Save to localStorage
+    saveMessages(messages.value)
     await nextTick()
     scrollToBottom()
   }
+}
+
+function copyMessage(content: string) {
+  navigator.clipboard.writeText(content).then(() => {
+    alert('内容已复制到剪贴板')
+  }).catch(err => {
+    console.error('Failed to copy:', err)
+    alert('复制失败，请手动复制')
+  })
 }
 
 function renderMermaidDiagrams() {
