@@ -104,7 +104,9 @@ md.renderer.rules.fence = function(tokens, idx, options, env, renderer) {
     try {
       // Generate unique ID for mermaid diagram
       const diagramId = `mermaid-${Date.now()}-${idx}`
-      return `<div class="mermaid-container" id="${diagramId}">${token.content}</div>`
+      // Store content in data attribute to avoid HTML escaping issues
+      const encodedContent = encodeURIComponent(token.content)
+      return `<div class="mermaid-container" id="${diagramId}" data-content="${encodedContent}"></div>`
     } catch (error) {
       console.error('Mermaid rendering error:', error)
       return `<pre><code>${token.content}</code></pre>`
@@ -283,14 +285,9 @@ function renderMermaidDiagrams() {
   const containers = document.querySelectorAll('.mermaid-container')
   containers.forEach(async (container) => {
     try {
-      // Get the raw content - it's in the textContent but may need decoding
-      let content = container.textContent || ''
-      
-      // If content is wrapped in code block, extract it
-      const codeElement = container.querySelector('code')
-      if (codeElement) {
-        content = codeElement.textContent || ''
-      }
+      // Get content from data attribute (avoid HTML escaping issues)
+      const encodedContent = container.getAttribute('data-content')
+      let content = encodedContent ? decodeURIComponent(encodedContent) : ''
       
       if (content.trim()) {
         const diagramId = 'mermaid-' + Math.random().toString(36).substr(2, 9)
@@ -299,7 +296,11 @@ function renderMermaidDiagrams() {
       }
     } catch (error) {
       console.error('Mermaid rendering error:', error)
-      // Keep the original content as pre/code if rendering fails
+      // Show original content if rendering fails
+      const encodedContent = container.getAttribute('data-content')
+      if (encodedContent) {
+        container.innerHTML = `<pre><code>${decodeURIComponent(encodedContent)}</code></pre>`
+      }
     }
   })
 }
