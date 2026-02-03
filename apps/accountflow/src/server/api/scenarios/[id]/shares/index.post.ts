@@ -4,7 +4,8 @@ import { createConversationShare } from '../../../../db/queries/conversation-sha
 export default defineEventHandler(async (event) => {
   try {
     const scenarioId = getRouterParam(event, 'id')
-    const { name } = await readBody(event)
+    const body = await readBody(event).catch(() => ({}))
+    const { name } = body || {}
 
     if (!scenarioId) {
       return {
