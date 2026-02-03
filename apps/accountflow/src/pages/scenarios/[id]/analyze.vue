@@ -228,7 +228,7 @@ const selectedModel = ref('')
 async function loadProviders() {
   loadingProviders.value = true
   try {
-    const response = await $fetch<{ success: boolean; data: any[] }>('/api/ai-providers')
+    const response = await $fetch<{ success: boolean; data: any[] }>('/api/admin/ai-providers')
     if (response.success) {
       aiProviders.value = response.data
     }
