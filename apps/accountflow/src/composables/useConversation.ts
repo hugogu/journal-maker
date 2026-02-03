@@ -85,6 +85,8 @@ export const useConversation = (scenarioId: number) => {
 
   // Delete a message by index and optionally by ID
   const deleteMessage = async (index: number, messageId?: number) => {
+    if (!confirm('确定要删除这条消息吗？')) return
+    
     // Remove from local array first
     messages.value.splice(index, 1)
     
