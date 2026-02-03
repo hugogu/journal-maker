@@ -187,7 +187,7 @@ import ShareManager from '../../../components/conversation/ShareManager.vue'
 
 const route = useRoute()
 const scenarioId = route.params.id as string
-const { messages: conversationMessages, loading: conversationLoading, loadMessages, saveMessage, deleteMessage: deleteMessageFromDB } = useConversation(parseInt(scenarioId, 10))
+const { messages: conversationMessages, loading: conversationLoading, loadMessages, saveMessage } = useConversation(parseInt(scenarioId, 10))
 
 // Create a local writable copy for display (to avoid readonly issues)
 const messages = ref<any[]>([])
@@ -294,10 +294,12 @@ async function deleteMessage(index: number, messageId?: number) {
   // Remove from local array immediately for instant UI update
   messages.value.splice(index, 1)
   
-  // Also delete from database via composable
+  // Delete from database directly to avoid duplicate confirmation
   if (messageId) {
     try {
-      await deleteMessageFromDB(index, messageId)
+      await $fetch(`/api/conversations/${parseInt(scenarioId, 10)}/messages/${messageId}`, {
+        method: 'DELETE'
+      })
     } catch (e) {
       console.error('Failed to delete message from database:', e)
       // Optionally restore the message if database delete fails
