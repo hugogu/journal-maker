@@ -17,12 +17,13 @@ export default defineEventHandler(async (event) => {
     })
     if (!scenario) throw new AppError(404, 'Scenario not found')
     const userId = 1
-    await db.insert(conversationMessages).values({
+    const [userMessageRecord] = await db.insert(conversationMessages).values({
       scenarioId,
       role: 'user',
       content: data.content,
       timestamp: new Date(),
-    })
+    }).returning()
+    
     const allAccounts = await db.query.accounts.findMany({
       where: eq(accounts.companyId, scenario.companyId)
     })
@@ -34,8 +35,13 @@ export default defineEventHandler(async (event) => {
     setHeader(event, 'Cache-Control', 'no-cache, no-transform')
     setHeader(event, 'Connection', 'keep-alive')
     setHeader(event, 'X-Accel-Buffering', 'no')
+    // Disable compression to ensure real-time streaming
+    setHeader(event, 'Content-Encoding', 'identity')
     event._handled = true
     const res = event.node.res
+    
+    // Send user message ID to frontend
+    res.write(`data: ${JSON.stringify({ type: 'user_saved', id: userMessageRecord.id }) }\n\n`)
     let fullMessage = ''
     let aiResponse: any = null
     try {
@@ -58,19 +64,26 @@ export default defineEventHandler(async (event) => {
           fullMessage += chunk
           const responseData = JSON.stringify({ type: 'chunk', content: chunk })
           res.write(`data: ${responseData}\n\n`)
+          // Flush to ensure real-time streaming
+          if (typeof (res as any).flush === 'function') {
+            (res as any).flush()
+          }
         }
       )
       const finalData = JSON.stringify({ type: 'complete', message: aiResponse.message })
       res.write(`data: ${finalData}\n\n`)
-      await db.insert(conversationMessages).values({
+      if (typeof (res as any).flush === 'function') {
+        (res as any).flush()
+      }
+      const [assistantMessageRecord] = await db.insert(conversationMessages).values({
         scenarioId,
         role: 'assistant',
         content: aiResponse.message,
         timestamp: new Date(),
         requestLog: aiResponse.requestLog,
         responseStats: aiResponse.responseStats,
-      })
-      res.write(`data: ${JSON.stringify({ type: 'done' })}\n\n`)
+      }).returning()
+      res.write(`data: ${JSON.stringify({ type: 'done', id: assistantMessageRecord.id }) }\n\n`)
       res.end()
     } catch (error) {
       console.error('Streaming error:', error)

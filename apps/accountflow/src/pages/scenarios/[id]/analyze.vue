@@ -92,7 +92,7 @@
                   </button>
                 </div>
               </div>
-              <div class="message-content markdown-content" v-html="renderMarkdown(message.content)"></div>
+              <div class="message-content markdown-content" v-html="streaming && index === messages.length - 1 && message.role === 'assistant' ? renderStreamingContent(streamingContent) : renderMarkdown(message.content)"></div>
             </div>
           </div>
           <div v-if="streaming" class="text-center text-gray-400 text-sm py-3">
@@ -216,6 +216,7 @@ const loading = ref(true)
 const scenario = ref<any>(null)
 const inputMessage = ref('')
 const streaming = ref(false)
+const streamingContent = ref('')  // Separate ref for streaming content
 const messagesContainer = ref<HTMLElement>()
 
 // AI Provider selection
@@ -304,6 +305,17 @@ function renderMarkdown(content: string): string {
   return md.render(content)
 }
 
+// Simple text rendering for streaming to avoid re-rendering markdown on every chunk
+function renderStreamingContent(content: string): string {
+  // Escape HTML to prevent XSS during streaming
+  const escaped = content
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+  // Preserve line breaks
+  return escaped.replace(/\n/g, '<br>')
+}
+
 async function sendMessage() {
   if (!inputMessage.value.trim()) return
   
@@ -320,8 +332,9 @@ async function sendMessage() {
   scrollToBottom()
   
   try {
-    // Create assistant message for streaming - store direct reference
-    const assistantMessage = { role: 'assistant' as const, content: '' }
+    // Create assistant message for streaming
+    streamingContent.value = ''
+    const assistantMessage: { role: 'assistant'; content: string; id?: number } = { role: 'assistant', content: '' }
     messages.value.push(assistantMessage)
     
     // Use fetch with streaming
@@ -373,35 +386,38 @@ async function sendMessage() {
             if (data.type === 'chunk') {
               // Append chunk content in real-time
               fullContent += data.content
-              assistantMessage.content = fullContent
+              streamingContent.value = fullContent  // Update reactive ref
+              assistantMessage.content = fullContent  // Keep message object in sync
               scrollToBottom()
+            } else if (data.type === 'user_saved') {
+              // Update user message with its database ID
+              const userMessageIndex = messages.value.length - 2  // User message is second to last
+              if (userMessageIndex >= 0 && messages.value[userMessageIndex]) {
+                messages.value[userMessageIndex].id = data.id
+              }
             } else if (data.type === 'complete') {
               // Update final message
               fullContent = data.message
+              streamingContent.value = data.message
               assistantMessage.content = data.message
             } else if (data.type === 'done') {
               streaming.value = false
+              streamingContent.value = ''  // Clear streaming content
+              // Assign the database ID to the assistant message
+              if (data.id) {
+                assistantMessage.id = data.id
+              }
               scrollToBottom()
               // Wait for DOM to fully update before rendering mermaid
               await nextTick()
               setTimeout(() => {
                 renderMermaidDiagrams()
               }, 100)
-              // Save final assistant message to database
-              await saveMessage({
-                role: 'assistant',
-                content: fullContent || assistantMessage.content
-              })
               return
             } else if (data.type === 'error') {
               assistantMessage.content = '抱歉，处理请求时出错：' + data.message
               streaming.value = false
               scrollToBottom()
-              // Save error message to database
-              await saveMessage({
-                role: 'assistant',
-                content: assistantMessage.content
-              })
               return
             }
           } catch (e) {
@@ -416,8 +432,6 @@ async function sendMessage() {
     const errorMessage = { role: 'assistant' as const, content: '抱歉，处理请求时出错。请稍后重试。' }
     messages.value.push(errorMessage)
     streaming.value = false
-    // Save error message to database
-    await saveMessage(errorMessage)
     await nextTick()
     scrollToBottom()
   }
