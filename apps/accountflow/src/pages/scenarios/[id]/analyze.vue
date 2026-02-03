@@ -339,12 +339,10 @@ async function sendMessage() {
   
   const userMessage = inputMessage.value
   const userMessageData = { role: 'user' as const, content: userMessage }
-  // Don't push here - saveMessage will add it via watch sync
+  // Add user message to UI immediately for better UX
+  messages.value.push(userMessageData)
   inputMessage.value = ''
   streaming.value = true
-  
-  // Save to database (this will add to messages via watch)
-  await saveMessage(userMessageData)
   
   await nextTick()
   scrollToBottom()
@@ -426,6 +424,8 @@ async function sendMessage() {
               if (data.id) {
                 assistantMessage.id = data.id
               }
+              // Reload messages from database to ensure consistency
+              await loadMessages()
               scrollToBottom()
               // Wait for DOM to fully update before rendering mermaid
               await nextTick()
