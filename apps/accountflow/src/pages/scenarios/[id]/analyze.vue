@@ -187,7 +187,15 @@ import ShareManager from '../../../components/conversation/ShareManager.vue'
 
 const route = useRoute()
 const scenarioId = route.params.id as string
-const { messages, loading: conversationLoading, loadMessages, saveMessage, deleteMessage } = useConversation(parseInt(scenarioId, 10))
+const { messages: conversationMessages, loading: conversationLoading, loadMessages, saveMessage, deleteMessage } = useConversation(parseInt(scenarioId, 10))
+
+// Create a local writable copy for display (to avoid readonly issues)
+const messages = ref<any[]>([])
+
+// Sync messages when conversation messages change
+watch(conversationMessages, (newMessages) => {
+  messages.value = [...newMessages]
+}, { immediate: true })
 
 // Initialize markdown renderer
 const md = new MarkdownIt({
