@@ -39,19 +39,21 @@
       <div class="space-y-4">
         <div
           v-for="(message, index) in sharedData.messages"
-          :key="index"
-          :class="message.role === 'user' ? 'user-message' : 'assistant-message'"
+          :key="message.id || index"
+          class="mb-4"
         >
-          <div class="flex items-center mb-2">
-            <div class="w-8 h-8 rounded-full flex items-center justify-center text-white text-sm font-medium mr-3"
-                 :class="message.role === 'user' ? 'bg-blue-500' : 'bg-gray-500'">
-              {{ message.role === 'user' ? '用户' : 'AI' }}
+          <div :class="message.role === 'user' ? 'user-message' : 'assistant-message'">
+            <div class="flex items-center mb-2">
+              <div class="w-8 h-8 rounded-full flex items-center justify-center text-white text-sm font-medium mr-3"
+                   :class="message.role === 'user' ? 'bg-blue-500' : 'bg-gray-500'">
+                {{ message.role === 'user' ? '你' : 'AI' }}
+              </div>
+              <div class="font-medium text-sm">
+                {{ message.role === 'user' ? '用户' : 'AI助手' }}
+              </div>
             </div>
-            <div class="text-sm text-gray-500">
-              {{ formatDate(message.timestamp) }}
-            </div>
+            <div class="message-content markdown-content" v-html="renderMarkdown(message.content)"></div>
           </div>
-          <div class="message-content markdown-content" v-html="renderMarkdown(message.content)"></div>
         </div>
       </div>
     </div>
@@ -174,22 +176,14 @@ function renderMermaidDiagrams() {
 
 <style scoped>
 .user-message {
-  @apply bg-blue-50 border-l-4 border-blue-500 p-4 rounded-r-lg;
+  @apply bg-blue-50 border-l-4 border-blue-500 p-4 rounded-r-lg shadow-sm;
 }
 
 .assistant-message {
-  @apply bg-gray-50 border-l-4 border-gray-400 p-4 rounded-r-lg;
+  @apply bg-gray-50 border-l-4 border-gray-400 p-4 rounded-r-lg shadow-sm;
 }
 
 .message-content {
   @apply text-sm leading-relaxed text-gray-800;
-}
-
-.user-message {
-  @apply bg-blue-50 border-l-4 border-blue-500 p-4 rounded-r-lg;
-}
-
-.assistant-message {
-  @apply bg-gray-50 border-l-4 border-gray-400 p-4 rounded-r-lg;
 }
 </style>
