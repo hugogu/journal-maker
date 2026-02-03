@@ -39,16 +39,38 @@
                           class="ml-2 inline-block w-2 h-2 bg-blue-500 rounded-full animate-pulse"></span>
                   </div>
                 </div>
-                <button 
-                  v-if="message.content"
-                  @click="copyMessage(message.content)"
-                  class="text-gray-400 hover:text-gray-600 p-1 rounded hover:bg-gray-100"
-                  title="复制内容"
-                >
-                  <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"></path>
-                  </svg>
-                </button>
+                <div class="flex items-center gap-1">
+                  <button 
+                    v-if="message.content"
+                    @click="copyMessage(message.content)"
+                    class="text-gray-400 hover:text-gray-600 p-1 rounded hover:bg-gray-100"
+                    title="复制内容"
+                  >
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"></path>
+                    </svg>
+                  </button>
+                  <button
+                    v-if="message.role === 'assistant' && message.id"
+                    @click="showLog(message.id)"
+                    class="text-gray-400 hover:text-blue-600 p-1 rounded hover:bg-blue-50"
+                    title="查看请求日志"
+                  >
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
+                    </svg>
+                  </button>
+                  <button
+                    v-if="message.role === 'assistant' && message.id"
+                    @click="showStats(message.id)"
+                    class="text-gray-400 hover:text-green-600 p-1 rounded hover:bg-green-50"
+                    title="查看响应统计"
+                  >
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"></path>
+                    </svg>
+                  </button>
+                </div>
               </div>
               <div class="message-content" v-html="renderMarkdown(message.content)"></div>
             </div>
@@ -80,6 +102,21 @@
         </form>
       </div>
     </div>
+    <!-- Log/Stats Modal -->
+    <div v-if="showLogModal || showStatsModal" class="fixed inset-0 bg-black/50 flex items-center justify-center p-4 z-50">
+      <div class="bg-white rounded-lg max-w-2xl w-full max-h-[80vh] overflow-hidden">
+        <RequestLogViewer
+          v-if="showLogModal && selectedMessageId"
+          :message-id="selectedMessageId"
+          @close="closeModals"
+        />
+        <ResponseStatsViewer
+          v-if="showStatsModal && selectedMessageId"
+          :message-id="selectedMessageId"
+          @close="closeModals"
+        />
+      </div>
+    </div>
   </div>
 </template>
 
@@ -89,6 +126,8 @@ import MarkdownIt from 'markdown-it'
 import mermaid from 'mermaid'
 import { useRoute } from 'vue-router'
 import ProviderModelSelector from '../../../components/ai-config/ProviderModelSelector.vue'
+import RequestLogViewer from '../../../components/conversation/RequestLogViewer.vue'
+import ResponseStatsViewer from '../../../components/conversation/ResponseStatsViewer.vue'
 
 const route = useRoute()
 const scenarioId = route.params.id as string
@@ -157,6 +196,29 @@ async function loadProviders() {
 function onProviderChange(providerId: string, model: string) {
   selectedProviderId.value = providerId
   selectedModel.value = model
+}
+
+// Log/Stats modal state
+const showLogModal = ref(false)
+const showStatsModal = ref(false)
+const selectedMessageId = ref<number | null>(null)
+
+function showLog(messageId: number) {
+  selectedMessageId.value = messageId
+  showLogModal.value = true
+  showStatsModal.value = false
+}
+
+function showStats(messageId: number) {
+  selectedMessageId.value = messageId
+  showStatsModal.value = true
+  showLogModal.value = false
+}
+
+function closeModals() {
+  showLogModal.value = false
+  showStatsModal.value = false
+  selectedMessageId.value = null
 }
 
 // Watch messages and render mermaid when they change
