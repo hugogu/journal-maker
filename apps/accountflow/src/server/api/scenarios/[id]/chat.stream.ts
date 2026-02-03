@@ -1,5 +1,5 @@
 import { db } from '../../../db'
-import { conversations, scenarios, accounts } from '../../../db/schema'
+import { conversationMessages, scenarios, accounts } from '../../../db/schema'
 import { sendMessageSchema } from '../../../utils/schemas'
 import { AppError, handleError } from '../../../utils/error'
 import { aiService } from '../../../utils/ai-service'
@@ -17,11 +17,11 @@ export default defineEventHandler(async (event) => {
     })
     if (!scenario) throw new AppError(404, 'Scenario not found')
     const userId = 1
-    await db.insert(conversations).values({
+    await db.insert(conversationMessages).values({
       scenarioId,
-      userId,
       role: 'user',
       content: data.content,
+      timestamp: new Date(),
     })
     const allAccounts = await db.query.accounts.findMany({
       where: eq(accounts.companyId, scenario.companyId)
@@ -62,12 +62,13 @@ export default defineEventHandler(async (event) => {
       )
       const finalData = JSON.stringify({ type: 'complete', message: aiResponse.message })
       res.write(`data: ${finalData}\n\n`)
-      await db.insert(conversations).values({
+      await db.insert(conversationMessages).values({
         scenarioId,
-        userId: 1,
         role: 'assistant',
         content: aiResponse.message,
-        structuredData: null,
+        timestamp: new Date(),
+        requestLog: aiResponse.requestLog,
+        responseStats: aiResponse.responseStats,
       })
       res.write(`data: ${JSON.stringify({ type: 'done' })}\n\n`)
       res.end()
