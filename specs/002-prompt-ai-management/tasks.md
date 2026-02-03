@@ -115,15 +115,15 @@
 ### Implementation for User Story 6
 
 - [X] T042 Create ConversationMessages table queries in `src/server/db/queries/conversation-messages.ts`
-- [ ] T043 Create conversation migration API in `src/server/api/conversations/migrate-from-localstorage.post.ts`
+- [~] T043 ~~Create conversation migration API~~ (Skipped - data dismissed)
 - [X] T044 Create conversation messages API in `src/server/api/scenarios/[id]/conversations/index.get.ts`
 - [X] T045 Create conversation messages API in `src/server/api/scenarios/[id]/conversations/messages.post.ts`
 - [X] T046 Update chat streaming API in `src/server/api/scenarios/[id]/chat.stream.ts` to persist to DB
 - [X] T047 Update chat post API in `src/server/api/scenarios/[id]/chat.post.ts` to persist to DB
 - [X] T048 Update conversation composable in `src/composables/useConversation.ts` to use database
-- [ ] T049 Create localStorage migration composable in `src/composables/useLocalStorageMigration.ts`
-- [ ] T050 Add migration prompt UI in `src/components/conversation/LocalStorageMigration.vue`
-- [ ] T051 Update analyze page in `src/pages/scenarios/[id]/analyze.vue` to load from database
+- [~] T049 ~~Create localStorage migration composable~~ (Skipped - data dismissed)
+- [~] T050 ~~Add migration prompt UI~~ (Skipped - data dismissed)
+- [X] T051 Update analyze page in `src/pages/scenarios/[id]/analyze.vue` to load from database
 
 **Checkpoint**: User Story 6 complete - conversation persistence migrated to database
 
