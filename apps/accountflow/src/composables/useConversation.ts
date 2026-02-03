@@ -83,6 +83,26 @@ export const useConversation = (scenarioId: number) => {
     }
   }
 
+  // Delete a message by index and optionally by ID
+  const deleteMessage = async (index: number, messageId?: number) => {
+    if (!confirm('确定要删除这条消息吗？')) return
+    
+    // Remove from local array first
+    messages.value.splice(index, 1)
+    
+    // If message has an ID, delete from database
+    if (messageId) {
+      try {
+        await $fetch(`/api/conversations/${scenarioId}/messages/${messageId}`, {
+          method: 'DELETE'
+        })
+      } catch (e) {
+        console.error('Failed to delete message:', e)
+        throw e
+      }
+    }
+  }
+
   // Clear all messages
   const clearMessages = async () => {
     messages.value = []
@@ -97,6 +117,7 @@ export const useConversation = (scenarioId: number) => {
     error: readonly(error),
     loadMessages,
     saveMessage,
+    deleteMessage,
     clearMessages
   }
 }

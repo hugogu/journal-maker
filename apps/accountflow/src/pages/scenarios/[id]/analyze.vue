@@ -92,7 +92,17 @@
                   </button>
                 </div>
               </div>
-              <div class="message-content markdown-content" v-html="renderMarkdown(message.content)"></div>
+              <div 
+                v-if="streaming && index === messages.length - 1 && message.role === 'assistant'"
+                class="message-content markdown-content" 
+                :key="`streaming-${streamingContent.length}`"
+                v-html="renderStreamingContent(streamingContent)"
+              ></div>
+              <div 
+                v-else
+                class="message-content markdown-content" 
+                v-html="renderMarkdown(message.content)"
+              ></div>
             </div>
           </div>
           <div v-if="streaming" class="text-center text-gray-400 text-sm py-3">
@@ -168,6 +178,7 @@ import { ref, onMounted, nextTick, watch } from 'vue'
 import MarkdownIt from 'markdown-it'
 import mermaid from 'mermaid'
 import { useRoute } from 'vue-router'
+import { useConversation } from '../../../composables/useConversation'
 import ProviderModelSelector from '../../../components/ai-config/ProviderModelSelector.vue'
 import RequestLogViewer from '../../../components/conversation/RequestLogViewer.vue'
 import ResponseStatsViewer from '../../../components/conversation/ResponseStatsViewer.vue'
@@ -176,7 +187,15 @@ import ShareManager from '../../../components/conversation/ShareManager.vue'
 
 const route = useRoute()
 const scenarioId = route.params.id as string
-const { messages, loading: conversationLoading, loadMessages, saveMessage } = useConversation(parseInt(scenarioId, 10))
+const { messages: conversationMessages, loading: conversationLoading, loadMessages, saveMessage } = useConversation(parseInt(scenarioId, 10))
+
+// Create a local writable copy for display (to avoid readonly issues)
+const messages = ref<any[]>([])
+
+// Sync messages when conversation messages change
+watch(conversationMessages, (newMessages) => {
+  messages.value = [...newMessages]
+}, { immediate: true })
 
 // Initialize markdown renderer
 const md = new MarkdownIt({
@@ -215,6 +234,7 @@ const loading = ref(true)
 const scenario = ref<any>(null)
 const inputMessage = ref('')
 const streaming = ref(false)
+const streamingContent = ref('')  // Separate ref for streaming content
 const messagesContainer = ref<HTMLElement>()
 
 // AI Provider selection
@@ -227,7 +247,7 @@ const selectedModel = ref('')
 async function loadProviders() {
   loadingProviders.value = true
   try {
-    const response = await $fetch<{ success: boolean; data: any[] }>('/api/ai-providers')
+    const response = await $fetch<{ success: boolean; data: any[] }>('/api/admin/ai-providers')
     if (response.success) {
       aiProviders.value = response.data
     }
@@ -267,6 +287,27 @@ function closeModals() {
   selectedMessageId.value = null
 }
 
+// Local delete function to ensure UI updates immediately
+async function deleteMessage(index: number, messageId?: number) {
+  if (!confirm('确定要删除这条消息吗？')) return
+  
+  // Remove from local array immediately for instant UI update
+  messages.value.splice(index, 1)
+  
+  // Delete from database directly to avoid duplicate confirmation
+  if (messageId) {
+    try {
+      await $fetch(`/api/conversations/${parseInt(scenarioId, 10)}/messages/${messageId}`, {
+        method: 'DELETE'
+      })
+    } catch (e) {
+      console.error('Failed to delete message from database:', e)
+      // Optionally restore the message if database delete fails
+      // This could be enhanced with proper error handling
+    }
+  }
+}
+
 // Watch messages and render mermaid when they change
 watch(() => messages.value.length, async (newLength, oldLength) => {
   if (newLength > 0 && newLength !== oldLength) {
@@ -303,24 +344,34 @@ function renderMarkdown(content: string): string {
   return md.render(content)
 }
 
+// Simple text rendering for streaming to avoid re-rendering markdown on every chunk
+function renderStreamingContent(content: string): string {
+  // Escape HTML to prevent XSS during streaming
+  const escaped = content
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+  // Preserve line breaks
+  return escaped.replace(/\n/g, '<br>')
+}
+
 async function sendMessage() {
   if (!inputMessage.value.trim()) return
   
   const userMessage = inputMessage.value
   const userMessageData = { role: 'user' as const, content: userMessage }
+  // Add user message to UI immediately for better UX
   messages.value.push(userMessageData)
   inputMessage.value = ''
   streaming.value = true
-  
-  // Save to database
-  await saveMessage(userMessageData)
   
   await nextTick()
   scrollToBottom()
   
   try {
-    // Create assistant message for streaming - store direct reference
-    const assistantMessage = { role: 'assistant' as const, content: '' }
+    // Create assistant message for streaming
+    streamingContent.value = ''
+    const assistantMessage: { role: 'assistant'; content: string; id?: number } = { role: 'assistant', content: '' }
     messages.value.push(assistantMessage)
     
     // Use fetch with streaming
@@ -372,35 +423,56 @@ async function sendMessage() {
             if (data.type === 'chunk') {
               // Append chunk content in real-time
               fullContent += data.content
-              assistantMessage.content = fullContent
+              streamingContent.value = fullContent  // Update reactive ref
+              console.log('Chunk received, streamingContent length:', streamingContent.value.length)
+              assistantMessage.content = fullContent  // Keep message object in sync
               scrollToBottom()
+            } else if (data.type === 'user_saved') {
+              // Update user message with its database ID
+              const userMessageIndex = messages.value.length - 2  // User message is second to last
+              if (userMessageIndex >= 0 && messages.value[userMessageIndex]) {
+                messages.value[userMessageIndex].id = data.id
+              }
             } else if (data.type === 'complete') {
               // Update final message
               fullContent = data.message
+              streamingContent.value = data.message
               assistantMessage.content = data.message
             } else if (data.type === 'done') {
               streaming.value = false
+              streamingContent.value = ''  // Clear streaming content
+              // Assign the database ID to the assistant message
+              if (data.id) {
+                assistantMessage.id = data.id
+              }
+              // Reload messages from database to ensure consistency
+              await loadMessages()
               scrollToBottom()
               // Wait for DOM to fully update before rendering mermaid
               await nextTick()
               setTimeout(() => {
                 renderMermaidDiagrams()
               }, 100)
-              // Save final assistant message to database
-              await saveMessage({
-                role: 'assistant',
-                content: fullContent || assistantMessage.content
-              })
               return
             } else if (data.type === 'error') {
-              assistantMessage.content = '抱歉，处理请求时出错：' + data.message
+              // Enhanced error handling for SSE errors
+              let errorContent = '抱歉，处理请求时出错：' + data.message
+              
+              // Add technical details if available
+              if (data.cause) {
+                errorContent += `\n\n**技术详情:**\n\`${data.cause}\``
+              }
+              
+              // Add suggestions based on error type
+              if (data.message?.includes('fetch failed') || data.message?.includes('Connect Timeout')) {
+                errorContent += '\n\n**建议:** 检查网络连接或稍后重试'
+              } else if (data.message?.includes('API')) {
+                errorContent += '\n\n**建议:** 检查 AI 服务配置'
+              }
+              
+              assistantMessage.content = errorContent
               streaming.value = false
               scrollToBottom()
-              // Save error message to database
-              await saveMessage({
-                role: 'assistant',
-                content: assistantMessage.content
-              })
               return
             }
           } catch (e) {
@@ -412,11 +484,50 @@ async function sendMessage() {
     
   } catch (e) {
     console.error('Streaming error:', e)
-    const errorMessage = { role: 'assistant' as const, content: '抱歉，处理请求时出错。请稍后重试。' }
-    messages.value.push(errorMessage)
+    
+    // Extract detailed error information
+    let errorMessage = '抱歉，处理请求时出错。请稍后重试。'
+    let technicalDetails = ''
+    
+    if (e instanceof Error) {
+      technicalDetails = e.message
+      
+      // Check for specific network errors
+      if (e.message.includes('fetch failed') || e.message.includes('Connect Timeout Error')) {
+        errorMessage = '网络连接失败，无法访问 AI 服务。请检查网络连接或稍后重试。'
+        
+        // Extract timeout info if available
+        const timeoutMatch = e.message.match(/timeout: (\d+)ms/)
+        if (timeoutMatch) {
+          technicalDetails += ` (连接超时: ${timeoutMatch[1]}ms)`
+        }
+        
+        // Extract target address if available
+        const addressMatch = e.message.match(/attempted address: ([^,]+)/)
+        if (addressMatch) {
+          technicalDetails += ` (目标地址: ${addressMatch[1]})`
+        }
+      } else if (e.message.includes('ENOTFOUND') || e.message.includes('ECONNREFUSED')) {
+        errorMessage = '无法连接到 AI 服务地址，请检查服务配置。'
+      } else if (e.message.includes('status')) {
+        const statusMatch = e.message.match(/status (\d+)/)
+        if (statusMatch) {
+          errorMessage = `AI 服务返回错误状态码: ${statusMatch[1]}`
+        }
+      }
+    }
+    
+    // Create detailed error message
+    const errorContent = errorMessage + 
+      (technicalDetails ? `\n\n**技术详情:**\n\`${technicalDetails}\`` : '') +
+      '\n\n**建议解决方案:**\n' +
+      '1. 检查网络连接\n' +
+      '2. 稍后重试\n' +
+      '3. 联系管理员检查 AI 服务配置'
+    
+    const errorResponse = { role: 'assistant' as const, content: errorContent }
+    messages.value.push(errorResponse)
     streaming.value = false
-    // Save error message to database
-    await saveMessage(errorMessage)
     await nextTick()
     scrollToBottom()
   }
@@ -487,24 +598,6 @@ function renderMermaidDiagrams() {
 function scrollToBottom() {
   if (messagesContainer.value) {
     messagesContainer.value.scrollTop = messagesContainer.value.scrollHeight
-  }
-}
-
-async function deleteMessage(index: number, messageId?: number) {
-  if (!confirm('确定要删除这条消息吗？')) return
-  
-  // Remove from local array
-  messages.value.splice(index, 1)
-  
-  // If message has an ID, delete from database
-  if (messageId) {
-    try {
-      await $fetch(`/api/conversations/${scenarioId}/messages/${messageId}`, {
-        method: 'DELETE'
-      })
-    } catch (e) {
-      console.error('Failed to delete message:', e)
-    }
   }
 }
 </script>
