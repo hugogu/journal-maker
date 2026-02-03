@@ -92,7 +92,7 @@
                   </button>
                 </div>
               </div>
-              <div class="message-content markdown-content" v-html="streaming && index === messages.length - 1 && message.role === 'assistant' ? renderStreamingContent(streamingContent) : renderMarkdown(message.content)"></div>
+              <div class="message-content markdown-content" v-html="(streaming && index === messages.length - 1 && message.role === 'assistant') ? renderStreamingContent(streamingContent) : renderMarkdown(message.content)"></div>
             </div>
           </div>
           <div v-if="streaming" class="text-center text-gray-400 text-sm py-3">
@@ -387,6 +387,7 @@ async function sendMessage() {
               // Append chunk content in real-time
               fullContent += data.content
               streamingContent.value = fullContent  // Update reactive ref
+              console.log('Chunk received, streamingContent length:', streamingContent.value.length)
               assistantMessage.content = fullContent  // Keep message object in sync
               scrollToBottom()
             } else if (data.type === 'user_saved') {
