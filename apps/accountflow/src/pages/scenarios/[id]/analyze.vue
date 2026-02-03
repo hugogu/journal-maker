@@ -187,7 +187,7 @@ import ShareManager from '../../../components/conversation/ShareManager.vue'
 
 const route = useRoute()
 const scenarioId = route.params.id as string
-const { messages: conversationMessages, loading: conversationLoading, loadMessages, saveMessage, deleteMessage } = useConversation(parseInt(scenarioId, 10))
+const { messages: conversationMessages, loading: conversationLoading, loadMessages, saveMessage, deleteMessage: deleteMessageFromDB } = useConversation(parseInt(scenarioId, 10))
 
 // Create a local writable copy for display (to avoid readonly issues)
 const messages = ref<any[]>([])
@@ -285,6 +285,25 @@ function closeModals() {
   showLogModal.value = false
   showStatsModal.value = false
   selectedMessageId.value = null
+}
+
+// Local delete function to ensure UI updates immediately
+async function deleteMessage(index: number, messageId?: number) {
+  if (!confirm('确定要删除这条消息吗？')) return
+  
+  // Remove from local array immediately for instant UI update
+  messages.value.splice(index, 1)
+  
+  // Also delete from database via composable
+  if (messageId) {
+    try {
+      await deleteMessageFromDB(index, messageId)
+    } catch (e) {
+      console.error('Failed to delete message from database:', e)
+      // Optionally restore the message if database delete fails
+      // This could be enhanced with proper error handling
+    }
+  }
 }
 
 // Watch messages and render mermaid when they change
