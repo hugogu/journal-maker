@@ -1,5 +1,6 @@
 import { defineEventHandler, getRouterParam } from 'h3'
-import { getConversationShareByToken, getConversationMessages } from '../../../db/queries'
+import { getConversationShareByToken } from '../../../db/queries/conversation-shares'
+import { getConversationMessages } from '../../../db/queries/conversations'
 import { db } from '../../../db'
 import { scenarios } from '../../../db/schema'
 import { eq } from 'drizzle-orm'
