@@ -1,7 +1,14 @@
 import { defineEventHandler, getRouterParam } from 'h3'
-import { getConversationShareByToken } from '../../../db/queries/conversation-shares'
-import { getConversationMessages } from '../../../db/queries/conversations'
-import { getScenario } from '../../../db/queries/scenarios'
+import { getConversationShareByToken, getConversationMessages } from '../../../db/queries'
+import { db } from '../../../db'
+import { scenarios } from '../../../db/schema'
+import { eq } from 'drizzle-orm'
+
+async function getScenario(id: number) {
+  return db.query.scenarios.findFirst({
+    where: eq(scenarios.id, id)
+  })
+}
 
 export default defineEventHandler(async (event) => {
   try {
