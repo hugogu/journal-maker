@@ -59,9 +59,10 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted } from 'vue'
+import { ref, onMounted, nextTick } from 'vue'
 import { useRoute } from 'vue-router'
 import MarkdownIt from 'markdown-it'
+import mermaid from 'mermaid'
 
 const route = useRoute()
 const token = route.params.token as string
@@ -76,6 +77,24 @@ const md = new MarkdownIt({
   typographer: true
 })
 
+// Custom renderer for mermaid diagrams
+const defaultRender = md.renderer.rules.fence || function(tokens, idx, options, env, renderer) {
+  return renderer.renderToken(tokens, idx, options)
+}
+
+md.renderer.rules.fence = function(tokens, idx, options, env, renderer) {
+  const token = tokens[idx]
+  const info = token.info ? token.info.trim() : ''
+  
+  if (info === 'mermaid') {
+    const diagramId = `mermaid-${Date.now()}-${idx}`
+    const encodedContent = encodeURIComponent(token.content)
+    return `<div class="mermaid-container" id="${diagramId}" data-content="${encodedContent}"></div>`
+  }
+  
+  return defaultRender(tokens, idx, options, env, renderer)
+}
+
 onMounted(async () => {
   try {
     const response = await fetch(`/api/shares/${token}`)
@@ -84,6 +103,11 @@ onMounted(async () => {
     
     if (data.success && data.data) {
       sharedData.value = data.data
+      // Render mermaid diagrams after data loads
+      await nextTick()
+      setTimeout(() => {
+        renderMermaidDiagrams()
+      }, 100)
     } else {
       error.value = typeof data.error === 'string' ? data.error : '加载失败'
     }
@@ -101,6 +125,43 @@ function renderMarkdown(content: string): string {
 
 function formatDate(dateStr: string): string {
   return new Date(dateStr).toLocaleString('zh-CN')
+}
+
+function renderMermaidDiagrams() {
+  mermaid.initialize({
+    startOnLoad: false,
+    theme: 'default',
+    securityLevel: 'loose',
+    flowchart: {
+      useMaxWidth: true,
+      htmlLabels: true,
+      curve: 'basis'
+    }
+  })
+  
+  const containers = document.querySelectorAll('.mermaid-container')
+  console.log(`Found ${containers.length} mermaid containers`)
+  
+  containers.forEach(async (container, index) => {
+    try {
+      const encodedContent = container.getAttribute('data-content')
+      if (!encodedContent) return
+      
+      const content = decodeURIComponent(encodedContent)
+      if (!content.trim()) return
+      
+      const diagramId = `mermaid-${Date.now()}-${index}`
+      const { svg } = await mermaid.render(diagramId, content.trim())
+      container.innerHTML = svg
+      console.log(`Diagram ${diagramId} rendered successfully`)
+    } catch (error) {
+      console.error(`Mermaid rendering error for container ${index}:`, error)
+      const encodedContent = container.getAttribute('data-content')
+      if (encodedContent) {
+        container.innerHTML = `<div class="text-red-500 text-sm">图表渲染失败</div><pre class="bg-gray-100 p-2 mt-2 text-xs overflow-x-auto"><code>${decodeURIComponent(encodedContent)}</code></pre>`
+      }
+    }
+  })
 }
 </script>
 
@@ -131,5 +192,14 @@ function formatDate(dateStr: string): string {
 
 .message-content :deep(code) {
   @apply bg-gray-100 px-1 py-0.5 rounded text-sm;
+}
+
+/* Mermaid container styles */
+.message-content :deep(.mermaid-container) {
+  @apply bg-white border border-gray-200 rounded-lg p-4 mb-4 overflow-x-auto;
+}
+
+.message-content :deep(.mermaid-container svg) {
+  @apply max-w-full;
 }
 </style>
