@@ -85,7 +85,7 @@ onMounted(async () => {
     if (data.success && data.data) {
       sharedData.value = data.data
     } else {
-      error.value = data.error || '加载失败'
+      error.value = typeof data.error === 'string' ? data.error : '加载失败'
     }
   } catch (e) {
     console.error('Share page error:', e)
