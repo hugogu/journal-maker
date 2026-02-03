@@ -187,65 +187,78 @@ export class AIService {
   }
 
   /**
-   * Build system prompt with all context
+   * Build system prompt with all context - supports flexible variable substitution
    */
   private async buildSystemPrompt(context: AIContext): Promise<string> {
-    const company = await this.getCompanyContext()
-    const accountsList = context.accounts.map(a => `${a.code} ${a.name} (${a.type})`).join(', ')
-    
-    // Try to get active prompt template from database
-    const activePromptContent = await getActivePromptContent('scenario_analysis')
-    
-    if (activePromptContent) {
-      // Replace variables in the prompt template
-      let prompt = activePromptContent
-        .replace(/\{\{accounts\}\}/g, accountsList)
-        .replace(/\{\{companyName\}\}/g, company.name)
-        .replace(/\{\{businessModel\}\}/g, company.businessModel || '')
-        .replace(/\{\{industry\}\}/g, company.industry || '')
-        .replace(/\{\{accountingPreference\}\}/g, company.accountingPreference || '')
-      
-      if (context.currentScenario) {
-        prompt = prompt
-          .replace(/\{\{scenarioName\}\}/g, context.currentScenario.name)
-          .replace(/\{\{scenarioDescription\}\}/g, context.currentScenario.description || '')
-      }
-      
-      return prompt
-    }
-    
-    throw new Error('No active prompt template found for scenario_analysis. Please configure one in Admin > Prompts.')
+    return this.buildPromptWithContext(context, 'scenario_analysis')
   }
 
   /**
-   * Build streaming system prompt
+   * Build streaming system prompt - supports flexible variable substitution
    */
   private async buildStreamSystemPrompt(context: AIContext): Promise<string> {
+    return this.buildPromptWithContext(context, 'scenario_analysis')
+  }
+
+  /**
+   * Generic prompt builder with comprehensive variable substitution
+   */
+  private async buildPromptWithContext(context: AIContext, promptType: string): Promise<string> {
     const company = await this.getCompanyContext()
-    const accountsList = context.accounts.map(a => `${a.code} ${a.name} (${a.type})`).join(', ')
     
     // Try to get active prompt template from database
-    const activePromptContent = await getActivePromptContent('scenario_analysis')
+    // Cast to any to allow flexible prompt types
+    const activePromptContent = await getActivePromptContent(promptType as any)
     
-    if (activePromptContent) {
-      // Replace variables in the prompt template
-      let prompt = activePromptContent
-        .replace(/\{\{accounts\}\}/g, accountsList)
-        .replace(/\{\{companyName\}\}/g, company.name)
-        .replace(/\{\{businessModel\}\}/g, company.businessModel || '')
-        .replace(/\{\{industry\}\}/g, company.industry || '')
-        .replace(/\{\{accountingPreference\}\}/g, company.accountingPreference || '')
-      
-      if (context.currentScenario) {
-        prompt = prompt
-          .replace(/\{\{scenarioName\}\}/g, context.currentScenario.name)
-          .replace(/\{\{scenarioDescription\}\}/g, context.currentScenario.description || '')
-      }
-      
-      return prompt
+    if (!activePromptContent) {
+      throw new Error(`No active prompt template found for ${promptType}. Please configure one in Admin > Prompts.`)
     }
     
-    throw new Error('No active prompt template found for scenario_analysis. Please configure one in Admin > Prompts.')
+    // Build accounts list in multiple formats for flexibility
+    const accountsList = context.accounts.map(a => `${a.code} ${a.name} (${a.type})`).join(', ')
+    const accountsListMultiline = context.accounts
+      .map(a => `- ${a.code} ${a.name} (${a.type})`)
+      .join('\n')
+    const accountsJson = JSON.stringify(context.accounts.map(a => ({
+      code: a.code,
+      name: a.name,
+      type: a.type
+    })))
+    
+    // Build company context summary
+    const companyContextParts = [
+      company.name,
+      company.businessModel,
+      company.industry,
+      company.accountingPreference
+    ].filter(Boolean).join(' | ')
+    
+    // Replace all variables in the prompt template
+    let prompt = activePromptContent
+      // Accounts variables
+      .replace(/\{\{accounts\}\}/g, accountsList)
+      .replace(/\{\{accountsList\}\}/g, accountsListMultiline)
+      .replace(/\{\{accountsJson\}\}/g, accountsJson)
+      // Company variables
+      .replace(/\{\{companyName\}\}/g, company.name)
+      .replace(/\{\{businessModel\}\}/g, company.businessModel || '')
+      .replace(/\{\{industry\}\}/g, company.industry || '')
+      .replace(/\{\{accountingPreference\}\}/g, company.accountingPreference || '')
+      .replace(/\{\{companyContext\}\}/g, companyContextParts)
+    
+    // Scenario variables (if available)
+    if (context.currentScenario) {
+      prompt = prompt
+        .replace(/\{\{scenarioName\}\}/g, context.currentScenario.name)
+        .replace(/\{\{scenarioDescription\}\}/g, context.currentScenario.description || '')
+    } else {
+      // Remove scenario-related sections if no scenario
+      prompt = prompt
+        .replace(/\{\{scenarioName\}\}/g, '')
+        .replace(/\{\{scenarioDescription\}\}/g, '')
+    }
+    
+    return prompt
   }
 
   /**
