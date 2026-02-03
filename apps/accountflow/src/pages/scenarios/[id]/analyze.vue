@@ -8,15 +8,6 @@
     </div>
     
     <div v-else class="grid grid-cols-1 gap-6 h-full">
-      <!-- AI Provider Selector -->
-      <div class="flex justify-end">
-        <ProviderModelSelector
-          :providers="aiProviders"
-          :loading="loadingProviders"
-          @change="onProviderChange"
-        />
-      </div>
-      
       <!-- Chat Section -->
       <div class="card flex flex-col h-full">
         <div class="border-b pb-4 mb-4">
@@ -25,7 +16,7 @@
               <h2 class="text-lg font-semibold">{{ scenario?.name }}</h2>
               <p class="text-gray-600 text-sm">{{ scenario?.description }}</p>
             </div>
-            <div class="flex items-center gap-2">
+            <div class="flex items-center gap-1">
               <ExportButton
                 :scenario-id="parseInt(scenarioId, 10)"
                 :messages="messages"
@@ -33,12 +24,12 @@
               />
               <button
                 @click="showShareModal = true"
-                class="btn-secondary text-sm flex items-center gap-2"
+                class="text-gray-500 hover:text-gray-700 p-2 rounded hover:bg-gray-100"
+                title="分享对话"
               >
-                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.368 2.684 3 3 0 00-5.368-2.684z"></path>
                 </svg>
-                分享
               </button>
             </div>
           </div>
@@ -90,6 +81,15 @@
                       <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"></path>
                     </svg>
                   </button>
+                  <button
+                    @click="deleteMessage(index, message.id)"
+                    class="text-gray-400 hover:text-red-600 p-1 rounded hover:bg-red-50"
+                    title="删除消息"
+                  >
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path>
+                    </svg>
+                  </button>
                 </div>
               </div>
               <div class="message-content markdown-content" v-html="renderMarkdown(message.content)"></div>
@@ -103,22 +103,31 @@
           </div>
         </div>
         
-        <form @submit.prevent="sendMessage" class="flex gap-2">
-          <textarea 
-            v-model="inputMessage" 
-            rows="2"
-            class="input flex-1 resize-none"
-            placeholder="描述业务场景细节..."
-            @keydown.enter.prevent="sendMessage"
-            :disabled="streaming"
-          />
-          <button 
-            type="submit" 
-            class="btn-primary self-end"
-            :disabled="!inputMessage.trim() || streaming"
-          >
-            发送
-          </button>
+        <form @submit.prevent="sendMessage" class="space-y-2">
+          <div class="flex gap-2">
+            <textarea 
+              v-model="inputMessage" 
+              rows="2"
+              class="input flex-1 resize-none"
+              placeholder="描述业务场景细节..."
+              @keydown.enter.prevent="sendMessage"
+              :disabled="streaming"
+            />
+            <button 
+              type="submit" 
+              class="btn-primary self-end"
+              :disabled="!inputMessage.trim() || streaming"
+            >
+              发送
+            </button>
+          </div>
+          <div class="flex justify-start">
+            <ProviderModelSelector
+              :providers="aiProviders"
+              :loading="loadingProviders"
+              @change="onProviderChange"
+            />
+          </div>
         </form>
       </div>
     </div>
@@ -478,6 +487,24 @@ function renderMermaidDiagrams() {
 function scrollToBottom() {
   if (messagesContainer.value) {
     messagesContainer.value.scrollTop = messagesContainer.value.scrollHeight
+  }
+}
+
+async function deleteMessage(index: number, messageId?: number) {
+  if (!confirm('确定要删除这条消息吗？')) return
+  
+  // Remove from local array
+  messages.value.splice(index, 1)
+  
+  // If message has an ID, delete from database
+  if (messageId) {
+    try {
+      await $fetch(`/api/conversations/${scenarioId}/messages/${messageId}`, {
+        method: 'DELETE'
+      })
+    } catch (e) {
+      console.error('Failed to delete message:', e)
+    }
   }
 }
 </script>
