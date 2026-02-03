@@ -20,7 +20,7 @@
           </div>
           <div class="flex items-center gap-2">
             <a
-              :href="`/api/shares/token/${token}/export`"
+              :href="`/api/shares/${token}/export`"
               class="btn-secondary text-sm flex items-center gap-2"
             >
               <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -78,7 +78,7 @@ const md = new MarkdownIt({
 
 onMounted(async () => {
   try {
-    const response = await fetch(`/api/shares/token/${token}`)
+    const response = await fetch(`/api/shares/${token}`)
     const data = await response.json()
     console.log('Share API response:', data)
     
