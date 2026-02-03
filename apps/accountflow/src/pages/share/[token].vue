@@ -147,8 +147,15 @@ function renderMermaidDiagrams() {
       const encodedContent = container.getAttribute('data-content')
       if (!encodedContent) return
       
-      const content = decodeURIComponent(encodedContent)
+      let content = decodeURIComponent(encodedContent)
       if (!content.trim()) return
+      
+      // Sanitize: Replace parentheses within square brackets (node labels) with #40; and #41;
+      // This preserves Mermaid syntax while handling Chinese text with parentheses
+      content = content.replace(/\[([^\]]*)\]/g, (match, label) => {
+        const sanitized = label.replace(/\(/g, '#40;').replace(/\)/g, '#41;')
+        return `[${sanitized}]`
+      })
       
       const diagramId = `mermaid-${Date.now()}-${index}`
       const { svg } = await mermaid.render(diagramId, content.trim())
