@@ -80,13 +80,15 @@ onMounted(async () => {
   try {
     const response = await fetch(`/api/shares/${token}`)
     const data = await response.json()
+    console.log('Share API response:', data)
     
-    if (data.success) {
+    if (data.success && data.data) {
       sharedData.value = data.data
     } else {
       error.value = data.error || '加载失败'
     }
   } catch (e) {
+    console.error('Share page error:', e)
     error.value = '网络错误'
   } finally {
     loading.value = false
