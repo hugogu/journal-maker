@@ -434,7 +434,22 @@ async function sendMessage() {
               }, 100)
               return
             } else if (data.type === 'error') {
-              assistantMessage.content = '抱歉，处理请求时出错：' + data.message
+              // Enhanced error handling for SSE errors
+              let errorContent = '抱歉，处理请求时出错：' + data.message
+              
+              // Add technical details if available
+              if (data.cause) {
+                errorContent += `\n\n**技术详情:**\n\`${data.cause}\``
+              }
+              
+              // Add suggestions based on error type
+              if (data.message?.includes('fetch failed') || data.message?.includes('Connect Timeout')) {
+                errorContent += '\n\n**建议:** 检查网络连接或稍后重试'
+              } else if (data.message?.includes('API')) {
+                errorContent += '\n\n**建议:** 检查 AI 服务配置'
+              }
+              
+              assistantMessage.content = errorContent
               streaming.value = false
               scrollToBottom()
               return
@@ -448,8 +463,49 @@ async function sendMessage() {
     
   } catch (e) {
     console.error('Streaming error:', e)
-    const errorMessage = { role: 'assistant' as const, content: '抱歉，处理请求时出错。请稍后重试。' }
-    messages.value.push(errorMessage)
+    
+    // Extract detailed error information
+    let errorMessage = '抱歉，处理请求时出错。请稍后重试。'
+    let technicalDetails = ''
+    
+    if (e instanceof Error) {
+      technicalDetails = e.message
+      
+      // Check for specific network errors
+      if (e.message.includes('fetch failed') || e.message.includes('Connect Timeout Error')) {
+        errorMessage = '网络连接失败，无法访问 AI 服务。请检查网络连接或稍后重试。'
+        
+        // Extract timeout info if available
+        const timeoutMatch = e.message.match(/timeout: (\d+)ms/)
+        if (timeoutMatch) {
+          technicalDetails += ` (连接超时: ${timeoutMatch[1]}ms)`
+        }
+        
+        // Extract target address if available
+        const addressMatch = e.message.match(/attempted address: ([^,]+)/)
+        if (addressMatch) {
+          technicalDetails += ` (目标地址: ${addressMatch[1]})`
+        }
+      } else if (e.message.includes('ENOTFOUND') || e.message.includes('ECONNREFUSED')) {
+        errorMessage = '无法连接到 AI 服务地址，请检查服务配置。'
+      } else if (e.message.includes('status')) {
+        const statusMatch = e.message.match(/status (\d+)/)
+        if (statusMatch) {
+          errorMessage = `AI 服务返回错误状态码: ${statusMatch[1]}`
+        }
+      }
+    }
+    
+    // Create detailed error message
+    const errorContent = errorMessage + 
+      (technicalDetails ? `\n\n**技术详情:**\n\`${technicalDetails}\`` : '') +
+      '\n\n**建议解决方案:**\n' +
+      '1. 检查网络连接\n' +
+      '2. 稍后重试\n' +
+      '3. 联系管理员检查 AI 服务配置'
+    
+    const errorResponse = { role: 'assistant' as const, content: errorContent }
+    messages.value.push(errorResponse)
     streaming.value = false
     await nextTick()
     scrollToBottom()
