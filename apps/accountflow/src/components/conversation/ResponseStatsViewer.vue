@@ -23,11 +23,11 @@
       <div class="grid grid-cols-2 gap-4">
         <div class="bg-gray-50 p-4 rounded-lg border border-gray-200">
           <span class="text-xs font-medium text-gray-500 uppercase tracking-wider">Provider</span>
-          <p class="font-medium text-gray-900 mt-1">{{ stats.providerName || 'Default' }}</p>
+          <p class="font-medium text-gray-900 mt-2">{{ stats.providerName || 'Default' }}</p>
         </div>
         <div class="bg-gray-50 p-4 rounded-lg border border-gray-200">
           <span class="text-xs font-medium text-gray-500 uppercase tracking-wider">模型</span>
-          <p class="font-medium text-gray-900 mt-1">{{ stats.model || 'Unknown' }}</p>
+          <p class="font-medium text-gray-900 mt-2">{{ stats.model || 'Unknown' }}</p>
         </div>
       </div>
 
@@ -42,15 +42,15 @@
         <div class="grid grid-cols-3 gap-4">
           <div class="bg-blue-50 p-4 rounded-lg border border-blue-200 text-center">
             <div class="text-2xl font-bold text-blue-600">{{ stats.inputTokens }}</div>
-            <div class="text-xs text-gray-600 mt-1 font-medium">输入</div>
+            <div class="text-xs text-gray-600 mt-2 font-medium">输入</div>
           </div>
           <div class="bg-green-50 p-4 rounded-lg border border-green-200 text-center">
             <div class="text-2xl font-bold text-green-600">{{ stats.outputTokens }}</div>
-            <div class="text-xs text-gray-600 mt-1 font-medium">输出</div>
+            <div class="text-xs text-gray-600 mt-2 font-medium">输出</div>
           </div>
           <div class="bg-purple-50 p-4 rounded-lg border border-purple-200 text-center">
             <div class="text-2xl font-bold text-purple-600">{{ stats.totalTokens }}</div>
-            <div class="text-xs text-gray-600 mt-1 font-medium">总计</div>
+            <div class="text-xs text-gray-600 mt-2 font-medium">总计</div>
           </div>
         </div>
       </div>
