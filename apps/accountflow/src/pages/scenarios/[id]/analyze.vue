@@ -92,7 +92,16 @@
                   </button>
                 </div>
               </div>
-              <div class="message-content markdown-content" v-html="(streaming && index === messages.length - 1 && message.role === 'assistant') ? renderStreamingContent(streamingContent) : renderMarkdown(message.content)"></div>
+              <div 
+                v-if="streaming && index === messages.length - 1 && message.role === 'assistant'"
+                class="message-content markdown-content" 
+                v-html="renderStreamingContent(streamingContent)"
+              ></div>
+              <div 
+                v-else
+                class="message-content markdown-content" 
+                v-html="renderMarkdown(message.content)"
+              ></div>
             </div>
           </div>
           <div v-if="streaming" class="text-center text-gray-400 text-sm py-3">
