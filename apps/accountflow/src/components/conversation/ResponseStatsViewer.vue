@@ -1,5 +1,5 @@
 <template>
-  <div class="response-stats-viewer">
+  <div class="response-stats-viewer p-6 pt-5">
     <div class="flex items-center justify-between mb-6">
       <h3 class="text-lg font-semibold text-gray-900">响应统计</h3>
       <button @click="$emit('close')" class="text-gray-400 hover:text-gray-600 transition-colors">
