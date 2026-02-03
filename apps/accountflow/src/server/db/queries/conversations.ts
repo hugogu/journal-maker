@@ -30,6 +30,13 @@ export async function createConversationMessage(data: {
   return message
 }
 
+// Get a single message by ID
+export async function getConversationMessageById(id: number) {
+  return db.query.conversationMessages.findFirst({
+    where: eq(conversationMessages.id, id)
+  })
+}
+
 // Delete all messages for a scenario
 export async function deleteConversationMessages(scenarioId: number) {
   await db.delete(conversationMessages)
