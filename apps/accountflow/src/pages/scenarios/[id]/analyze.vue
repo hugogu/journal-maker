@@ -455,11 +455,8 @@ function renderMermaidDiagrams() {
         return
       }
       
-      // Sanitize content: replace Chinese parentheses in labels to avoid Mermaid parser errors
-      // Note: We only replace () not [] because [] is valid Mermaid node syntax
-      content = content
-        .replace(/\(/g, '（')
-        .replace(/\)/g, '）')
+      // Don't sanitize - let Mermaid handle the content as-is
+      // The issue was that replacing () breaks Mermaid's node label syntax like A(Label)
       
       const diagramId = `mermaid-${Date.now()}-${index}`
       console.log(`Rendering diagram ${diagramId}`)
