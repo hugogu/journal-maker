@@ -95,6 +95,7 @@
               <div 
                 v-if="streaming && index === messages.length - 1 && message.role === 'assistant'"
                 class="message-content markdown-content" 
+                :key="`streaming-${streamingContent.length}`"
                 v-html="renderStreamingContent(streamingContent)"
               ></div>
               <div 
