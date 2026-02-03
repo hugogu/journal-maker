@@ -65,7 +65,7 @@
 
 <script setup lang="ts">
 import { computed, onMounted } from 'vue'
-import { useConversationShare } from '../../../composables/useConversationShare'
+import { useConversationShare } from '../../composables/useConversationShare'
 
 const props = defineProps<{
   scenarioId: number
