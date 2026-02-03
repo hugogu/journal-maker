@@ -51,7 +51,7 @@
               {{ formatDate(message.timestamp) }}
             </div>
           </div>
-          <div class="message-content" v-html="renderMarkdown(message.content)"></div>
+          <div class="message-content markdown-content" v-html="renderMarkdown(message.content)"></div>
         </div>
       </div>
     </div>
@@ -185,28 +185,11 @@ function renderMermaidDiagrams() {
   @apply text-sm leading-relaxed text-gray-800;
 }
 
-.message-content :deep(h1), .message-content :deep(h2), .message-content :deep(h3) {
-  @apply font-bold mb-2 mt-4;
+.user-message {
+  @apply bg-blue-50 border-l-4 border-blue-500 p-4 rounded-r-lg;
 }
 
-.message-content :deep(p) {
-  @apply mb-2;
-}
-
-.message-content :deep(pre) {
-  @apply bg-gray-100 text-gray-800 p-3 rounded-lg overflow-x-auto my-2 border border-gray-200;
-}
-
-.message-content :deep(pre code) {
-  @apply bg-transparent text-gray-800 p-0;
-}
-
-/* Mermaid container styles */
-.message-content :deep(.mermaid-container) {
-  @apply bg-white border border-gray-200 rounded-lg p-4 mb-4 overflow-x-auto;
-}
-
-.message-content :deep(.mermaid-container svg) {
-  @apply max-w-full;
+.assistant-message {
+  @apply bg-gray-50 border-l-4 border-gray-400 p-4 rounded-r-lg;
 }
 </style>

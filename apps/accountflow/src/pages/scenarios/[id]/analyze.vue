@@ -92,7 +92,7 @@
                   </button>
                 </div>
               </div>
-              <div class="message-content" v-html="renderMarkdown(message.content)"></div>
+              <div class="message-content markdown-content" v-html="renderMarkdown(message.content)"></div>
             </div>
           </div>
           <div v-if="streaming" class="text-center text-gray-400 text-sm py-3">
@@ -495,61 +495,14 @@ function scrollToBottom() {
   @apply text-sm leading-relaxed text-gray-800;
 }
 
-/* Markdown styles */
-.message-content :deep(h1) {
-  @apply text-xl font-bold mb-4 mt-4 text-gray-900;
-}
-
-.message-content :deep(h2) {
-  @apply text-lg font-semibold mb-3 mt-3 text-gray-900;
-}
-
-.message-content :deep(h3) {
-  @apply text-base font-medium mb-2 mt-2 text-gray-900;
-}
-
-.message-content :deep(p) {
-  @apply mb-3 text-gray-700;
-}
-
-.message-content :deep(ul), .message-content :deep(ol) {
-  @apply mb-3 pl-5;
-}
-
-.message-content :deep(li) {
-  @apply mb-1 text-gray-700;
-}
-
-.message-content :deep(table) {
-  @apply w-full border-collapse border border-gray-300 mb-4;
-}
-
-.message-content :deep(th), .message-content :deep(td) {
-  @apply border border-gray-300 px-3 py-2 text-left;
-}
-
-.message-content :deep(th) {
-  @apply bg-gray-100 font-medium text-gray-900;
-}
-
-.message-content :deep(code) {
-  @apply bg-gray-100 text-gray-800 px-1 py-0.5 rounded text-sm;
-}
-
+/* Markdown styles - use shared .markdown-content class from main.css */
+/* Only keep page-specific overrides if needed */
 .message-content :deep(pre) {
-  @apply bg-gray-900 text-gray-100 p-3 rounded-lg overflow-x-auto mb-4;
+  @apply bg-gray-100 text-gray-800 p-3 rounded-lg overflow-x-auto my-2 border border-gray-200;
 }
 
 .message-content :deep(pre code) {
-  @apply bg-transparent p-0 text-sm;
-}
-
-.message-content :deep(blockquote) {
-  @apply border-l-4 border-gray-300 pl-4 italic text-gray-600 mb-4;
-}
-
-.message-content :deep(a) {
-  @apply text-blue-600 hover:text-blue-800 underline;
+  @apply bg-transparent text-gray-800 p-0;
 }
 
 /* Mermaid container styles */
