@@ -288,7 +288,10 @@ export class AIService {
 
     let structured: AIResponse['structured'] | undefined
     try {
-      const parsed = JSON.parse(response.content)
+      // Try to extract JSON from markdown code block first
+      const jsonMatch = response.content.match(/```json\n([\s\S]*?)\n```/)
+      const jsonContent = jsonMatch ? jsonMatch[1] : response.content
+      const parsed = JSON.parse(jsonContent)
       structured = parsed.structured
     } catch (e) {
       // Not JSON format, that's ok
