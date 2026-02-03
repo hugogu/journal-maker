@@ -8,6 +8,15 @@
     </div>
     
     <div v-else class="grid grid-cols-1 gap-6 h-full">
+      <!-- AI Provider Selector -->
+      <div class="flex justify-end">
+        <ProviderModelSelector
+          :providers="aiProviders"
+          :loading="loadingProviders"
+          @change="onProviderChange"
+        />
+      </div>
+      
       <!-- Chat Section -->
       <div class="card flex flex-col h-full">
         <div class="border-b pb-4 mb-4">
@@ -75,10 +84,11 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted, nextTick } from 'vue'
+import { ref, onMounted, nextTick, watch } from 'vue'
 import MarkdownIt from 'markdown-it'
 import mermaid from 'mermaid'
 import { useRoute } from 'vue-router'
+import ProviderModelSelector from '../../../components/ai-config/ProviderModelSelector.vue'
 
 const route = useRoute()
 const scenarioId = route.params.id as string
@@ -123,6 +133,32 @@ const inputMessage = ref('')
 const streaming = ref(false)
 const messagesContainer = ref<HTMLElement>()
 
+// AI Provider selection
+const aiProviders = ref<any[]>([])
+const loadingProviders = ref(false)
+const selectedProviderId = ref('')
+const selectedModel = ref('')
+
+// Load AI providers
+async function loadProviders() {
+  loadingProviders.value = true
+  try {
+    const response = await $fetch<{ success: boolean; data: any[] }>('/api/ai-providers')
+    if (response.success) {
+      aiProviders.value = response.data
+    }
+  } catch (e) {
+    console.error('Failed to load AI providers:', e)
+  } finally {
+    loadingProviders.value = false
+  }
+}
+
+function onProviderChange(providerId: string, model: string) {
+  selectedProviderId.value = providerId
+  selectedModel.value = model
+}
+
 // Watch messages and render mermaid when they change
 watch(() => messages.value.length, async (newLength, oldLength) => {
   if (newLength > 0 && newLength !== oldLength) {
@@ -134,6 +170,9 @@ watch(() => messages.value.length, async (newLength, oldLength) => {
 }, { immediate: true })
 
 onMounted(async () => {
+  // Load AI providers first
+  await loadProviders()
+  
   // Load scenario
   const response = await $fetch<{ success: boolean; data: any }>(`/api/scenarios/${scenarioId}`)
   if (response.success) {
@@ -182,7 +221,11 @@ async function sendMessage() {
       headers: {
         'Content-Type': 'application/json',
       },
-      body: JSON.stringify({ content: userMessage }),
+      body: JSON.stringify({ 
+        content: userMessage,
+        providerId: selectedProviderId.value || undefined,
+        model: selectedModel.value || undefined
+      }),
     })
     
     if (!response.ok) {
