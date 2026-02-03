@@ -177,7 +177,7 @@ import ShareManager from '../../../components/conversation/ShareManager.vue'
 
 const route = useRoute()
 const scenarioId = route.params.id as string
-const { messages, loading: conversationLoading, loadMessages, saveMessage } = useConversation(parseInt(scenarioId, 10))
+const { messages, loading: conversationLoading, loadMessages, saveMessage, deleteMessage } = useConversation(parseInt(scenarioId, 10))
 
 // Initialize markdown renderer
 const md = new MarkdownIt({
@@ -488,24 +488,6 @@ function renderMermaidDiagrams() {
 function scrollToBottom() {
   if (messagesContainer.value) {
     messagesContainer.value.scrollTop = messagesContainer.value.scrollHeight
-  }
-}
-
-async function deleteMessage(index: number, messageId?: number) {
-  if (!confirm('确定要删除这条消息吗？')) return
-  
-  // Remove from local array
-  messages.value.splice(index, 1)
-  
-  // If message has an ID, delete from database
-  if (messageId) {
-    try {
-      await $fetch(`/api/conversations/${scenarioId}/messages/${messageId}`, {
-        method: 'DELETE'
-      })
-    } catch (e) {
-      console.error('Failed to delete message:', e)
-    }
   }
 }
 </script>
