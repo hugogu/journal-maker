@@ -339,11 +339,11 @@ async function sendMessage() {
   
   const userMessage = inputMessage.value
   const userMessageData = { role: 'user' as const, content: userMessage }
-  messages.value.push(userMessageData)
+  // Don't push here - saveMessage will add it via watch sync
   inputMessage.value = ''
   streaming.value = true
   
-  // Save to database
+  // Save to database (this will add to messages via watch)
   await saveMessage(userMessageData)
   
   await nextTick()
