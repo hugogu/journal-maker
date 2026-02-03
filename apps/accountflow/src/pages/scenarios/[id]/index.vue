@@ -3,44 +3,35 @@
     <div class="flex items-center justify-between mb-6">
       <div class="flex-1">
         <h1 class="text-2xl font-bold">{{ scenario.name }}</h1>
-        <div class="mt-2">
-          <p v-if="!editingDescription" class="text-gray-600">{{ scenario.description || '暂无描述' }}</p>
-          <div v-else class="flex gap-2">
-            <textarea 
-              v-model="editDescription" 
-              rows="2" 
-              class="input flex-1"
-              placeholder="描述业务场景的背景、参与方、业务流程..."
-            />
-            <button 
-              class="btn-primary"
-              :disabled="saving"
-              @click="saveDescription"
-            >
-              {{ saving ? '保存中...' : '保存' }}
-            </button>
-            <button 
-              class="btn-secondary"
-              @click="cancelEdit"
-            >
-              取消
-            </button>
-          </div>
-        </div>
+        <p class="text-gray-600 mt-2">{{ scenario.description || '暂无描述' }}</p>
       </div>
-      <div class="flex gap-3">
-        <button 
-          v-if="!editingDescription"
-          class="btn-secondary"
-          @click="startEditDescription"
+      <div class="flex gap-1">
+        <NuxtLink 
+          :to="`/scenarios/${scenario.id}/edit`"
+          class="text-gray-500 hover:text-gray-700 p-2 rounded hover:bg-gray-100"
+          title="编辑"
         >
-          编辑描述
+          <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path>
+          </svg>
+        </NuxtLink>
+        <button 
+          class="text-gray-500 hover:text-gray-700 p-2 rounded hover:bg-gray-100"
+          title="导出 JSON"
+          @click="exportData('json')"
+        >
+          <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path>
+          </svg>
         </button>
-        <button class="btn-secondary" @click="exportData('json')">
-          导出 JSON
-        </button>
-        <NuxtLink :to="`/scenarios/${scenario.id}/analyze`" class="btn-primary">
-          开始分析
+        <NuxtLink 
+          :to="`/scenarios/${scenario.id}/analyze`"
+          class="text-blue-600 hover:text-blue-800 p-2 rounded hover:bg-blue-50"
+          title="开始分析"
+        >
+          <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z"></path>
+          </svg>
         </NuxtLink>
       </div>
     </div>
@@ -110,9 +101,6 @@ interface Scenario {
 const route = useRoute()
 const router = useRouter()
 const scenario = ref<Scenario | null>(null)
-const editingDescription = ref(false)
-const editDescription = ref('')
-const saving = ref(false)
 
 onMounted(async () => {
   const response = await $fetch<{ success: boolean; data: Scenario }>(`/api/scenarios/${route.params.id}`)
@@ -152,37 +140,5 @@ async function confirmScenario() {
 function exportData(format: string) {
   const url = `/api/scenarios/${route.params.id}/export?format=${format}`
   window.open(url, '_blank')
-}
-
-function startEditDescription() {
-  editingDescription.value = true
-  editDescription.value = scenario.value?.description || ''
-}
-
-function cancelEdit() {
-  editingDescription.value = false
-  editDescription.value = ''
-}
-
-async function saveDescription() {
-  if (!scenario.value) return
-  
-  saving.value = true
-  try {
-    await $fetch(`/api/scenarios/${route.params.id}`, {
-      method: 'PUT',
-      body: {
-        description: editDescription.value
-      }
-    })
-    scenario.value.description = editDescription.value
-    editingDescription.value = false
-    alert('描述已更新')
-  } catch (e) {
-    console.error('Failed to update description:', e)
-    alert('更新失败')
-  } finally {
-    saving.value = false
-  }
 }
 </script>
