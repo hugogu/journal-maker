@@ -305,13 +305,19 @@ function renderMermaidDiagrams() {
         return
       }
       
-      const content = decodeURIComponent(encodedContent)
+      let content = decodeURIComponent(encodedContent)
       console.log(`Container ${index} content (first 100 chars):`, content.substring(0, 100))
       
       if (!content.trim()) {
         console.warn(`Container ${index}: empty content`)
         return
       }
+      
+      // Sanitize content: replace Chinese parentheses in labels to avoid Mermaid parser errors
+      // Note: We only replace () not [] because [] is valid Mermaid node syntax
+      content = content
+        .replace(/\(/g, '（')
+        .replace(/\)/g, '）')
       
       const diagramId = `mermaid-${Date.now()}-${index}`
       console.log(`Rendering diagram ${diagramId}`)

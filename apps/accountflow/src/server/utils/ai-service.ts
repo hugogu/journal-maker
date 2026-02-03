@@ -356,8 +356,20 @@ export class AIService {
 
     const durationMs = Date.now() - startTime
 
+    // Extract structured data from markdown JSON block
+    let structured: AIResponse['structured'] | undefined
+    try {
+      const jsonMatch = fullContent.match(/```json\n([\s\S]*?)\n```/)
+      const jsonContent = jsonMatch ? jsonMatch[1] : fullContent
+      const parsed = JSON.parse(jsonContent)
+      structured = parsed.structured
+    } catch (e) {
+      // Not JSON format, that's ok
+    }
+
     return {
       message: fullContent,
+      structured,
       requestLog: {
         systemPrompt,
         contextMessages: messages,
