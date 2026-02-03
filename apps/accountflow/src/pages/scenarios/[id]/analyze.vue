@@ -20,8 +20,28 @@
       <!-- Chat Section -->
       <div class="card flex flex-col h-full">
         <div class="border-b pb-4 mb-4">
-          <h2 class="text-lg font-semibold">{{ scenario?.name }}</h2>
-          <p class="text-gray-600 text-sm">{{ scenario?.description }}</p>
+          <div class="flex items-start justify-between">
+            <div>
+              <h2 class="text-lg font-semibold">{{ scenario?.name }}</h2>
+              <p class="text-gray-600 text-sm">{{ scenario?.description }}</p>
+            </div>
+            <div class="flex items-center gap-2">
+              <ExportButton
+                :scenario-id="parseInt(scenarioId, 10)"
+                :messages="messages"
+                :scenario-name="scenario?.name"
+              />
+              <button
+                @click="showShareModal = true"
+                class="btn-secondary text-sm flex items-center gap-2"
+              >
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.368 2.684 3 3 0 00-5.368-2.684z"></path>
+                </svg>
+                分享
+              </button>
+            </div>
+          </div>
         </div>
         
         <div class="flex-1 overflow-y-auto" ref="messagesContainer">
@@ -117,6 +137,20 @@
         />
       </div>
     </div>
+    <!-- Share Modal -->
+    <div v-if="showShareModal" class="fixed inset-0 bg-black/50 flex items-center justify-center p-4 z-50">
+      <div class="bg-white rounded-lg max-w-lg w-full p-6">
+        <div class="flex items-center justify-between mb-4">
+          <h3 class="text-lg font-semibold">分享对话</h3>
+          <button @click="showShareModal = false" class="text-gray-500 hover:text-gray-700">
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+            </svg>
+          </button>
+        </div>
+        <ShareManager :scenario-id="parseInt(scenarioId, 10)" />
+      </div>
+    </div>
   </div>
 </template>
 
@@ -128,6 +162,8 @@ import { useRoute } from 'vue-router'
 import ProviderModelSelector from '../../../components/ai-config/ProviderModelSelector.vue'
 import RequestLogViewer from '../../../components/conversation/RequestLogViewer.vue'
 import ResponseStatsViewer from '../../../components/conversation/ResponseStatsViewer.vue'
+import ExportButton from '../../../components/conversation/ExportButton.vue'
+import ShareManager from '../../../components/conversation/ShareManager.vue'
 
 const route = useRoute()
 const scenarioId = route.params.id as string
@@ -201,6 +237,7 @@ function onProviderChange(providerId: string, model: string) {
 // Log/Stats modal state
 const showLogModal = ref(false)
 const showStatsModal = ref(false)
+const showShareModal = ref(false)
 const selectedMessageId = ref<number | null>(null)
 
 function showLog(messageId: number) {
