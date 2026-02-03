@@ -194,11 +194,11 @@ function renderMermaidDiagrams() {
 }
 
 .message-content :deep(pre) {
-  @apply bg-gray-900 text-gray-100 p-3 rounded-lg overflow-x-auto my-2;
+  @apply bg-gray-100 text-gray-800 p-3 rounded-lg overflow-x-auto my-2 border border-gray-200;
 }
 
-.message-content :deep(code) {
-  @apply bg-gray-100 px-1 py-0.5 rounded text-sm;
+.message-content :deep(pre code) {
+  @apply bg-transparent text-gray-800 p-0;
 }
 
 /* Mermaid container styles */
