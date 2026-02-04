@@ -119,6 +119,13 @@ function closeModals() {
 }
 
 async function handleConfirm(data: { parsed: ParsedAnalysis; messageId?: number }) {
+  console.log('Confirming analysis with data:', {
+    subjects: data.parsed.subjects,
+    rules: data.parsed.rules,
+    diagrams: data.parsed.diagrams,
+    messageId: data.messageId
+  })
+  
   const success = await confirmedAnalysis.save({
     subjects: data.parsed.subjects,
     rules: data.parsed.rules,
@@ -128,6 +135,8 @@ async function handleConfirm(data: { parsed: ParsedAnalysis; messageId?: number 
 
   if (!success) {
     alert('保存分析结果失败，请重试')
+  } else {
+    console.log('Analysis saved successfully, confirmed data:', confirmedAnalysis.data.value)
   }
 }
 

@@ -84,6 +84,7 @@ export const useConfirmedAnalysis = (scenarioId: number) => {
     diagramMermaid?: string | null
     sourceMessageId?: number | null
   }) => {
+    loading.value = true
     saving.value = true
     error.value = null
 
@@ -119,6 +120,7 @@ export const useConfirmedAnalysis = (scenarioId: number) => {
       console.error('useConfirmedAnalysis save error:', e)
       return false
     } finally {
+      loading.value = false
       saving.value = false
     }
   }
@@ -127,6 +129,7 @@ export const useConfirmedAnalysis = (scenarioId: number) => {
    * Clear/delete confirmed analysis
    */
   const clear = async () => {
+    loading.value = true
     saving.value = true
     error.value = null
 
@@ -156,6 +159,7 @@ export const useConfirmedAnalysis = (scenarioId: number) => {
       console.error('useConfirmedAnalysis clear error:', e)
       return false
     } finally {
+      loading.value = false
       saving.value = false
     }
   }
