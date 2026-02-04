@@ -1,0 +1,350 @@
+openapi: 3.0.3
+info:
+  title: Message Structured Storage API
+  description: API for storing conversation messages with structured payloads and extracted analysis artifacts.
+  version: 1.0.0
+
+paths:
+  /api/scenarios/{scenarioId}/conversation-messages:
+    get:
+      summary: List conversation messages for a scenario
+      operationId: listConversationMessages
+      parameters:
+        - name: scenarioId
+          in: path
+          required: true
+          schema:
+            type: integer
+        - name: includeStructured
+          in: query
+          required: false
+          schema:
+            type: boolean
+            default: false
+      responses:
+        '200':
+          description: Message list
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ConversationMessageListResponse'
+    post:
+      summary: Create a conversation message with structured payload
+      operationId: createConversationMessage
+      parameters:
+        - name: scenarioId
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateConversationMessageRequest'
+      responses:
+        '201':
+          description: Message created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ConversationMessageResponse'
+
+  /api/conversation-messages/{messageId}:
+    get:
+      summary: Get a single conversation message
+      operationId: getConversationMessage
+      parameters:
+        - name: messageId
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: Message
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ConversationMessageResponse'
+
+  /api/scenarios/{scenarioId}/analysis-artifacts:
+    get:
+      summary: List extracted analysis artifacts for a scenario
+      operationId: listAnalysisArtifacts
+      parameters:
+        - name: scenarioId
+          in: path
+          required: true
+          schema:
+            type: integer
+        - name: sourceMessageId
+          in: query
+          required: false
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: Analysis artifacts
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AnalysisArtifactListResponse'
+    post:
+      summary: Create extracted analysis artifacts
+      operationId: createAnalysisArtifacts
+      parameters:
+        - name: scenarioId
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateAnalysisArtifactsRequest'
+      responses:
+        '201':
+          description: Artifacts created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AnalysisArtifactListResponse'
+
+  /api/journal-rules/{ruleId}:
+    patch:
+      summary: Update a journal rule with structured debit/credit
+      operationId: updateJournalRule
+      parameters:
+        - name: ruleId
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateJournalRuleRequest'
+      responses:
+        '200':
+          description: Updated rule
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/JournalRuleResponse'
+
+components:
+  schemas:
+    ConversationMessage:
+      type: object
+      required: [id, scenarioId, role, content, timestamp]
+      properties:
+        id:
+          type: integer
+        scenarioId:
+          type: integer
+        role:
+          type: string
+          enum: [user, assistant, system]
+        content:
+          type: string
+        structuredData:
+          type: object
+          nullable: true
+        requestLog:
+          type: object
+          nullable: true
+        responseStats:
+          type: object
+          nullable: true
+        timestamp:
+          type: string
+          format: date-time
+
+    ConversationMessageListResponse:
+      type: object
+      properties:
+        scenarioId:
+          type: integer
+        messages:
+          type: array
+          items:
+            $ref: '#/components/schemas/ConversationMessage'
+
+    ConversationMessageResponse:
+      type: object
+      properties:
+        data:
+          $ref: '#/components/schemas/ConversationMessage'
+
+    CreateConversationMessageRequest:
+      type: object
+      required: [role, content]
+      properties:
+        role:
+          type: string
+          enum: [user, assistant, system]
+        content:
+          type: string
+        structuredData:
+          type: object
+          nullable: true
+        requestLog:
+          type: object
+          nullable: true
+        responseStats:
+          type: object
+          nullable: true
+
+    AnalysisSubject:
+      type: object
+      required: [code, name, direction]
+      properties:
+        code:
+          type: string
+        name:
+          type: string
+        direction:
+          type: string
+          enum: [debit, credit, both]
+        description:
+          type: string
+          nullable: true
+        metadata:
+          type: object
+          nullable: true
+
+    AnalysisEntry:
+      type: object
+      required: [lines]
+      properties:
+        lines:
+          type: array
+          items:
+            type: object
+            required: [side, accountCode, amount]
+            properties:
+              side:
+                type: string
+                enum: [debit, credit]
+              accountCode:
+                type: string
+              amount:
+                type: number
+              description:
+                type: string
+                nullable: true
+        description:
+          type: string
+          nullable: true
+        amount:
+          type: number
+          nullable: true
+        currency:
+          type: string
+          nullable: true
+        metadata:
+          type: object
+          nullable: true
+
+    AnalysisDiagram:
+      type: object
+      required: [diagramType, payload]
+      properties:
+        diagramType:
+          type: string
+          enum: [mermaid, chart, table]
+        payload:
+          type: string
+        metadata:
+          type: object
+          nullable: true
+
+    AnalysisArtifactListResponse:
+      type: object
+      properties:
+        scenarioId:
+          type: integer
+        sourceMessageId:
+          type: integer
+          nullable: true
+        subjects:
+          type: array
+          items:
+            $ref: '#/components/schemas/AnalysisSubject'
+        entries:
+          type: array
+          items:
+            $ref: '#/components/schemas/AnalysisEntry'
+        diagrams:
+          type: array
+          items:
+            $ref: '#/components/schemas/AnalysisDiagram'
+
+    CreateAnalysisArtifactsRequest:
+      type: object
+      properties:
+        sourceMessageId:
+          type: integer
+        subjects:
+          type: array
+          items:
+            $ref: '#/components/schemas/AnalysisSubject'
+        entries:
+          type: array
+          items:
+            $ref: '#/components/schemas/AnalysisEntry'
+        diagrams:
+          type: array
+          items:
+            $ref: '#/components/schemas/AnalysisDiagram'
+
+    UpdateJournalRuleRequest:
+      type: object
+      required: [debitSide, creditSide, triggerType, status]
+      properties:
+        debitSide:
+          type: object
+        creditSide:
+          type: object
+        triggerType:
+          type: string
+        status:
+          type: string
+          enum: [proposal, confirmed]
+        amountFormula:
+          type: string
+          nullable: true
+
+    JournalRuleResponse:
+      type: object
+      properties:
+        data:
+          type: object
+          properties:
+            id:
+              type: integer
+            scenarioId:
+              type: integer
+            eventName:
+              type: string
+            eventDescription:
+              type: string
+              nullable: true
+            debitSide:
+              type: object
+            creditSide:
+              type: object
+            triggerType:
+              type: string
+            status:
+              type: string
+              enum: [proposal, confirmed]
+            amountFormula:
+              type: string
+              nullable: true
