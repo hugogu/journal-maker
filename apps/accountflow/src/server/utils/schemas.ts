@@ -97,3 +97,34 @@ export const createSampleTransactionSchema = z.object({
 export const exportScenarioSchema = z.object({
   format: z.enum(['json', 'excel']),
 })
+
+// Confirmed Analysis schemas
+export const accountingSubjectSchema = z.object({
+  code: z.string().min(1).max(20).regex(/^[A-Za-z0-9]+$/),
+  name: z.string().min(1).max(100),
+  direction: z.enum(['debit', 'credit']),
+  description: z.string().max(500).optional(),
+})
+
+export const accountingRuleSchema = z.object({
+  id: z.string().min(1).max(50),
+  description: z.string().min(1).max(500),
+  condition: z.string().max(200).optional(),
+  debitAccount: z.string().max(20).optional(),
+  creditAccount: z.string().max(20).optional(),
+})
+
+export const confirmAnalysisRequestSchema = z.object({
+  subjects: z.array(accountingSubjectSchema).default([]),
+  rules: z.array(accountingRuleSchema).default([]),
+  diagramMermaid: z.string().nullable().optional(),
+  sourceMessageId: z.number().int().positive().nullable().optional(),
+}).refine(
+  (data) =>
+    data.subjects.length > 0 ||
+    data.rules.length > 0 ||
+    (data.diagramMermaid && data.diagramMermaid.trim().length > 0),
+  {
+    message: 'At least one of subjects, rules, or diagramMermaid must have content',
+  }
+)

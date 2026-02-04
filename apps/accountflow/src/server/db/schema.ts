@@ -277,3 +277,30 @@ export const aiModelsRelations = relations(aiModels, ({ one }) => ({
     references: [aiProviders.id],
   }),
 }))
+
+// Confirmed Analysis Table (stores user-confirmed analysis results)
+export const confirmedAnalysis = pgTable('confirmed_analysis', {
+  id: serial('id').primaryKey(),
+  scenarioId: integer('scenario_id')
+    .notNull()
+    .unique()
+    .references(() => scenarios.id, { onDelete: 'cascade' }),
+  subjects: jsonb('subjects').notNull().default([]),
+  rules: jsonb('rules').notNull().default([]),
+  diagramMermaid: text('diagram_mermaid'),
+  sourceMessageId: integer('source_message_id')
+    .references(() => conversationMessages.id, { onDelete: 'set null' }),
+  confirmedAt: timestamp('confirmed_at').defaultNow().notNull(),
+  updatedAt: timestamp('updated_at').defaultNow().notNull(),
+})
+
+export const confirmedAnalysisRelations = relations(confirmedAnalysis, ({ one }) => ({
+  scenario: one(scenarios, {
+    fields: [confirmedAnalysis.scenarioId],
+    references: [scenarios.id],
+  }),
+  sourceMessage: one(conversationMessages, {
+    fields: [confirmedAnalysis.sourceMessageId],
+    references: [conversationMessages.id],
+  }),
+}))

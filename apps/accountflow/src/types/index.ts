@@ -165,3 +165,44 @@ export const FlowchartData = z.object({
   updatedAt: z.date(),
 })
 export type FlowchartData = z.infer<typeof FlowchartData>
+
+// Accounting Subject (for confirmed analysis)
+export const AccountingSubject = z.object({
+  code: z.string().min(1).max(20),
+  name: z.string().min(1).max(100),
+  direction: z.enum(['debit', 'credit']),
+  description: z.string().max(500).optional(),
+})
+export type AccountingSubject = z.infer<typeof AccountingSubject>
+
+// Accounting Rule (for confirmed analysis)
+export const AccountingRule = z.object({
+  id: z.string().min(1).max(50),
+  description: z.string().min(1).max(500),
+  condition: z.string().max(200).optional(),
+  debitAccount: z.string().max(20).optional(),
+  creditAccount: z.string().max(20).optional(),
+})
+export type AccountingRule = z.infer<typeof AccountingRule>
+
+// Confirmed Analysis
+export const ConfirmedAnalysis = z.object({
+  id: z.number(),
+  scenarioId: z.number(),
+  subjects: z.array(AccountingSubject),
+  rules: z.array(AccountingRule),
+  diagramMermaid: z.string().nullable(),
+  sourceMessageId: z.number().nullable(),
+  confirmedAt: z.date(),
+  updatedAt: z.date(),
+})
+export type ConfirmedAnalysis = z.infer<typeof ConfirmedAnalysis>
+
+// Parsed Analysis (from AI response)
+export const ParsedAnalysis = z.object({
+  subjects: z.array(AccountingSubject),
+  rules: z.array(AccountingRule),
+  diagrams: z.array(z.string()),
+  rawContent: z.string(),
+})
+export type ParsedAnalysis = z.infer<typeof ParsedAnalysis>

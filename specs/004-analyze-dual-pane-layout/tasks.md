@@ -56,14 +56,14 @@
 
 ### Implementation for User Story 1
 
-- [ ] T011 [US1] Create ChatPane component shell in `apps/accountflow/src/components/analysis/ChatPane.vue`
-- [ ] T012 [US1] Extract message list rendering logic from analyze.vue to ChatPane.vue
-- [ ] T013 [US1] Extract message input form and send logic from analyze.vue to ChatPane.vue
-- [ ] T014 [US1] Extract streaming response handling from analyze.vue to ChatPane.vue
-- [ ] T015 [US1] Extract mermaid rendering logic from analyze.vue to ChatPane.vue
-- [ ] T016 [US1] Move modal components (LogModal, StatsModal, ShareModal) handling to ChatPane.vue
-- [ ] T017 [US1] Refactor `apps/accountflow/src/pages/scenarios/[id]/analyze.vue` to dual-pane grid layout
-- [ ] T018 [US1] Add responsive breakpoints for mobile/tablet in analyze.vue
+- [x] T011 [US1] Create ChatPane component shell in `apps/accountflow/src/components/analysis/ChatPane.vue`
+- [x] T012 [US1] Extract message list rendering logic from analyze.vue to ChatPane.vue
+- [x] T013 [US1] Extract message input form and send logic from analyze.vue to ChatPane.vue
+- [x] T014 [US1] Extract streaming response handling from analyze.vue to ChatPane.vue
+- [x] T015 [US1] Extract mermaid rendering logic from analyze.vue to ChatPane.vue
+- [x] T016 [US1] Move modal components (LogModal, StatsModal, ShareModal) handling to ChatPane.vue
+- [x] T017 [US1] Refactor `apps/accountflow/src/pages/scenarios/[id]/analyze.vue` to dual-pane grid layout
+- [x] T018 [US1] Add responsive breakpoints for mobile/tablet in analyze.vue
 - [ ] T019 [US1] Verify all existing functionality works in new ChatPane structure
 
 **Checkpoint**: User Story 1 complete - ChatPane fully functional with all existing features
@@ -78,14 +78,14 @@
 
 ### Implementation for User Story 2
 
-- [ ] T020 [P] [US2] Create ConfirmAnalysisButton component in `apps/accountflow/src/components/analysis/ConfirmAnalysisButton.vue`
-- [ ] T021 [P] [US2] Create StatePane component shell in `apps/accountflow/src/components/analysis/StatePane.vue`
-- [ ] T022 [US2] Implement confirm button state logic (disabled during streaming, enabled when parseable content)
-- [ ] T023 [US2] Integrate ConfirmAnalysisButton into ChatPane after AI responses
-- [ ] T024 [US2] Connect confirm action to POST API endpoint via useConfirmedAnalysis
-- [ ] T025 [US2] Display basic confirmed content in StatePane (subjects, rules, diagram as raw text)
-- [ ] T026 [US2] Integrate StatePane into analyze.vue dual-pane layout
-- [ ] T027 [US2] Load existing confirmed analysis on page mount via GET endpoint
+- [x] T020 [P] [US2] Create ConfirmAnalysisButton component in `apps/accountflow/src/components/analysis/ConfirmAnalysisButton.vue`
+- [x] T021 [P] [US2] Create StatePane component shell in `apps/accountflow/src/components/analysis/StatePane.vue`
+- [x] T022 [US2] Implement confirm button state logic (disabled during streaming, enabled when parseable content)
+- [x] T023 [US2] Integrate ConfirmAnalysisButton into ChatPane after AI responses
+- [x] T024 [US2] Connect confirm action to POST API endpoint via useConfirmedAnalysis
+- [x] T025 [US2] Display basic confirmed content in StatePane (subjects, rules, diagram as raw text)
+- [x] T026 [US2] Integrate StatePane into analyze.vue dual-pane layout
+- [x] T027 [US2] Load existing confirmed analysis on page mount via GET endpoint
 - [ ] T028 [US2] Verify confirmed content persists across page refresh
 
 **Checkpoint**: User Story 2 complete - Confirm button and basic StatePane working
@@ -100,14 +100,14 @@
 
 ### Implementation for User Story 3
 
-- [ ] T029 [P] [US3] Create AccountingSubjectList component in `apps/accountflow/src/components/analysis/AccountingSubjectList.vue`
-- [ ] T030 [P] [US3] Create AccountingRuleCard component in `apps/accountflow/src/components/analysis/AccountingRuleCard.vue`
-- [ ] T031 [US3] Style AccountingSubjectList with code, name, direction columns
-- [ ] T032 [US3] Style AccountingRuleCard with description, condition, account info
-- [ ] T033 [US3] Integrate AccountingSubjectList into StatePane
-- [ ] T034 [US3] Integrate AccountingRuleCard list into StatePane
-- [ ] T035 [US3] Add empty state messaging when no subjects/rules confirmed
-- [ ] T036 [US3] Add independent scrolling for StatePane content area
+- [x] T029 [P] [US3] Create AccountingSubjectList component in `apps/accountflow/src/components/analysis/AccountingSubjectList.vue`
+- [x] T030 [P] [US3] Create AccountingRuleCard component in `apps/accountflow/src/components/analysis/AccountingRuleCard.vue`
+- [x] T031 [US3] Style AccountingSubjectList with code, name, direction columns
+- [x] T032 [US3] Style AccountingRuleCard with description, condition, account info
+- [x] T033 [US3] Integrate AccountingSubjectList into StatePane
+- [x] T034 [US3] Integrate AccountingRuleCard list into StatePane
+- [x] T035 [US3] Add empty state messaging when no subjects/rules confirmed
+- [x] T036 [US3] Add independent scrolling for StatePane content area
 
 **Checkpoint**: User Story 3 complete - Structured display of subjects and rules
 
@@ -121,12 +121,12 @@
 
 ### Implementation for User Story 4
 
-- [ ] T037 [US4] Create FlowDiagramViewer component in `apps/accountflow/src/components/analysis/FlowDiagramViewer.vue`
-- [ ] T038 [US4] Extract and refactor mermaid initialization logic from ChatPane to FlowDiagramViewer
-- [ ] T039 [US4] Implement mermaid rendering with proper container sizing
-- [ ] T040 [US4] Add overflow scroll for large diagrams in FlowDiagramViewer
-- [ ] T041 [US4] Integrate FlowDiagramViewer into StatePane
-- [ ] T042 [US4] Handle mermaid render errors with fallback display
+- [x] T037 [US4] Create FlowDiagramViewer component in `apps/accountflow/src/components/analysis/FlowDiagramViewer.vue`
+- [x] T038 [US4] Extract and refactor mermaid initialization logic from ChatPane to FlowDiagramViewer
+- [x] T039 [US4] Implement mermaid rendering with proper container sizing
+- [x] T040 [US4] Add overflow scroll for large diagrams in FlowDiagramViewer
+- [x] T041 [US4] Integrate FlowDiagramViewer into StatePane
+- [x] T042 [US4] Handle mermaid render errors with fallback display
 
 **Checkpoint**: User Story 4 complete - Flow diagrams render in StatePane
 
