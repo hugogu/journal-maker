@@ -146,9 +146,7 @@
 <script setup lang="ts">
 import { ref, watch, nextTick, onMounted, computed } from 'vue'
 import MarkdownIt from 'markdown-it'
-import mermaid from 'mermaid'
 import { useConversation } from '../../composables/useConversation'
-import { parseAIResponse, hasExtractableContent } from '../../utils/ai-response-parser'
 import ProviderModelSelector from '../ai-config/ProviderModelSelector.vue'
 import ExportButton from '../conversation/ExportButton.vue'
 import ConfirmAnalysisButton from './ConfirmAnalysisButton.vue'
@@ -406,7 +404,13 @@ function copyMessage(content: string) {
   })
 }
 
-function renderMermaidDiagrams() {
+async function renderMermaidDiagrams() {
+  if (typeof window === 'undefined') return
+
+  // Dynamic import for client-side only
+  const mermaidModule = await import('mermaid')
+  const mermaid = mermaidModule.default
+
   mermaid.initialize({
     startOnLoad: false,
     theme: 'default',

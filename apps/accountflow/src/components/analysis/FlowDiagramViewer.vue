@@ -25,7 +25,6 @@
 
 <script setup lang="ts">
 import { ref, watch, onMounted, nextTick } from 'vue'
-import mermaid from 'mermaid'
 
 const props = defineProps<{
   mermaidCode: string
@@ -36,9 +35,14 @@ const loading = ref(true)
 const error = ref(false)
 
 let mermaidInitialized = false
+let mermaid: any = null
 
-function initMermaid() {
-  if (mermaidInitialized) return
+async function initMermaid() {
+  if (mermaidInitialized || typeof window === 'undefined') return
+
+  // Dynamic import for client-side only
+  const mermaidModule = await import('mermaid')
+  mermaid = mermaidModule.default
 
   mermaid.initialize({
     startOnLoad: false,
@@ -54,13 +58,15 @@ function initMermaid() {
 }
 
 async function renderDiagram() {
-  if (!props.mermaidCode || !diagramContainer.value) return
+  if (!props.mermaidCode || !diagramContainer.value || typeof window === 'undefined') return
 
   loading.value = true
   error.value = false
 
   try {
-    initMermaid()
+    await initMermaid()
+
+    if (!mermaid) return
 
     // Clear previous content
     diagramContainer.value.innerHTML = ''
