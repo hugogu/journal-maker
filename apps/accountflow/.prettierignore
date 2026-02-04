@@ -3,7 +3,10 @@ dist/
 build/
 .output/
 .nuxt/
+.nitro/
+.data/
 *.log
+coverage/
 package-lock.json
 yarn.lock
 pnpm-lock.yaml

@@ -89,6 +89,10 @@ export const JournalRule = z.object({
   creditAccountId: z.number().nullable(),
   conditions: z.record(z.any()).nullable(),
   amountFormula: z.string().nullable(),
+  debitSide: z.record(z.any()).nullable(),
+  creditSide: z.record(z.any()).nullable(),
+  triggerType: z.string().nullable(),
+  status: z.enum(['proposal', 'confirmed']).nullable(),
   createdAt: z.date(),
   updatedAt: z.date(),
 })
@@ -185,6 +189,24 @@ export const AccountingRule = z.object({
 })
 export type AccountingRule = z.infer<typeof AccountingRule>
 
+// Analysis Entry (for extracted journal entries)
+export const AnalysisEntryLine = z.object({
+  side: z.enum(['debit', 'credit']),
+  accountCode: z.string().min(1).max(20),
+  amount: z.number().optional(),
+  description: z.string().max(500).optional(),
+})
+export type AnalysisEntryLine = z.infer<typeof AnalysisEntryLine>
+
+export const AnalysisEntry = z.object({
+  lines: z.array(AnalysisEntryLine),
+  description: z.string().max(1000).optional(),
+  amount: z.number().optional(),
+  currency: z.string().max(10).optional(),
+  metadata: z.record(z.any()).optional(),
+})
+export type AnalysisEntry = z.infer<typeof AnalysisEntry>
+
 // Confirmed Analysis
 export const ConfirmedAnalysis = z.object({
   id: z.number(),
@@ -203,6 +225,7 @@ export const ParsedAnalysis = z.object({
   subjects: z.array(AccountingSubject),
   rules: z.array(AccountingRule),
   diagrams: z.array(z.string()),
+  entries: z.array(AnalysisEntry).default([]),
   rawContent: z.string(),
 })
 export type ParsedAnalysis = z.infer<typeof ParsedAnalysis>

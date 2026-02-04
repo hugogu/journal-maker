@@ -1,4 +1,4 @@
-import type { AccountingSubject, AccountingRule, ParsedAnalysis } from '../types'
+import type { AccountingSubject, AccountingRule, AnalysisEntry, ParsedAnalysis } from '../types'
 
 /**
  * Parse AI response content to extract structured analysis data
@@ -12,6 +12,7 @@ export function parseAIResponse(content: string): ParsedAnalysis {
     subjects: extractSubjects(content),
     rules: extractRules(content),
     diagrams: extractMermaidDiagrams(content),
+    entries: extractEntries(content),
     rawContent: content,
   }
 }
@@ -82,7 +83,8 @@ export function hasExtractableContent(parsed: ParsedAnalysis): boolean {
   return (
     parsed.subjects.length > 0 ||
     parsed.rules.length > 0 ||
-    parsed.diagrams.length > 0
+    parsed.diagrams.length > 0 ||
+    parsed.entries.length > 0
   )
 }
 
@@ -191,6 +193,20 @@ function extractRulesFromList(content: string): AccountingRule[] {
   return rules
 }
 
+function extractEntries(content: string): AnalysisEntry[] {
+  const jsonEntries = extractJSONArray<AnalysisEntry>(content, 'entries')
+  if (jsonEntries.length > 0) {
+    return jsonEntries.filter(isValidEntry)
+  }
+
+  const jsonBlockEntries = extractJSONFromCodeBlock<AnalysisEntry[]>(content, 'entries')
+  if (jsonBlockEntries && Array.isArray(jsonBlockEntries)) {
+    return jsonBlockEntries.filter(isValidEntry)
+  }
+
+  return []
+}
+
 function isValidSubject(subject: unknown): subject is AccountingSubject {
   if (!subject || typeof subject !== 'object') return false
   const s = subject as Record<string, unknown>
@@ -212,4 +228,11 @@ function isValidRule(rule: unknown): rule is AccountingRule {
     typeof r.description === 'string' &&
     r.description.length > 0
   )
+}
+
+function isValidEntry(entry: unknown): entry is AnalysisEntry {
+  if (!entry || typeof entry !== 'object') return false
+  const e = entry as Record<string, unknown>
+  if (!Array.isArray(e.lines) || e.lines.length === 0) return false
+  return true
 }

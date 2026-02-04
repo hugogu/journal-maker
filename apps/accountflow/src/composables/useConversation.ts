@@ -3,6 +3,9 @@ export interface ConversationMessage {
   role: 'user' | 'assistant' | 'system'
   content: string
   timestamp?: Date | string
+  structuredData?: Record<string, unknown> | null
+  requestLog?: Record<string, unknown> | null
+  responseStats?: Record<string, unknown> | null
 }
 
 export const useConversation = (scenarioId: number) => {
@@ -16,7 +19,9 @@ export const useConversation = (scenarioId: number) => {
     error.value = null
     try {
       // Try to load from API first
-      const { data } = await useFetch(`/api/scenarios/${scenarioId}/conversations`)
+      const { data } = await useFetch(`/api/scenarios/${scenarioId}/conversations`, {
+        query: { includeStructured: 'true' }
+      })
       if (data.value?.messages?.length) {
         messages.value = data.value.messages.map((m: any) => ({
           ...m,

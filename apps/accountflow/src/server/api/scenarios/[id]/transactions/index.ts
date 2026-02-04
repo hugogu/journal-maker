@@ -40,12 +40,20 @@ export default defineEventHandler(async (event) => {
         })
         
         // Generate sample using AI
+        const resolveAccount = (side: any, fallbackId?: number | null) => {
+          if (side?.accountId) return String(side.accountId)
+          if (side?.accountCode) return String(side.accountCode)
+          if (side?.account?.code) return String(side.account.code)
+          if (fallbackId) return String(fallbackId)
+          return ''
+        }
+
         const generated = await aiService.generateSampleTransaction(
           scenario.description || scenario.name,
           rules.map(r => ({
             event: r.eventName,
-            debit: r.debitAccountId?.toString() || '',
-            credit: r.creditAccountId?.toString() || '',
+            debit: resolveAccount(r.debitSide, r.debitAccountId),
+            credit: resolveAccount(r.creditSide, r.creditAccountId),
             description: r.eventDescription || ''
           })),
           allAccounts

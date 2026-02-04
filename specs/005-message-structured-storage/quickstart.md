@@ -12,6 +12,7 @@ Validate that conversation messages store structured payloads, analysis artifact
 1) **Create a message with structured payload**
 - Call `POST /api/scenarios/{scenarioId}/conversation-messages` with `content` and `structuredData/requestLog/responseStats`.
 - Verify `GET /api/scenarios/{scenarioId}/conversation-messages?includeStructured=true` returns those fields.
+- Optional: Verify `GET /api/scenarios/{scenarioId}/conversations?includeStructured=true` returns the same structured fields for replay.
 
 2) **Extract analysis artifacts**
 - Call `POST /api/scenarios/{scenarioId}/analysis-artifacts` with `subjects`, `entries`, and `diagrams` tied to `sourceMessageId`.

@@ -16,6 +16,7 @@ export async function createConversationMessage(data: {
   scenarioId: number
   role: 'user' | 'assistant' | 'system'
   content: string
+  structuredData?: any
   requestLog?: any
   responseStats?: any
 }) {
@@ -23,6 +24,7 @@ export async function createConversationMessage(data: {
     .values({
       ...data,
       timestamp: new Date(),
+      structuredData: data.structuredData || null,
       requestLog: data.requestLog || null,
       responseStats: data.responseStats || null
     })

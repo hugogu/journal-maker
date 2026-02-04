@@ -5,7 +5,7 @@ export default defineEventHandler(async (event) => {
   try {
     const idParam = getRouterParam(event, 'id')
     const scenarioId = idParam ? parseInt(idParam, 10) : null
-    
+
     if (!scenarioId || isNaN(scenarioId)) {
       throw createError({ statusCode: 400, message: 'Invalid scenario ID' })
     }
@@ -18,7 +18,7 @@ export default defineEventHandler(async (event) => {
       ? messages
       : messages.map(({ structuredData, requestLog, responseStats, ...rest }) => rest)
 
-    return { messages: sanitizedMessages }
+    return { scenarioId, messages: sanitizedMessages }
   } catch (error) {
     console.error('Error fetching conversation messages:', error)
     throw createError({

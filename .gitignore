@@ -1,0 +1,30 @@
+# Dependencies
+node_modules/
+
+# Build outputs
+.output/
+.nuxt/
+.nitro/
+.data/
+dist/
+build/
+
+# Testing
+coverage/
+
+# Environment
+.env*
+
+# Logs
+*.log
+
+# Editor/IDE
+.vscode/
+.idea/
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Docker volumes
+postgres-data/

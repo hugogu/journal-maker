@@ -3,6 +3,8 @@ import { conversationMessages, scenarios, accounts } from '../../../db/schema'
 import { sendMessageSchema } from '../../../utils/schemas'
 import { AppError, handleError } from '../../../utils/error'
 import { aiService } from '../../../utils/ai-service'
+import { createAnalysisArtifacts } from '../../../db/queries/analysis-artifacts'
+import { parseAIResponse } from '../../../../utils/ai-response-parser'
 import { eq } from 'drizzle-orm'
 import { defineEventHandler, getRouterParam, readBody, setResponseStatus, setHeader } from 'h3'
 
@@ -80,9 +82,22 @@ export default defineEventHandler(async (event) => {
         role: 'assistant',
         content: aiResponse.message,
         timestamp: new Date(),
+        structuredData: aiResponse.structured,
         requestLog: aiResponse.requestLog,
         responseStats: aiResponse.responseStats,
       }).returning()
+
+      const parsed = parseAIResponse(aiResponse.message)
+      await createAnalysisArtifacts({
+        scenarioId,
+        sourceMessageId: assistantMessageRecord.id,
+        subjects: parsed.subjects,
+        entries: parsed.entries,
+        diagrams: parsed.diagrams.map((diagram) => ({
+          diagramType: 'mermaid',
+          payload: { mermaid: diagram },
+        })),
+      })
       res.write(`data: ${JSON.stringify({ type: 'done', id: assistantMessageRecord.id }) }\n\n`)
       res.end()
     } catch (error) {

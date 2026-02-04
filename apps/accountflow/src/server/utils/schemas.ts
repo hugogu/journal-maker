@@ -68,6 +68,14 @@ export const sendMessageSchema = z.object({
   content: z.string().min(1).max(10000),
 })
 
+export const conversationMessageSchema = z.object({
+  role: z.enum(['user', 'assistant', 'system']),
+  content: z.string().min(1),
+  structuredData: z.record(z.any()).optional().nullable(),
+  requestLog: z.record(z.any()).optional().nullable(),
+  responseStats: z.record(z.any()).optional().nullable(),
+})
+
 // Journal Rule schemas
 export const createJournalRuleSchema = z.object({
   eventName: z.string().min(1).max(100),
@@ -79,6 +87,14 @@ export const createJournalRuleSchema = z.object({
 })
 
 export const updateJournalRuleSchema = createJournalRuleSchema.partial()
+
+export const structuredJournalRuleSchema = z.object({
+  debitSide: z.record(z.any()),
+  creditSide: z.record(z.any()),
+  triggerType: z.string().min(1).max(50),
+  status: z.enum(['proposal', 'confirmed']),
+  amountFormula: z.string().optional().nullable(),
+})
 
 // Sample Transaction schemas
 export const createSampleTransactionSchema = z.object({
@@ -128,3 +144,40 @@ export const confirmAnalysisRequestSchema = z.object({
     message: 'At least one of subjects, rules, or diagramMermaid must have content',
   }
 )
+
+// Analysis artifact schemas
+export const analysisSubjectSchema = z.object({
+  code: z.string().min(1).max(20),
+  name: z.string().min(1).max(100),
+  direction: z.enum(['debit', 'credit', 'both']),
+  description: z.string().max(500).optional().nullable(),
+  metadata: z.record(z.any()).optional().nullable(),
+})
+
+export const analysisEntryLineSchema = z.object({
+  side: z.enum(['debit', 'credit']),
+  accountCode: z.string().min(1).max(20),
+  amount: z.number(),
+  description: z.string().max(500).optional().nullable(),
+})
+
+export const analysisEntrySchema = z.object({
+  lines: z.array(analysisEntryLineSchema).min(2),
+  description: z.string().max(1000).optional().nullable(),
+  amount: z.number().optional().nullable(),
+  currency: z.string().max(10).optional().nullable(),
+  metadata: z.record(z.any()).optional().nullable(),
+})
+
+export const analysisDiagramSchema = z.object({
+  diagramType: z.enum(['mermaid', 'chart', 'table']),
+  payload: z.any(),
+  metadata: z.record(z.any()).optional().nullable(),
+})
+
+export const analysisArtifactsRequestSchema = z.object({
+  sourceMessageId: z.number().int().positive().optional().nullable(),
+  subjects: z.array(analysisSubjectSchema).optional().default([]),
+  entries: z.array(analysisEntrySchema).optional().default([]),
+  diagrams: z.array(analysisDiagramSchema).optional().default([]),
+})
