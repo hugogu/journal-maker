@@ -58,7 +58,10 @@ async function initMermaid() {
 }
 
 async function renderDiagram() {
-  if (!props.mermaidCode || !diagramContainer.value || typeof window === 'undefined') return
+  if (!props.mermaidCode || !diagramContainer.value || typeof window === 'undefined') {
+    loading.value = false
+    return
+  }
 
   loading.value = true
   error.value = false
@@ -66,7 +69,11 @@ async function renderDiagram() {
   try {
     await initMermaid()
 
-    if (!mermaid) return
+    if (!mermaid) {
+      loading.value = false
+      error.value = true
+      return
+    }
 
     // Clear previous content
     diagramContainer.value.innerHTML = ''

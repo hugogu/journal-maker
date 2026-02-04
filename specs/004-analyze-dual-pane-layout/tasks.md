@@ -64,7 +64,7 @@
 - [x] T016 [US1] Move modal components (LogModal, StatsModal, ShareModal) handling to ChatPane.vue
 - [x] T017 [US1] Refactor `apps/accountflow/src/pages/scenarios/[id]/analyze.vue` to dual-pane grid layout
 - [x] T018 [US1] Add responsive breakpoints for mobile/tablet in analyze.vue
-- [ ] T019 [US1] Verify all existing functionality works in new ChatPane structure
+- [x] T019 [US1] Verify all existing functionality works in new ChatPane structure
 
 **Checkpoint**: User Story 1 complete - ChatPane fully functional with all existing features
 
@@ -86,7 +86,7 @@
 - [x] T025 [US2] Display basic confirmed content in StatePane (subjects, rules, diagram as raw text)
 - [x] T026 [US2] Integrate StatePane into analyze.vue dual-pane layout
 - [x] T027 [US2] Load existing confirmed analysis on page mount via GET endpoint
-- [ ] T028 [US2] Verify confirmed content persists across page refresh
+- [x] T028 [US2] Verify confirmed content persists across page refresh
 
 **Checkpoint**: User Story 2 complete - Confirm button and basic StatePane working
 
@@ -158,9 +158,9 @@
 - [x] T049 [P] Add error toasts for API failures
 - [x] T050 Verify responsive layout on tablet (768px-1024px) and mobile (<768px)
 - [x] T051 Code cleanup: remove unused code from original analyze.vue
-- [ ] T052 Add aria labels and keyboard accessibility to new components
-- [ ] T053 Run TypeScript type check with `pnpm typecheck`
-- [ ] T054 Run linter with `pnpm lint:fix`
+- [x] T052 Add aria labels and keyboard accessibility to new components
+- [x] T053 Run TypeScript type check with `pnpm typecheck`
+- [x] T054 Run linter with `pnpm lint:fix`
 
 ---
 
