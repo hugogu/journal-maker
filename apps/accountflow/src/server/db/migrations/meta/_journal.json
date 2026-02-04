@@ -43,6 +43,13 @@
       "when": 1770014401841,
       "tag": "005_add_default_model",
       "breakpoints": true
+    },
+    {
+      "idx": 6,
+      "version": "7",
+      "when": 1770183437872,
+      "tag": "0006_add_confirmed_analysis",
+      "breakpoints": true
     }
   ]
 }

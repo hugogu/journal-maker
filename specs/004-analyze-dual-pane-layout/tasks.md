@@ -25,7 +25,7 @@
 **Purpose**: Database schema extension and shared utilities
 
 - [x] T001 Add confirmedAnalysis table schema in `apps/accountflow/src/server/db/schema.ts`
-- [ ] T002 Generate and apply database migration with `pnpm db:generate && pnpm db:migrate`
+- [x] T002 Generate and apply database migration with `pnpm db:generate && pnpm db:migrate`
 - [x] T003 [P] Create TypeScript types for analysis entities in `apps/accountflow/src/types/index.ts`
 - [x] T004 [P] Add Zod validation schemas in `apps/accountflow/src/server/utils/schemas.ts`
 
@@ -140,11 +140,11 @@
 
 ### Implementation for User Story 5
 
-- [ ] T043 [US5] Add clear/reset button to StatePane header
-- [ ] T044 [US5] Implement confirmation dialog for clear action
-- [ ] T045 [US5] Connect clear action to DELETE API endpoint via useConfirmedAnalysis
-- [ ] T046 [US5] Reset StatePane to empty state after successful clear
-- [ ] T047 [US5] Update confirm button state after clear (re-enable if last AI response has content)
+- [x] T043 [US5] Add clear/reset button to StatePane header
+- [x] T044 [US5] Implement confirmation dialog for clear action
+- [x] T045 [US5] Connect clear action to DELETE API endpoint via useConfirmedAnalysis
+- [x] T046 [US5] Reset StatePane to empty state after successful clear
+- [x] T047 [US5] Update confirm button state after clear (re-enable if last AI response has content)
 
 **Checkpoint**: User Story 5 complete - Clear functionality working
 
@@ -154,10 +154,10 @@
 
 **Purpose**: Improvements that affect multiple user stories
 
-- [ ] T048 [P] Add loading spinners for confirm and clear operations
-- [ ] T049 [P] Add error toasts for API failures
-- [ ] T050 Verify responsive layout on tablet (768px-1024px) and mobile (<768px)
-- [ ] T051 Code cleanup: remove unused code from original analyze.vue
+- [x] T048 [P] Add loading spinners for confirm and clear operations
+- [x] T049 [P] Add error toasts for API failures
+- [x] T050 Verify responsive layout on tablet (768px-1024px) and mobile (<768px)
+- [x] T051 Code cleanup: remove unused code from original analyze.vue
 - [ ] T052 Add aria labels and keyboard accessibility to new components
 - [ ] T053 Run TypeScript type check with `pnpm typecheck`
 - [ ] T054 Run linter with `pnpm lint:fix`
