@@ -402,6 +402,73 @@ export class AIService {
   }
 
   /**
+   * Generic analyze method with tool/function calling support
+   * This is a flexible method that allows custom messages and tools
+   */
+  async analyze(options: {
+    scenarioId: number
+    companyId: number
+    userId?: number
+    messages: ChatMessage[]
+    tools?: any[]
+    tool_choice?: 'auto' | 'none' | { type: 'function'; function: { name: string } }
+    explicitProviderId?: number
+    explicitModel?: string
+  }): Promise<AnalysisResult & { toolCalls?: any[] }> {
+    const startTime = Date.now()
+    const { adapter, model, providerId, providerName } = await this.getAdapter(
+      options.userId,
+      options.explicitProviderId,
+      options.explicitModel
+    )
+
+    const response = await adapter.chatCompletion({
+      model,
+      messages: options.messages,
+      temperature: 0.7,
+      tools: options.tools,
+      tool_choice: options.tool_choice,
+    })
+
+    const durationMs = Date.now() - startTime
+
+    let structured: AIResponse['structured'] | undefined
+    try {
+      // Try to extract JSON from markdown code block first
+      const jsonMatch = response.content?.match(/```json\n([\s\S]*?)\n```/)
+      const jsonContent = jsonMatch ? jsonMatch[1] : response.content
+      const parsed = JSON.parse(jsonContent)
+      structured = parsed.structured
+    } catch (e) {
+      // Not JSON format, that's ok
+    }
+
+    // Extract system prompt from messages
+    const systemPrompt = options.messages.find(m => m.role === 'system')?.content || ''
+
+    return {
+      message: response.content,
+      structured,
+      requestLog: {
+        systemPrompt,
+        contextMessages: options.messages,
+        fullPrompt: options.messages.map(m => `${m.role}: ${m.content}`).join('\n\n'),
+        variables: {},
+      },
+      responseStats: {
+        model: response.model,
+        providerId,
+        providerName,
+        inputTokens: response.usage?.promptTokens || 0,
+        outputTokens: response.usage?.completionTokens || 0,
+        totalTokens: response.usage?.totalTokens || 0,
+        durationMs,
+      },
+      toolCalls: response.toolCalls,
+    }
+  }
+
+  /**
    * Test connection to a provider
    */
   async testConnection(

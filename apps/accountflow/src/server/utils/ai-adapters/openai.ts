@@ -48,8 +48,39 @@ export class OpenAIAdapter extends BaseAIAdapter {
   }
 
   async chatCompletion(params: ChatCompletionParams): Promise<ChatCompletionResponse> {
+    const requestBody: any = {
+      model: params.model,
+      messages: params.messages,
+      temperature: params.temperature ?? 0.7,
+      max_tokens: params.maxTokens,
+    }
+
+    // Add tools/functions if provided
+    if (params.tools && params.tools.length > 0) {
+      requestBody.tools = params.tools
+      if (params.tool_choice) {
+        requestBody.tool_choice = params.tool_choice
+      }
+    }
+
     const response = await this.makeRequest<{
-      choices: Array<{ message: { content: string } }>
+      choices: Array<{
+        message: {
+          content: string | null
+          tool_calls?: Array<{
+            id: string
+            type: 'function'
+            function: {
+              name: string
+              arguments: string
+            }
+          }>
+          function_call?: {
+            name: string
+            arguments: string
+          }
+        }
+      }>
       model: string
       usage: {
         prompt_tokens: number
@@ -58,22 +89,30 @@ export class OpenAIAdapter extends BaseAIAdapter {
       }
     }>('/chat/completions', {
       method: 'POST',
-      body: JSON.stringify({
-        model: params.model,
-        messages: params.messages,
-        temperature: params.temperature ?? 0.7,
-        max_tokens: params.maxTokens,
-      }),
+      body: JSON.stringify(requestBody),
     })
 
+    const message = response.choices[0]?.message
     return {
-      content: response.choices[0]?.message?.content || '',
+      content: message?.content || '',
       model: response.model,
       usage: {
         promptTokens: response.usage.prompt_tokens,
         completionTokens: response.usage.completion_tokens,
         totalTokens: response.usage.total_tokens,
       },
+      toolCalls: message?.tool_calls?.map(tc => ({
+        id: tc.id,
+        type: tc.type,
+        function: {
+          name: tc.function.name,
+          arguments: tc.function.arguments,
+        },
+      })),
+      functionCall: message?.function_call ? {
+        name: message.function_call.name,
+        arguments: message.function_call.arguments,
+      } : undefined,
     }
   }
 
@@ -81,19 +120,29 @@ export class OpenAIAdapter extends BaseAIAdapter {
     params: ChatCompletionParams,
     onChunk: (chunk: StreamingChatResponse) => void
   ): Promise<void> {
+    const requestBody: any = {
+      model: params.model,
+      messages: params.messages,
+      temperature: params.temperature ?? 0.7,
+      max_tokens: params.maxTokens,
+      stream: true,
+    }
+
+    // Add tools/functions if provided
+    if (params.tools && params.tools.length > 0) {
+      requestBody.tools = params.tools
+      if (params.tool_choice) {
+        requestBody.tool_choice = params.tool_choice
+      }
+    }
+
     const response = await fetch(`${this.apiEndpoint}/chat/completions`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
         'Authorization': `Bearer ${this.apiKey}`,
       },
-      body: JSON.stringify({
-        model: params.model,
-        messages: params.messages,
-        temperature: params.temperature ?? 0.7,
-        max_tokens: params.maxTokens,
-        stream: true,
-      }),
+      body: JSON.stringify(requestBody),
     })
 
     if (!response.ok) {
