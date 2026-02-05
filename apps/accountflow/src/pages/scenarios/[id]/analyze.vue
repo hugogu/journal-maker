@@ -119,21 +119,26 @@ function closeModals() {
 }
 
 async function handleConfirm(data: { parsed: ParsedAnalysis; messageId?: number }) {
-  console.log('Confirming analysis with data:', {
+  console.log('=== CONFIRM CLICKED ===')
+  console.log('Parsed analysis data:', {
     subjects: data.parsed.subjects,
     rules: data.parsed.rules,
+    diagramsCount: data.parsed.diagrams.length,
     diagrams: data.parsed.diagrams,
     messageId: data.messageId
   })
-  
+
   // Prioritize LR (funds/information flow) diagram over TD (business process flow)
   // LR diagrams are typically the second one, so we search for it specifically
   let selectedDiagram = data.parsed.diagrams.length > 0 ? data.parsed.diagrams[0] : null
   const lrDiagram = data.parsed.diagrams.find(d => d.includes('flowchart LR') || d.includes('flowchart RL'))
   if (lrDiagram) {
     selectedDiagram = lrDiagram
+    console.log('Found LR diagram, using it instead')
   }
-  
+
+  console.log('Saving with diagramMermaid:', selectedDiagram ? selectedDiagram.substring(0, 100) + '...' : 'null')
+
   const success = await confirmedAnalysis.save({
     subjects: data.parsed.subjects,
     rules: data.parsed.rules,
@@ -144,7 +149,15 @@ async function handleConfirm(data: { parsed: ParsedAnalysis; messageId?: number 
   if (!success) {
     alert('保存分析结果失败，请重试')
   } else {
-    console.log('Analysis saved successfully, confirmed data:', confirmedAnalysis.data.value)
+    console.log('=== SAVE SUCCESSFUL ===')
+    console.log('Confirmed data from composable:', {
+      id: confirmedAnalysis.data.value.id,
+      subjects: confirmedAnalysis.data.value.subjects?.length || 0,
+      rules: confirmedAnalysis.data.value.rules?.length || 0,
+      hasDiagram: !!confirmedAnalysis.data.value.diagramMermaid,
+      diagramLength: confirmedAnalysis.data.value.diagramMermaid?.length,
+      diagramPreview: confirmedAnalysis.data.value.diagramMermaid?.substring(0, 100) + '...'
+    })
   }
 }
 

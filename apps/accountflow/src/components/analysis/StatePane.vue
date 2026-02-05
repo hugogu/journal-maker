@@ -33,6 +33,18 @@
 
     <!-- Content -->
     <div class="flex-1 overflow-y-auto space-y-6">
+      <!-- Debug Info -->
+      <div class="bg-gray-100 p-2 rounded text-xs font-mono">
+        <div>loading: {{ loading }}</div>
+        <div>hasContent: {{ hasContent }}</div>
+        <div>subjects: {{ data.subjects?.length || 0 }}</div>
+        <div>rules: {{ data.rules?.length || 0 }}</div>
+        <div>diagram: {{ data.diagramMermaid ? 'yes (' + data.diagramMermaid.length + ' chars)' : 'no' }}</div>
+        <div v-if="data.diagramMermaid" class="mt-2 max-h-20 overflow-auto">
+          <pre class="text-xs">{{ data.diagramMermaid.substring(0, 200) }}...</pre>
+        </div>
+      </div>
+
       <!-- Empty State -->
       <div v-if="!hasContent && !loading" class="flex flex-col items-center justify-center h-full text-gray-400">
         <svg class="w-16 h-16 mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">

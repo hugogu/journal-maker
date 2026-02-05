@@ -1,21 +1,21 @@
 <template>
   <div class="flow-diagram-viewer">
-    <!-- Loading State -->
-    <div v-if="loading" class="flex items-center justify-center py-8">
-      <div class="animate-spin rounded-full h-6 w-6 border-b-2 border-green-600"></div>
-    </div>
-
     <!-- Error State -->
-    <div v-else-if="error" class="bg-red-50 border border-red-200 rounded-lg p-4">
+    <div v-if="error" class="bg-red-50 border border-red-200 rounded-lg p-4">
       <p class="text-sm text-red-600">流程图渲染失败</p>
     </div>
 
-    <!-- Rendered Diagram -->
+    <!-- Container (always rendered to keep ref alive) -->
     <div
       v-else
       ref="diagramContainer"
-      class="mermaid-container overflow-auto bg-white rounded-lg border border-gray-200 p-4"
-    ></div>
+      class="mermaid-container overflow-auto bg-white rounded-lg border border-gray-200 p-4 relative"
+    >
+      <!-- Loading Overlay -->
+      <div v-if="loading" class="absolute inset-0 flex items-center justify-center bg-white/80">
+        <div class="animate-spin rounded-full h-6 w-6 border-b-2 border-green-600"></div>
+      </div>
+    </div>
   </div>
 </template>
 
@@ -27,7 +27,7 @@ const props = defineProps<{
 }>()
 
 const diagramContainer = ref<HTMLElement | null>(null)
-const loading = ref(true)
+const loading = ref(false)
 const error = ref(false)
 
 let mermaidInitialized = false
@@ -54,7 +54,17 @@ async function initMermaid() {
 }
 
 async function renderDiagram() {
+  console.log('FlowDiagramViewer renderDiagram called:', {
+    hasMermaidCode: !!props.mermaidCode,
+    mermaidCodeLength: props.mermaidCode?.length,
+    hasContainer: !!diagramContainer.value,
+    isClient: typeof window !== 'undefined'
+  })
+
   if (!props.mermaidCode || !diagramContainer.value || typeof window === 'undefined') {
+    console.log('FlowDiagramViewer early return:', {
+      reason: !props.mermaidCode ? 'no mermaid code' : !diagramContainer.value ? 'no container' : 'server side'
+    })
     loading.value = false
     return
   }
@@ -66,6 +76,7 @@ async function renderDiagram() {
     await initMermaid()
 
     if (!mermaid) {
+      console.error('FlowDiagramViewer: Mermaid failed to initialize')
       loading.value = false
       error.value = true
       return
@@ -79,10 +90,21 @@ async function renderDiagram() {
 
     // Render the diagram
     const result = await mermaid.render(id, props.mermaidCode)
+    console.log('FlowDiagramViewer render result:', {
+      hasResult: !!result,
+      hasSvg: !!result?.svg,
+      svgLength: result?.svg?.length,
+      hasContainer: !!diagramContainer.value
+    })
 
     if (diagramContainer.value && result.svg) {
       diagramContainer.value.innerHTML = result.svg
+      console.log('FlowDiagramViewer: SVG successfully inserted')
     } else {
+      console.error('FlowDiagramViewer: Failed to insert SVG', {
+        hasContainer: !!diagramContainer.value,
+        hasSvg: !!result?.svg
+      })
       error.value = true
     }
   } catch (e) {
@@ -93,30 +115,48 @@ async function renderDiagram() {
   }
 }
 
+// Wait for both mermaidCode and container to be ready
+async function tryRender(attempt = 0): Promise<void> {
+  const maxAttempts = 5
+
+  if (props.mermaidCode && diagramContainer.value) {
+    await renderDiagram()
+  } else if (props.mermaidCode && attempt < maxAttempts) {
+    console.log(`FlowDiagramViewer: Container not ready, attempt ${attempt + 1}/${maxAttempts}`)
+    await new Promise(resolve => setTimeout(resolve, 50))
+    await tryRender(attempt + 1)
+  } else if (attempt >= maxAttempts) {
+    console.error('FlowDiagramViewer: Container never became ready after', maxAttempts, 'attempts')
+    loading.value = false
+    error.value = true
+  } else {
+    // No mermaid code, just set loading to false
+    loading.value = false
+  }
+}
+
 onMounted(async () => {
   await nextTick()
-  // Delay slightly to ensure container is fully rendered
-  setTimeout(() => {
-    renderDiagram()
-  }, 100)
+  await tryRender()
 })
 
 watch(() => props.mermaidCode, async () => {
   await nextTick()
-  // Delay to ensure DOM update is complete
-  setTimeout(() => {
-    renderDiagram()
-  }, 100)
+  await tryRender()
 })
 </script>
 
 <style scoped>
 .mermaid-container {
-  min-height: 100px;
+  min-height: 200px;
 }
 
 .mermaid-container :deep(svg) {
   max-width: 100%;
   height: auto;
+}
+
+.flow-diagram-viewer {
+  position: relative;
 }
 </style>

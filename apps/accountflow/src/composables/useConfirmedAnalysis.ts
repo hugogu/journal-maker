@@ -92,10 +92,12 @@ export const useConfirmedAnalysis = (scenarioId: number) => {
     const validSubjects = input.subjects.filter(s => s && s.code && s.name && s.direction)
     const validRules = input.rules.filter(r => r && r.id && r.description)
 
-    console.log('Saving with filtered data:', {
+    console.log('useConfirmedAnalysis.save - Filtered data:', {
       subjectsCount: validSubjects.length,
       rulesCount: validRules.length,
-      hasDiagram: !!input.diagramMermaid
+      hasDiagram: !!input.diagramMermaid,
+      diagramLength: input.diagramMermaid?.length,
+      diagramPreview: input.diagramMermaid?.substring(0, 100) + '...'
     })
 
     try {
@@ -112,6 +114,17 @@ export const useConfirmedAnalysis = (scenarioId: number) => {
         }
       )
 
+      console.log('useConfirmedAnalysis.save - API response:', {
+        success: response.success,
+        hasData: !!response.data,
+        dataId: response.data?.id,
+        dataSubjectsCount: response.data?.subjects?.length || 0,
+        dataRulesCount: response.data?.rules?.length || 0,
+        hasDiagramMermaid: !!response.data?.diagramMermaid,
+        diagramMermaidLength: response.data?.diagramMermaid?.length,
+        diagramMermaidPreview: response.data?.diagramMermaid?.substring(0, 100) + '...'
+      })
+
       if (response.success && response.data) {
         data.value = {
           id: response.data.id,
@@ -122,6 +135,13 @@ export const useConfirmedAnalysis = (scenarioId: number) => {
           confirmedAt: response.data.confirmedAt ? new Date(response.data.confirmedAt) : null,
           updatedAt: response.data.updatedAt ? new Date(response.data.updatedAt) : null,
         }
+        console.log('useConfirmedAnalysis.save - Updated data.value:', {
+          id: data.value.id,
+          subjectsCount: data.value.subjects.length,
+          rulesCount: data.value.rules.length,
+          hasDiagramMermaid: !!data.value.diagramMermaid,
+          diagramMermaidLength: data.value.diagramMermaid?.length
+        })
         return true
       }
       return false
