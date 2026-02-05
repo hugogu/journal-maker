@@ -28,7 +28,8 @@
     "mermaid": "^11.12.2",
     "openai": "^6.17.0",
     "postgres": "^3.4.8",
-    "zod": "^4.3.6"
+    "zod": "^4.3.6",
+    "zod-to-json-schema": "^3.25.1"
   },
   "devDependencies": {
     "@nuxt/devtools": "latest",

@@ -16,12 +16,25 @@ export interface ChatMessage {
   content: string
 }
 
+export interface FunctionCall {
+  name: string
+  arguments: string // JSON string
+}
+
+export interface ToolCall {
+  id: string
+  type: 'function'
+  function: FunctionCall
+}
+
 export interface ChatCompletionParams {
   model: string
   messages: ChatMessage[]
   temperature?: number
   maxTokens?: number
   stream?: boolean
+  tools?: any[] // Tool definitions for function calling
+  tool_choice?: 'auto' | 'none' | { type: 'function'; function: { name: string } }
 }
 
 export interface ChatCompletionResponse {
@@ -32,6 +45,8 @@ export interface ChatCompletionResponse {
     completionTokens: number
     totalTokens: number
   }
+  toolCalls?: ToolCall[] // Function/tool calls made by the model
+  functionCall?: FunctionCall // Legacy function calling format
 }
 
 export interface StreamingChatResponse {
