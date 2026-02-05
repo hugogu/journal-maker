@@ -126,10 +126,18 @@ async function handleConfirm(data: { parsed: ParsedAnalysis; messageId?: number 
     messageId: data.messageId
   })
   
+  // Prioritize LR (funds/information flow) diagram over TD (business process flow)
+  // LR diagrams are typically the second one, so we search for it specifically
+  let selectedDiagram = data.parsed.diagrams.length > 0 ? data.parsed.diagrams[0] : null
+  const lrDiagram = data.parsed.diagrams.find(d => d.includes('flowchart LR') || d.includes('flowchart RL'))
+  if (lrDiagram) {
+    selectedDiagram = lrDiagram
+  }
+  
   const success = await confirmedAnalysis.save({
     subjects: data.parsed.subjects,
     rules: data.parsed.rules,
-    diagramMermaid: data.parsed.diagrams.length > 0 ? data.parsed.diagrams[0] : null,
+    diagramMermaid: selectedDiagram,
     sourceMessageId: data.messageId ?? null,
   })
 
