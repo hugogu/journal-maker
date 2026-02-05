@@ -1,0 +1,232 @@
+openapi: 3.0.3
+info:
+  title: Confirmed Analysis API
+  description: API for managing confirmed analysis results in StatePane
+  version: 1.0.0
+
+paths:
+  /api/scenarios/{scenarioId}/confirmed-analysis:
+    get:
+      summary: Get confirmed analysis for a scenario
+      description: Retrieves the confirmed analysis result for the specified scenario. Returns empty if not yet confirmed.
+      operationId: getConfirmedAnalysis
+      parameters:
+        - name: scenarioId
+          in: path
+          required: true
+          schema:
+            type: integer
+          description: Scenario ID
+      responses:
+        '200':
+          description: Confirmed analysis data
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ConfirmedAnalysisResponse'
+        '404':
+          description: Scenario not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+    post:
+      summary: Create or update confirmed analysis
+      description: Creates a new confirmed analysis or updates existing one (UPSERT behavior).
+      operationId: upsertConfirmedAnalysis
+      parameters:
+        - name: scenarioId
+          in: path
+          required: true
+          schema:
+            type: integer
+          description: Scenario ID
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ConfirmAnalysisRequest'
+      responses:
+        '200':
+          description: Analysis confirmed successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ConfirmedAnalysisResponse'
+        '400':
+          description: Invalid request - no content to confirm
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '404':
+          description: Scenario not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+    delete:
+      summary: Clear confirmed analysis
+      description: Deletes the confirmed analysis for the specified scenario (reset StatePane).
+      operationId: deleteConfirmedAnalysis
+      parameters:
+        - name: scenarioId
+          in: path
+          required: true
+          schema:
+            type: integer
+          description: Scenario ID
+      responses:
+        '200':
+          description: Analysis cleared successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  message:
+                    type: string
+                    example: "Confirmed analysis cleared"
+        '404':
+          description: Scenario not found or no analysis to clear
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+components:
+  schemas:
+    AccountingSubject:
+      type: object
+      required:
+        - code
+        - name
+        - direction
+      properties:
+        code:
+          type: string
+          minLength: 1
+          maxLength: 20
+          pattern: '^[A-Za-z0-9]+$'
+          example: "1001"
+        name:
+          type: string
+          minLength: 1
+          maxLength: 100
+          example: "库存现金"
+        direction:
+          type: string
+          enum: [debit, credit]
+          example: "debit"
+        description:
+          type: string
+          maxLength: 500
+          example: "现金及现金等价物"
+
+    AccountingRule:
+      type: object
+      required:
+        - id
+        - description
+      properties:
+        id:
+          type: string
+          minLength: 1
+          maxLength: 50
+          example: "RULE-001"
+        description:
+          type: string
+          minLength: 1
+          maxLength: 500
+          example: "收到客户货款时，借记银行存款，贷记应收账款"
+        condition:
+          type: string
+          maxLength: 200
+          example: "收款确认后"
+        debitAccount:
+          type: string
+          maxLength: 20
+          example: "1002"
+        creditAccount:
+          type: string
+          maxLength: 20
+          example: "1131"
+
+    ConfirmAnalysisRequest:
+      type: object
+      properties:
+        subjects:
+          type: array
+          items:
+            $ref: '#/components/schemas/AccountingSubject'
+          default: []
+        rules:
+          type: array
+          items:
+            $ref: '#/components/schemas/AccountingRule'
+          default: []
+        diagramMermaid:
+          type: string
+          nullable: true
+          description: Mermaid diagram code
+          example: |
+            graph LR
+              A[客户] -->|付款| B[银行存款]
+              B -->|转账| C[应收账款]
+        sourceMessageId:
+          type: integer
+          nullable: true
+          description: ID of the conversation message that generated this analysis
+
+    ConfirmedAnalysisResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+          example: true
+        data:
+          type: object
+          nullable: true
+          properties:
+            id:
+              type: integer
+              example: 1
+            scenarioId:
+              type: integer
+              example: 5
+            subjects:
+              type: array
+              items:
+                $ref: '#/components/schemas/AccountingSubject'
+            rules:
+              type: array
+              items:
+                $ref: '#/components/schemas/AccountingRule'
+            diagramMermaid:
+              type: string
+              nullable: true
+            sourceMessageId:
+              type: integer
+              nullable: true
+            confirmedAt:
+              type: string
+              format: date-time
+            updatedAt:
+              type: string
+              format: date-time
+
+    ErrorResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+          example: false
+        error:
+          type: string
+          example: "Scenario not found"

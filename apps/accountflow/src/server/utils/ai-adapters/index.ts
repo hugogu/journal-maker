@@ -58,6 +58,3 @@ export function createAIAdapter(params: CreateAdapterParams): AIProviderAdapter 
       throw new Error(`Unknown provider type: ${params.providerType}`)
   }
 }
-
-// Export adapter classes for direct use
-export { OpenAIAdapter, AzureOpenAIAdapter, OllamaAdapter }

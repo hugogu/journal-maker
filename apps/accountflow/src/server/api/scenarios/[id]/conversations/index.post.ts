@@ -5,6 +5,7 @@ import { z } from 'zod'
 const messageSchema = z.object({
   role: z.enum(['user', 'assistant', 'system']),
   content: z.string().min(1),
+  structuredData: z.any().optional(),
   requestLog: z.any().optional(),
   responseStats: z.any().optional(),
 })

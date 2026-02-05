@@ -1,4 +1,4 @@
-import { defineEventHandler, createError, getRouterParam } from 'h3'
+import { defineEventHandler, createError, getRouterParam, getQuery } from 'h3'
 import { getConversationMessages } from '../../../../db/queries/conversations'
 
 export default defineEventHandler(async (event) => {
@@ -10,8 +10,15 @@ export default defineEventHandler(async (event) => {
       throw createError({ statusCode: 400, message: 'Invalid scenario ID' })
     }
 
+    const query = getQuery(event)
+    const includeStructured = query.includeStructured === 'true'
+
     const messages = await getConversationMessages(scenarioId)
-    return { messages }
+    const sanitizedMessages = includeStructured
+      ? messages
+      : messages.map(({ structuredData, requestLog, responseStats, ...rest }) => rest)
+
+    return { messages: sanitizedMessages }
   } catch (error) {
     console.error('Error fetching conversation messages:', error)
     throw createError({

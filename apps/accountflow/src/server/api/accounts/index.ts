@@ -2,7 +2,7 @@ import { db } from '../../db'
 import { accounts, scenarios, sampleTransactions, journalRules } from '../../db/schema'
 import { createAccountSchema, updateAccountSchema } from '../../utils/schemas'
 import { AppError, handleError, successResponse } from '../../utils/error'
-import { eq, and, like } from 'drizzle-orm'
+import { eq, and, like, inArray } from 'drizzle-orm'
 import { defineEventHandler, getMethod, readBody, setResponseStatus, getRouterParam } from 'h3'
 
 export default defineEventHandler(async (event) => {
@@ -73,8 +73,33 @@ export default defineEventHandler(async (event) => {
       const creditRulesUsingAccount = await db.query.journalRules.findMany({
         where: eq(journalRules.creditAccountId, accountId)
       })
-      
-      const rulesUsingAccount = [...debitRulesUsingAccount, ...creditRulesUsingAccount]
+      const scenarioIds = await db.select({ id: scenarios.id })
+        .from(scenarios)
+        .where(eq(scenarios.companyId, companyId))
+
+      const candidateRules = scenarioIds.length
+        ? await db.query.journalRules.findMany({
+            where: inArray(journalRules.scenarioId, scenarioIds.map(s => s.id))
+          })
+        : []
+
+      const hasAccountReference = (value: any): boolean => {
+        if (!value) return false
+        if (Array.isArray(value)) return value.some(hasAccountReference)
+        if (typeof value === 'object') {
+          if (value.accountId === accountId || value.accountCode === account.code || value.code === account.code) {
+            return true
+          }
+          return Object.values(value).some(hasAccountReference)
+        }
+        return false
+      }
+
+      const structuredRulesUsingAccount = candidateRules.filter(rule =>
+        hasAccountReference(rule.debitSide) || hasAccountReference(rule.creditSide)
+      )
+
+      const rulesUsingAccount = [...debitRulesUsingAccount, ...creditRulesUsingAccount, ...structuredRulesUsingAccount]
       
       const usageCount = scenariosUsingAccount.length + transactionsUsingAccount.length + rulesUsingAccount.length
       

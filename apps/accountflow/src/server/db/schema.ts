@@ -1,4 +1,4 @@
-import { pgTable, serial, varchar, text, timestamp, integer, boolean, jsonb, pgEnum, index, unique } from 'drizzle-orm/pg-core'
+import { pgTable, serial, varchar, text, timestamp, integer, boolean, jsonb, pgEnum, index, unique, numeric } from 'drizzle-orm/pg-core'
 import { relations } from 'drizzle-orm'
 
 // Enums
@@ -21,6 +21,12 @@ export const providerStatusEnum = pgEnum('provider_status', ['active', 'inactive
 
 // NEW: Conversation Message Enum
 export const messageRoleEnum = pgEnum('message_role', ['user', 'assistant', 'system'])
+
+// NEW: Journal Rule Status Enum
+export const journalRuleStatusEnum = pgEnum('journal_rule_status', ['proposal', 'confirmed'])
+
+// NEW: Analysis Diagram Type Enum
+export const analysisDiagramTypeEnum = pgEnum('analysis_diagram_type', ['mermaid', 'chart', 'table'])
 
 // Company table
 export const companies = pgTable('companies', {
@@ -92,6 +98,10 @@ export const journalRules = pgTable('journal_rules', {
   creditAccountId: integer('credit_account_id').references(() => accounts.id),
   conditions: jsonb('conditions'),
   amountFormula: text('amount_formula'),
+  debitSide: jsonb('debit_side'),
+  creditSide: jsonb('credit_side'),
+  triggerType: varchar('trigger_type', { length: 50 }),
+  status: journalRuleStatusEnum('status').default('proposal').notNull(),
   createdAt: timestamp('created_at').defaultNow().notNull(),
   updatedAt: timestamp('updated_at').defaultNow().notNull(),
 }, (table) => [
@@ -218,12 +228,59 @@ export const conversationMessages = pgTable('conversation_messages', {
   role: messageRoleEnum('role').notNull(),
   content: text('content').notNull(),
   timestamp: timestamp('timestamp').defaultNow().notNull(),
+  structuredData: jsonb('structured_data'),
   requestLog: jsonb('request_log'),
   responseStats: jsonb('response_stats'),
   createdAt: timestamp('created_at').defaultNow().notNull(),
 }, (table) => [
   index('idx_conversation_messages_scenario_id').on(table.scenarioId),
   index('idx_conversation_messages_timestamp').on(table.timestamp),
+])
+
+// NEW: Analysis Subjects (extracted from AI analysis)
+export const analysisSubjects = pgTable('analysis_subjects', {
+  id: serial('id').primaryKey(),
+  scenarioId: integer('scenario_id').notNull().references(() => scenarios.id, { onDelete: 'cascade' }),
+  sourceMessageId: integer('source_message_id').references(() => conversationMessages.id, { onDelete: 'set null' }),
+  code: varchar('code', { length: 20 }).notNull(),
+  name: varchar('name', { length: 100 }).notNull(),
+  direction: accountDirectionEnum('direction').notNull(),
+  description: text('description'),
+  metadata: jsonb('metadata'),
+  createdAt: timestamp('created_at').defaultNow().notNull(),
+}, (table) => [
+  index('idx_analysis_subjects_scenario_id').on(table.scenarioId),
+  index('idx_analysis_subjects_source_message_id').on(table.sourceMessageId),
+])
+
+// NEW: Analysis Entries (journal entries extracted from AI analysis)
+export const analysisEntries = pgTable('analysis_entries', {
+  id: serial('id').primaryKey(),
+  scenarioId: integer('scenario_id').notNull().references(() => scenarios.id, { onDelete: 'cascade' }),
+  sourceMessageId: integer('source_message_id').references(() => conversationMessages.id, { onDelete: 'set null' }),
+  lines: jsonb('lines').notNull(),
+  description: text('description'),
+  amount: numeric('amount', { precision: 18, scale: 2 }),
+  currency: varchar('currency', { length: 10 }),
+  metadata: jsonb('metadata'),
+  createdAt: timestamp('created_at').defaultNow().notNull(),
+}, (table) => [
+  index('idx_analysis_entries_scenario_id').on(table.scenarioId),
+  index('idx_analysis_entries_source_message_id').on(table.sourceMessageId),
+])
+
+// NEW: Analysis Diagrams (charts/flow/mermaid extracted from AI analysis)
+export const analysisDiagrams = pgTable('analysis_diagrams', {
+  id: serial('id').primaryKey(),
+  scenarioId: integer('scenario_id').notNull().references(() => scenarios.id, { onDelete: 'cascade' }),
+  sourceMessageId: integer('source_message_id').references(() => conversationMessages.id, { onDelete: 'set null' }),
+  diagramType: analysisDiagramTypeEnum('diagram_type').notNull(),
+  payload: jsonb('payload').notNull(),
+  metadata: jsonb('metadata'),
+  createdAt: timestamp('created_at').defaultNow().notNull(),
+}, (table) => [
+  index('idx_analysis_diagrams_scenario_id').on(table.scenarioId),
+  index('idx_analysis_diagrams_source_message_id').on(table.sourceMessageId),
 ])
 
 // NEW: Conversation Shares Table
@@ -275,5 +332,32 @@ export const aiModelsRelations = relations(aiModels, ({ one }) => ({
   provider: one(aiProviders, {
     fields: [aiModels.providerId],
     references: [aiProviders.id],
+  }),
+}))
+
+// Confirmed Analysis Table (stores user-confirmed analysis results)
+export const confirmedAnalysis = pgTable('confirmed_analysis', {
+  id: serial('id').primaryKey(),
+  scenarioId: integer('scenario_id')
+    .notNull()
+    .unique()
+    .references(() => scenarios.id, { onDelete: 'cascade' }),
+  subjects: jsonb('subjects').notNull().default([]),
+  rules: jsonb('rules').notNull().default([]),
+  diagramMermaid: text('diagram_mermaid'),
+  sourceMessageId: integer('source_message_id')
+    .references(() => conversationMessages.id, { onDelete: 'set null' }),
+  confirmedAt: timestamp('confirmed_at').defaultNow().notNull(),
+  updatedAt: timestamp('updated_at').defaultNow().notNull(),
+})
+
+export const confirmedAnalysisRelations = relations(confirmedAnalysis, ({ one }) => ({
+  scenario: one(scenarios, {
+    fields: [confirmedAnalysis.scenarioId],
+    references: [scenarios.id],
+  }),
+  sourceMessage: one(conversationMessages, {
+    fields: [confirmedAnalysis.sourceMessageId],
+    references: [conversationMessages.id],
   }),
 }))

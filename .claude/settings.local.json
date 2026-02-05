@@ -1,0 +1,10 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(git fetch:*)",
+      "Bash(powershell -Command \"git fetch --all --prune\")",
+      "Bash(powershell.exe -Command \"New-Item -ItemType Directory -Path ''E:\\\\OpenSource\\\\journal-maker\\\\apps\\\\accountflow\\\\src\\\\utils'' -Force\")",
+      "Bash(powershell.exe -ExecutionPolicy Bypass -Command \"cd ''E:\\\\OpenSource\\\\journal-maker\\\\apps\\\\accountflow''; pnpm typecheck 2>&1 | Select-Object -First 80\")"
+    ]
+  }
+}

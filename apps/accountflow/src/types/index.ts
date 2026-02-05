@@ -89,6 +89,10 @@ export const JournalRule = z.object({
   creditAccountId: z.number().nullable(),
   conditions: z.record(z.any()).nullable(),
   amountFormula: z.string().nullable(),
+  debitSide: z.record(z.any()).nullable(),
+  creditSide: z.record(z.any()).nullable(),
+  triggerType: z.string().nullable(),
+  status: z.enum(['proposal', 'confirmed']).nullable(),
   createdAt: z.date(),
   updatedAt: z.date(),
 })
@@ -165,3 +169,63 @@ export const FlowchartData = z.object({
   updatedAt: z.date(),
 })
 export type FlowchartData = z.infer<typeof FlowchartData>
+
+// Accounting Subject (for confirmed analysis)
+export const AccountingSubject = z.object({
+  code: z.string().min(1).max(20),
+  name: z.string().min(1).max(100),
+  direction: z.enum(['debit', 'credit']),
+  description: z.string().max(500).optional(),
+})
+export type AccountingSubject = z.infer<typeof AccountingSubject>
+
+// Accounting Rule (for confirmed analysis)
+export const AccountingRule = z.object({
+  id: z.string().min(1).max(50),
+  description: z.string().min(1).max(500),
+  condition: z.string().max(200).optional(),
+  debitAccount: z.string().max(20).optional(),
+  creditAccount: z.string().max(20).optional(),
+})
+export type AccountingRule = z.infer<typeof AccountingRule>
+
+// Analysis Entry (for extracted journal entries)
+export const AnalysisEntryLine = z.object({
+  side: z.enum(['debit', 'credit']),
+  accountCode: z.string().min(1).max(20),
+  amount: z.number().optional(),
+  description: z.string().max(500).optional(),
+})
+export type AnalysisEntryLine = z.infer<typeof AnalysisEntryLine>
+
+export const AnalysisEntry = z.object({
+  lines: z.array(AnalysisEntryLine),
+  description: z.string().max(1000).optional(),
+  amount: z.number().optional(),
+  currency: z.string().max(10).optional(),
+  metadata: z.record(z.any()).optional(),
+})
+export type AnalysisEntry = z.infer<typeof AnalysisEntry>
+
+// Confirmed Analysis
+export const ConfirmedAnalysis = z.object({
+  id: z.number(),
+  scenarioId: z.number(),
+  subjects: z.array(AccountingSubject),
+  rules: z.array(AccountingRule),
+  diagramMermaid: z.string().nullable(),
+  sourceMessageId: z.number().nullable(),
+  confirmedAt: z.date(),
+  updatedAt: z.date(),
+})
+export type ConfirmedAnalysis = z.infer<typeof ConfirmedAnalysis>
+
+// Parsed Analysis (from AI response)
+export const ParsedAnalysis = z.object({
+  subjects: z.array(AccountingSubject),
+  rules: z.array(AccountingRule),
+  diagrams: z.array(z.string()),
+  entries: z.array(AnalysisEntry).default([]),
+  rawContent: z.string(),
+})
+export type ParsedAnalysis = z.infer<typeof ParsedAnalysis>

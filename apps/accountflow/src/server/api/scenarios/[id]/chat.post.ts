@@ -1,8 +1,10 @@
 import { db } from '../../../db'
-import { conversations, scenarios, accounts } from '../../../db/schema'
+import { conversationMessages, scenarios, accounts } from '../../../db/schema'
 import { sendMessageSchema } from '../../../utils/schemas'
 import { AppError, handleError, successResponse } from '../../../utils/error'
 import { aiService } from '../../../utils/ai-service'
+import { createAnalysisArtifacts } from '../../../db/queries/analysis-artifacts'
+import { parseAIResponse } from '../../../../utils/ai-response-parser'
 import { eq } from 'drizzle-orm'
 import { defineEventHandler, getRouterParam, readBody, setResponseStatus } from 'h3'
 
@@ -23,11 +25,11 @@ export default defineEventHandler(async (event) => {
     // Save user message
     // TODO: Get actual user ID from session
     const userId = 1
-    await db.insert(conversations).values({
+    await db.insert(conversationMessages).values({
       scenarioId,
-      userId,
       role: 'user',
       content: data.content,
+      timestamp: new Date(),
     })
     
     // Get context for AI
@@ -56,12 +58,26 @@ export default defineEventHandler(async (event) => {
     })
     
     // Save AI response
-    await db.insert(conversations).values({
+    const [assistantMessageRecord] = await db.insert(conversationMessages).values({
       scenarioId,
-      userId: 1, // system
       role: 'assistant',
       content: aiResponse.message,
       structuredData: aiResponse.structured,
+      requestLog: aiResponse.requestLog,
+      responseStats: aiResponse.responseStats,
+      timestamp: new Date(),
+    }).returning()
+
+    const parsed = parseAIResponse(aiResponse.message)
+    await createAnalysisArtifacts({
+      scenarioId,
+      sourceMessageId: assistantMessageRecord.id,
+      subjects: parsed.subjects,
+      entries: parsed.entries,
+      diagrams: parsed.diagrams.map((diagram) => ({
+        diagramType: 'mermaid',
+        payload: { mermaid: diagram },
+      })),
     })
     
     return successResponse(aiResponse)

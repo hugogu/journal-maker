@@ -1,5 +1,5 @@
 import { db } from '../../../db'
-import { scenarios, accounts, journalRules, sampleTransactions, conversations } from '../../../db/schema'
+import { scenarios, accounts, journalRules, sampleTransactions, conversationMessages } from '../../../db/schema'
 import { AppError, handleError, successResponse } from '../../../utils/error'
 import { eq } from 'drizzle-orm'
 
@@ -29,9 +29,9 @@ export default defineEventHandler(async (event) => {
       where: eq(sampleTransactions.scenarioId, scenarioId)
     })
     
-    const chatHistory = await db.query.conversations.findMany({
-      where: eq(conversations.scenarioId, scenarioId),
-      orderBy: (c, { asc }) => asc(c.createdAt)
+    const chatHistory = await db.query.conversationMessages.findMany({
+      where: eq(conversationMessages.scenarioId, scenarioId),
+      orderBy: (c, { asc }) => asc(c.timestamp)
     })
     
     const exportData = {
@@ -51,6 +51,11 @@ export default defineEventHandler(async (event) => {
         eventName: r.eventName,
         eventDescription: r.eventDescription,
         conditions: r.conditions,
+        debitSide: r.debitSide,
+        creditSide: r.creditSide,
+        triggerType: r.triggerType,
+        status: r.status,
+        amountFormula: r.amountFormula,
       })),
       sampleTransactions: transactions.map(t => ({
         description: t.description,
@@ -60,6 +65,9 @@ export default defineEventHandler(async (event) => {
         role: c.role,
         content: c.content,
         structuredData: c.structuredData,
+        requestLog: c.requestLog,
+        responseStats: c.responseStats,
+        timestamp: c.timestamp,
         createdAt: c.createdAt,
       })),
     }

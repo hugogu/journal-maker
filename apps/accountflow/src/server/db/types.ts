@@ -19,6 +19,9 @@ import type {
   aiModels,
   companyProfile,
   conversationMessages,
+  analysisSubjects,
+  analysisEntries,
+  analysisDiagrams,
   conversationShares,
   userPreferences,
 } from './schema'
@@ -69,6 +72,15 @@ export type NewCompanyProfile = InferInsertModel<typeof companyProfile>
 
 export type ConversationMessage = InferSelectModel<typeof conversationMessages>
 export type NewConversationMessage = InferInsertModel<typeof conversationMessages>
+
+export type AnalysisSubject = InferSelectModel<typeof analysisSubjects>
+export type NewAnalysisSubject = InferInsertModel<typeof analysisSubjects>
+
+export type AnalysisEntry = InferSelectModel<typeof analysisEntries>
+export type NewAnalysisEntry = InferInsertModel<typeof analysisEntries>
+
+export type AnalysisDiagram = InferSelectModel<typeof analysisDiagrams>
+export type NewAnalysisDiagram = InferInsertModel<typeof analysisDiagrams>
 
 export type ConversationShare = InferSelectModel<typeof conversationShares>
 export type NewConversationShare = InferInsertModel<typeof conversationShares>

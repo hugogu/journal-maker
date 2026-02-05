@@ -1,0 +1,30 @@
+import { defineEventHandler, createError, getRouterParam, readBody } from 'h3'
+import { createConversationMessage } from '../../../../db/queries/conversations'
+import { conversationMessageSchema } from '../../../../utils/schemas'
+
+export default defineEventHandler(async (event) => {
+  try {
+    const idParam = getRouterParam(event, 'id')
+    const scenarioId = idParam ? parseInt(idParam, 10) : null
+
+    if (!scenarioId || isNaN(scenarioId)) {
+      throw createError({ statusCode: 400, message: 'Invalid scenario ID' })
+    }
+
+    const body = await readBody(event)
+    const data = conversationMessageSchema.parse(body)
+
+    const message = await createConversationMessage({
+      scenarioId,
+      ...data,
+    })
+
+    return { message }
+  } catch (error: any) {
+    console.error('Error creating conversation message:', error)
+    throw createError({
+      statusCode: error?.statusCode || 500,
+      message: error?.message || 'Failed to create conversation message'
+    })
+  }
+})
