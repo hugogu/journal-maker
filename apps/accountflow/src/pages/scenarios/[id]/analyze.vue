@@ -1,5 +1,5 @@
 <template>
-  <div class="container mx-auto p-6 h-full">
+  <div class="w-full h-full px-4 py-3 mx-auto" style="max-width: 1920px;">
     <div v-if="loading" class="flex items-center justify-center h-full">
       <div class="text-center">
         <div class="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
@@ -7,9 +7,9 @@
       </div>
     </div>
 
-    <!-- Dual-pane layout -->
-    <div v-else class="grid grid-cols-1 lg:grid-cols-2 gap-6 h-full">
-      <!-- Left Pane: Chat -->
+    <!-- Dual-pane layout with flexible column widths -->
+    <div v-else class="grid grid-cols-1 xl:grid-cols-[1.2fr_0.8fr] gap-4 h-full">
+      <!-- Left Pane: Chat (wider) -->
       <ChatPane
         :scenario="scenario"
         :scenario-id="scenarioId"
@@ -19,7 +19,7 @@
         @show-stats="showStats"
       />
 
-      <!-- Right Pane: Confirmed Analysis State -->
+      <!-- Right Pane: Confirmed Analysis State (narrower) -->
       <StatePane
         :data="confirmedAnalysis.data.value"
         :loading="confirmedAnalysis.loading.value"
@@ -119,25 +119,13 @@ function closeModals() {
 }
 
 async function handleConfirm(data: { parsed: ParsedAnalysis; messageId?: number }) {
-  console.log('=== CONFIRM CLICKED ===')
-  console.log('Parsed analysis data:', {
-    subjects: data.parsed.subjects,
-    rules: data.parsed.rules,
-    diagramsCount: data.parsed.diagrams.length,
-    diagrams: data.parsed.diagrams,
-    messageId: data.messageId
-  })
-
   // Prioritize LR (funds/information flow) diagram over TD (business process flow)
   // LR diagrams are typically the second one, so we search for it specifically
   let selectedDiagram = data.parsed.diagrams.length > 0 ? data.parsed.diagrams[0] : null
   const lrDiagram = data.parsed.diagrams.find(d => d.includes('flowchart LR') || d.includes('flowchart RL'))
   if (lrDiagram) {
     selectedDiagram = lrDiagram
-    console.log('Found LR diagram, using it instead')
   }
-
-  console.log('Saving with diagramMermaid:', selectedDiagram ? selectedDiagram.substring(0, 100) + '...' : 'null')
 
   const success = await confirmedAnalysis.save({
     subjects: data.parsed.subjects,
@@ -148,16 +136,6 @@ async function handleConfirm(data: { parsed: ParsedAnalysis; messageId?: number 
 
   if (!success) {
     alert('保存分析结果失败，请重试')
-  } else {
-    console.log('=== SAVE SUCCESSFUL ===')
-    console.log('Confirmed data from composable:', {
-      id: confirmedAnalysis.data.value.id,
-      subjects: confirmedAnalysis.data.value.subjects?.length || 0,
-      rules: confirmedAnalysis.data.value.rules?.length || 0,
-      hasDiagram: !!confirmedAnalysis.data.value.diagramMermaid,
-      diagramLength: confirmedAnalysis.data.value.diagramMermaid?.length,
-      diagramPreview: confirmedAnalysis.data.value.diagramMermaid?.substring(0, 100) + '...'
-    })
   }
 }
 

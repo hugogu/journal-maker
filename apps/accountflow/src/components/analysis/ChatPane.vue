@@ -92,17 +92,41 @@
               </button>
             </div>
           </div>
-          <div
-            v-if="streaming && index === messages.length - 1 && message.role === 'assistant'"
-            class="message-content markdown-content"
-            :key="`streaming-${streamingContent.length}`"
-            v-html="renderStreamingContent(streamingContent)"
-          ></div>
-          <div
-            v-else
-            class="message-content markdown-content"
-            v-html="renderMarkdown(message.content)"
-          ></div>
+          <!-- Message Content with optional height limit -->
+          <div class="relative">
+            <div
+              v-if="streaming && index === messages.length - 1 && message.role === 'assistant'"
+              class="message-content markdown-content"
+              :class="{ 'message-collapsed': !isExpanded(index) && shouldShowExpandButton(streamingContent) }"
+              :key="`streaming-${streamingContent.length}`"
+              v-html="renderStreamingContent(streamingContent)"
+            ></div>
+            <div
+              v-else
+              class="message-content markdown-content"
+              :class="{ 'message-collapsed': !isExpanded(index) && shouldShowExpandButton(message.content) }"
+              v-html="renderMarkdown(message.content)"
+            ></div>
+
+            <!-- Expand/Collapse Button -->
+            <div
+              v-if="shouldShowExpandButton(message.content) && !(streaming && index === messages.length - 1)"
+              class="flex justify-center mt-2"
+            >
+              <button
+                @click="toggleExpand(index)"
+                class="text-xs text-blue-600 hover:text-blue-700 flex items-center gap-1 px-3 py-1 rounded hover:bg-blue-50 transition-colors"
+              >
+                <svg v-if="!isExpanded(index)" class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
+                </svg>
+                <svg v-else class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 15l7-7 7 7"></path>
+                </svg>
+                {{ isExpanded(index) ? '收起' : '展开全文' }}
+              </button>
+            </div>
+          </div>
         </div>
       </div>
       <div v-if="streaming" class="text-center text-gray-400 text-sm py-3">
@@ -210,6 +234,7 @@ const inputMessage = ref('')
 const streaming = ref(false)
 const streamingContent = ref('')
 const messagesContainer = ref<HTMLElement>()
+const expandedMessages = ref<Set<number>>(new Set())
 
 // AI Provider selection
 const aiProviders = ref<any[]>([])
@@ -279,11 +304,25 @@ function renderMarkdown(content: string): string {
 }
 
 function renderStreamingContent(content: string): string {
-  const escaped = content
-    .replace(/&/g, '&amp;')
-    .replace(/</g, '&lt;')
-    .replace(/>/g, '&gt;')
-  return escaped.replace(/\n/g, '<br>')
+  // Use markdown rendering for streaming content as well
+  return md.render(content)
+}
+
+function toggleExpand(index: number) {
+  if (expandedMessages.value.has(index)) {
+    expandedMessages.value.delete(index)
+  } else {
+    expandedMessages.value.add(index)
+  }
+}
+
+function isExpanded(index: number): boolean {
+  return expandedMessages.value.has(index)
+}
+
+function shouldShowExpandButton(content: string): boolean {
+  // Show expand button if content is long (> 500 chars or > 10 lines)
+  return content.length > 500 || content.split('\n').length > 10
 }
 
 async function sendMessage() {
@@ -470,6 +509,33 @@ defineExpose({
 
 .message-content {
   @apply text-sm leading-relaxed text-gray-800;
+}
+
+.message-collapsed {
+  max-height: 400px;
+  overflow-y: auto;
+  overflow-x: hidden;
+  position: relative;
+  padding-bottom: 20px;
+}
+
+/* Scrollbar styling for collapsed messages */
+.message-collapsed::-webkit-scrollbar {
+  width: 6px;
+}
+
+.message-collapsed::-webkit-scrollbar-track {
+  background: #f1f1f1;
+  border-radius: 3px;
+}
+
+.message-collapsed::-webkit-scrollbar-thumb {
+  background: #c1c1c1;
+  border-radius: 3px;
+}
+
+.message-collapsed::-webkit-scrollbar-thumb:hover {
+  background: #a1a1a1;
 }
 
 .message-content :deep(pre) {

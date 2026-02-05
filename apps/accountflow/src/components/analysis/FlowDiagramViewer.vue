@@ -54,17 +54,7 @@ async function initMermaid() {
 }
 
 async function renderDiagram() {
-  console.log('FlowDiagramViewer renderDiagram called:', {
-    hasMermaidCode: !!props.mermaidCode,
-    mermaidCodeLength: props.mermaidCode?.length,
-    hasContainer: !!diagramContainer.value,
-    isClient: typeof window !== 'undefined'
-  })
-
   if (!props.mermaidCode || !diagramContainer.value || typeof window === 'undefined') {
-    console.log('FlowDiagramViewer early return:', {
-      reason: !props.mermaidCode ? 'no mermaid code' : !diagramContainer.value ? 'no container' : 'server side'
-    })
     loading.value = false
     return
   }
@@ -76,7 +66,6 @@ async function renderDiagram() {
     await initMermaid()
 
     if (!mermaid) {
-      console.error('FlowDiagramViewer: Mermaid failed to initialize')
       loading.value = false
       error.value = true
       return
@@ -90,21 +79,10 @@ async function renderDiagram() {
 
     // Render the diagram
     const result = await mermaid.render(id, props.mermaidCode)
-    console.log('FlowDiagramViewer render result:', {
-      hasResult: !!result,
-      hasSvg: !!result?.svg,
-      svgLength: result?.svg?.length,
-      hasContainer: !!diagramContainer.value
-    })
 
     if (diagramContainer.value && result.svg) {
       diagramContainer.value.innerHTML = result.svg
-      console.log('FlowDiagramViewer: SVG successfully inserted')
     } else {
-      console.error('FlowDiagramViewer: Failed to insert SVG', {
-        hasContainer: !!diagramContainer.value,
-        hasSvg: !!result?.svg
-      })
       error.value = true
     }
   } catch (e) {
@@ -122,11 +100,9 @@ async function tryRender(attempt = 0): Promise<void> {
   if (props.mermaidCode && diagramContainer.value) {
     await renderDiagram()
   } else if (props.mermaidCode && attempt < maxAttempts) {
-    console.log(`FlowDiagramViewer: Container not ready, attempt ${attempt + 1}/${maxAttempts}`)
     await new Promise(resolve => setTimeout(resolve, 50))
     await tryRender(attempt + 1)
   } else if (attempt >= maxAttempts) {
-    console.error('FlowDiagramViewer: Container never became ready after', maxAttempts, 'attempts')
     loading.value = false
     error.value = true
   } else {
