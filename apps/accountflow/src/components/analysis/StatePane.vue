@@ -65,7 +65,7 @@
             </svg>
             会计科目 ({{ data.subjects.length }})
           </h3>
-          <AccountingSubjectList :subjects="data.subjects" />
+          <AccountingSubjectList :subjects="subjectsWithStatus" />
         </div>
 
         <!-- Accounting Rules -->
@@ -106,11 +106,12 @@
 </template>
 
 <script setup lang="ts">
-import { computed, ref } from 'vue'
+import { computed, ref, onMounted } from 'vue'
 import AccountingSubjectList from './AccountingSubjectList.vue'
 import AccountingRuleCard from './AccountingRuleCard.vue'
 import FlowDiagramViewer from './FlowDiagramViewer.vue'
 import type { ConfirmedAnalysisState } from '../../composables/useConfirmedAnalysis'
+import type { Account } from '../../types'
 
 const props = defineProps<{
   data: ConfirmedAnalysisState
@@ -122,6 +123,8 @@ const emit = defineEmits<{
 }>()
 
 const clearing = ref(false)
+const existingAccounts = ref<Account[]>([])
+const loadingAccounts = ref(false)
 
 const hasContent = computed(() => {
   return (
@@ -129,6 +132,41 @@ const hasContent = computed(() => {
     (props.data.rules && props.data.rules.length > 0) ||
     (props.data.diagramMermaid && props.data.diagramMermaid.trim().length > 0)
   )
+})
+
+// Compute which subjects are new vs existing
+const subjectsWithStatus = computed(() => {
+  if (!props.data.subjects) return []
+
+  return props.data.subjects.map(subject => {
+    const existing = existingAccounts.value.find(
+      account => account.code === subject.code
+    )
+    return {
+      ...subject,
+      isExisting: !!existing,
+      existingAccount: existing
+    }
+  })
+})
+
+// Load existing accounts from API
+async function loadExistingAccounts() {
+  loadingAccounts.value = true
+  try {
+    const response = await $fetch<{ success: boolean; data: Account[] }>('/api/accounts')
+    if (response.success) {
+      existingAccounts.value = response.data
+    }
+  } catch (error) {
+    console.error('Failed to load existing accounts:', error)
+  } finally {
+    loadingAccounts.value = false
+  }
+}
+
+onMounted(() => {
+  loadExistingAccounts()
 })
 
 async function handleClear() {

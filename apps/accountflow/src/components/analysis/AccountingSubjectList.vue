@@ -6,6 +6,7 @@
           <th class="text-left py-2 px-3 font-medium text-gray-600">科目代码</th>
           <th class="text-left py-2 px-3 font-medium text-gray-600">科目名称</th>
           <th class="text-left py-2 px-3 font-medium text-gray-600">方向</th>
+          <th class="text-left py-2 px-3 font-medium text-gray-600">状态</th>
         </tr>
       </thead>
       <tbody>
@@ -28,6 +29,26 @@
               {{ subject.direction === 'debit' ? '借方' : '贷方' }}
             </span>
           </td>
+          <td class="py-2 px-3">
+            <span
+              v-if="subject.isExisting !== undefined"
+              :class="[
+                'inline-flex items-center px-2 py-0.5 rounded text-xs font-medium',
+                subject.isExisting
+                  ? 'bg-green-100 text-green-800'
+                  : 'bg-blue-100 text-blue-800'
+              ]"
+              :title="subject.isExisting ? '该科目已存在于系统中' : '建议新建的科目'"
+            >
+              <svg v-if="subject.isExisting" class="w-3 h-3 mr-1" fill="currentColor" viewBox="0 0 20 20">
+                <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"></path>
+              </svg>
+              <svg v-else class="w-3 h-3 mr-1" fill="currentColor" viewBox="0 0 20 20">
+                <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-11a1 1 0 10-2 0v2H7a1 1 0 100 2h2v2a1 1 0 102 0v-2h2a1 1 0 100-2h-2V7z" clip-rule="evenodd"></path>
+              </svg>
+              {{ subject.isExisting ? '已存在' : '新建议' }}
+            </span>
+          </td>
         </tr>
       </tbody>
     </table>
@@ -38,9 +59,14 @@
 </template>
 
 <script setup lang="ts">
-import type { AccountingSubject } from '../../types'
+import type { AccountingSubject, Account } from '../../types'
+
+interface SubjectWithStatus extends AccountingSubject {
+  isExisting?: boolean
+  existingAccount?: Account
+}
 
 defineProps<{
-  subjects: AccountingSubject[]
+  subjects: SubjectWithStatus[]
 }>()
 </script>
