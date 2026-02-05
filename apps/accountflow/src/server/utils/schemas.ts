@@ -116,7 +116,7 @@ export const exportScenarioSchema = z.object({
 
 // Confirmed Analysis schemas
 export const accountingSubjectSchema = z.object({
-  code: z.string().min(1).max(20).regex(/^[A-Za-z0-9]+$/),
+  code: z.string().min(1).max(20).regex(/^[A-Za-z0-9-]+$/),
   name: z.string().min(1).max(100),
   direction: z.enum(['debit', 'credit']),
   description: z.string().max(500).optional(),

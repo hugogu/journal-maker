@@ -88,14 +88,24 @@ export const useConfirmedAnalysis = (scenarioId: number) => {
     saving.value = true
     error.value = null
 
+    // Filter out any invalid entries
+    const validSubjects = input.subjects.filter(s => s && s.code && s.name && s.direction)
+    const validRules = input.rules.filter(r => r && r.id && r.description)
+
+    console.log('Saving with filtered data:', {
+      subjectsCount: validSubjects.length,
+      rulesCount: validRules.length,
+      hasDiagram: !!input.diagramMermaid
+    })
+
     try {
       const response = await $fetch<{ success: boolean; data: ConfirmedAnalysis }>(
         `/api/scenarios/${scenarioId}/confirmed-analysis`,
         {
           method: 'POST',
           body: {
-            subjects: input.subjects,
-            rules: input.rules,
+            subjects: validSubjects,
+            rules: validRules,
             diagramMermaid: input.diagramMermaid ?? null,
             sourceMessageId: input.sourceMessageId ?? null,
           },
