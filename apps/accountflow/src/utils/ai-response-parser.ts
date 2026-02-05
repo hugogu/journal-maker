@@ -40,6 +40,18 @@ export function extractMermaidDiagrams(content: string): string[] {
  * Tries JSON format first, then falls back to table/text extraction
  */
 export function extractSubjects(content: string): AccountingSubject[] {
+  // Try to find structured.accounts from nested JSON format
+  const structuredData = extractStructuredData(content)
+  if (structuredData?.accounts && Array.isArray(structuredData.accounts)) {
+    const subjects = structuredData.accounts.map((a: any) => ({
+      code: a.code,
+      name: a.name,
+      direction: a.type === 'asset' ? 'debit' : a.type === 'liability' ? 'credit' : 'debit',
+      description: a.reason,
+    })).filter(isValidSubject)
+    if (subjects.length > 0) return subjects
+  }
+
   // Try to find JSON array for subjects
   const jsonSubjects = extractJSONArray<AccountingSubject>(content, 'subjects')
   if (jsonSubjects.length > 0) {
@@ -60,6 +72,19 @@ export function extractSubjects(content: string): AccountingSubject[] {
  * Extract accounting rules from AI response
  */
 export function extractRules(content: string): AccountingRule[] {
+  // Try to find structured.rules from nested JSON format
+  const structuredData = extractStructuredData(content)
+  if (structuredData?.rules && Array.isArray(structuredData.rules)) {
+    const rules = structuredData.rules.map((r: any, index: number) => ({
+      id: r.id || `RULE-${String(index + 1).padStart(3, '0')}`,
+      description: r.description || `${r.event}: ${r.description || ''}`,
+      condition: r.condition,
+      debitAccount: r.debit,
+      creditAccount: r.credit,
+    })).filter(isValidRule)
+    if (rules.length > 0) return rules
+  }
+
   // Try to find JSON array for rules
   const jsonRules = extractJSONArray<AccountingRule>(content, 'rules')
   if (jsonRules.length > 0) {
@@ -74,6 +99,29 @@ export function extractRules(content: string): AccountingRule[] {
 
   // Fallback: try to extract from numbered list format
   return extractRulesFromList(content)
+}
+
+/**
+ * Extract structured data from the nested JSON format
+ * Looks for {"structured": {"accounts": [...], "rules": [...]}} pattern
+ */
+function extractStructuredData(content: string): any {
+  const jsonBlockRegex = /```json\s*([\s\S]*?)```/gi
+
+  let match
+  while ((match = jsonBlockRegex.exec(content)) !== null) {
+    const jsonContent = match[1].trim()
+    try {
+      const parsed = JSON.parse(jsonContent)
+      if (parsed.structured) {
+        return parsed.structured
+      }
+    } catch {
+      // Continue to next block
+    }
+  }
+
+  return null
 }
 
 /**
