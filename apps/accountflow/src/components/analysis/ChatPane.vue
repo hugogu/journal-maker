@@ -29,14 +29,17 @@
     <!-- Messages -->
     <div class="flex-1 overflow-y-auto" ref="messagesContainer">
       <div v-for="(message, index) in messages" :key="index" class="mb-3">
-        <div :class="message.role === 'user' ? 'user-message' : 'assistant-message'">
+        <div :class="[
+          message.role === 'user' ? 'user-message' : 'assistant-message',
+          message.role === 'assistant' && isConfirmed(message.id) ? 'confirmed-message' : ''
+        ]">
           <div class="flex items-center mb-2 justify-between">
             <div class="flex items-center">
               <div class="w-8 h-8 rounded-full flex items-center justify-center text-white text-sm font-medium mr-3"
                    :class="message.role === 'user' ? 'bg-blue-500' : 'bg-gray-500'">
                 {{ message.role === 'user' ? '你' : 'AI' }}
               </div>
-              <div class="font-medium text-sm">
+              <div class="font-medium text-sm flex items-center gap-2">
                 <template v-if="message.role === 'user'">用户</template>
                 <template v-else>
                   <span v-if="message.responseStats?.providerName">
@@ -47,6 +50,14 @@
                   </span>
                   <span v-else>AI助手</span>
                 </template>
+                <!-- Confirmation Badge -->
+                <span v-if="message.role === 'assistant' && isConfirmed(message.id)" 
+                      class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-emerald-100 text-emerald-800">
+                  <svg class="w-3 h-3 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
+                  </svg>
+                  已确认
+                </span>
                 <span v-if="message.role === 'assistant' && streaming && index === messages.length - 1"
                       class="ml-2 inline-block w-2 h-2 bg-blue-500 rounded-full animate-pulse"></span>
               </div>
@@ -203,10 +214,18 @@ const { messages: conversationMessages, loading: conversationLoading, loadMessag
 
 // Create a local writable copy for display
 const messages = ref<any[]>([])
+const confirmedMessageIds = ref<Set<number>>(new Set())
 
 // Sync messages when conversation messages change
 watch(conversationMessages, (newMessages) => {
   messages.value = [...newMessages]
+  // Update confirmed message IDs from database
+  confirmedMessageIds.value.clear()
+  newMessages.forEach(msg => {
+    if (msg.confirmedAt) {
+      confirmedMessageIds.value.add(msg.id)
+    }
+  })
 }, { immediate: true })
 
 // Initialize markdown renderer with XSS protection
@@ -536,8 +555,27 @@ function scrollToBottom(force = false) {
   }
 }
 
-function handleConfirm(data: { parsed: ParsedAnalysis; messageId?: number }) {
+async function handleConfirm(data: { parsed: ParsedAnalysis; messageId?: number }) {
+  if (data.messageId) {
+    confirmedMessageIds.value.add(data.messageId)
+    
+    // Save confirmation to database
+    try {
+      await $fetch(`/api/conversation-messages/${data.messageId}/confirm`, {
+        method: 'POST',
+        body: { scenarioId: scenarioIdNum.value }
+      })
+    } catch (error) {
+      console.error('Failed to save confirmation:', error)
+      // Remove from local set if API call failed
+      confirmedMessageIds.value.delete(data.messageId)
+    }
+  }
   emit('confirm', data)
+}
+
+function isConfirmed(messageId?: number): boolean {
+  return messageId ? confirmedMessageIds.value.has(messageId) : false
 }
 
 // Expose for parent component access
@@ -555,6 +593,10 @@ defineExpose({
 
 .assistant-message {
   @apply bg-gray-50 border-l-4 border-gray-400 p-4 rounded-r-lg shadow-sm;
+}
+
+.confirmed-message {
+  @apply bg-emerald-50 border-l-4 border-emerald-400;
 }
 
 .message-content {
