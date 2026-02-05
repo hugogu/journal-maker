@@ -35,27 +35,33 @@ export default defineEventHandler(async (event) => {
     // Get context for AI
     const allAccounts = await db.query.accounts.findMany({
       where: eq(accounts.companyId, scenario.companyId)
-    })
-    
+    }) || []
+
     // Get template scenario if exists
     const templateScenario = await db.query.scenarios.findFirst({
       where: eq(scenarios.isTemplate, true)
     })
     
     // Call AI service
-    const aiResponse = await aiService.analyzeScenario(data.content, {
-      company: { name: 'Company' }, // TODO: Get actual company
-      accounts: allAccounts,
-      templateScenario: templateScenario ? {
-        name: templateScenario.name,
-        description: templateScenario.description || undefined,
-        rules: []
-      } : undefined,
-      currentScenario: {
-        name: scenario.name,
-        description: scenario.description || undefined
-      }
-    })
+    const aiResponse = await aiService.analyzeScenario(
+      data.content,
+      {
+        company: { name: 'Company' }, // TODO: Get actual company
+        accounts: allAccounts,
+        templateScenario: templateScenario ? {
+          name: templateScenario.name,
+          description: templateScenario.description || undefined,
+          rules: []
+        } : undefined,
+        currentScenario: {
+          name: scenario.name,
+          description: scenario.description || undefined
+        }
+      },
+      userId,
+      data.providerId,
+      data.model
+    )
     
     // Save AI response
     const [assistantMessageRecord] = await db.insert(conversationMessages).values({

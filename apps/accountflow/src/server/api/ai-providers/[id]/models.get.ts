@@ -22,7 +22,10 @@ export default defineEventHandler(async (event) => {
 
     return {
       success: true,
-      models: provider.models || []
+      models: (provider.models || []).map(model => ({
+        id: model.name, // Use model name as ID for selection
+        name: model.name
+      }))
     }
   } catch (error) {
     console.error('Error fetching AI provider models:', error)

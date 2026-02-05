@@ -28,8 +28,12 @@ export class OpenAIAdapter extends BaseAIAdapter {
   }
 
   async fetchModels(): Promise<AIModel[]> {
-    const response = await this.makeRequest<{ data: OpenAIModel[] }>('/models')
-    
+    const response = await this.makeRequest<{ data?: OpenAIModel[] }>('/models')
+
+    if (!response.data || !Array.isArray(response.data)) {
+      return []
+    }
+
     return response.data
       .filter(model => model.id.includes('gpt'))
       .map(model => ({
