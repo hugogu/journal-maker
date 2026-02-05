@@ -318,12 +318,18 @@ function renderStreamingContent(content: string): string {
   return md.render(content)
 }
 
-function toggleExpand(index: number) {
+async function toggleExpand(index: number) {
   if (expandedMessages.value.has(index)) {
     expandedMessages.value.delete(index)
   } else {
     expandedMessages.value.add(index)
   }
+  
+  // Re-render Mermaid diagrams after expansion state changes
+  await nextTick()
+  setTimeout(() => {
+    renderMermaidDiagrams()
+  }, 50)
 }
 
 function isExpanded(index: number): boolean {
