@@ -2,9 +2,7 @@
   <div class="max-w-6xl mx-auto">
     <div class="flex items-center justify-between mb-6">
       <h1 class="text-2xl font-bold">Prompt 模板管理</h1>
-      <NuxtLink to="/admin/prompts/new" class="btn-primary">
-        新建模板
-      </NuxtLink>
+      <NuxtLink to="/admin/prompts/new" class="btn-primary"> 新建模板 </NuxtLink>
     </div>
 
     <div class="card">
@@ -48,7 +46,10 @@
             </td>
             <td class="py-3 px-4">{{ template.versionCount }}</td>
             <td class="py-3 px-4 text-right">
-              <NuxtLink :to="`/admin/prompts/${template.id}`" class="text-blue-600 hover:text-blue-800">
+              <NuxtLink
+                :to="`/admin/prompts/${template.id}`"
+                class="text-blue-600 hover:text-blue-800"
+              >
                 编辑
               </NuxtLink>
             </td>
@@ -60,19 +61,19 @@
 </template>
 
 <script setup lang="ts">
-const { templates, loading, error, fetchTemplates } = usePrompts()
+  const { templates, loading, error, fetchTemplates } = usePrompts()
 
-onMounted(() => {
-  fetchTemplates()
-})
+  onMounted(() => {
+    fetchTemplates()
+  })
 
-function formatScenarioType(type: string): string {
-  const map: Record<string, string> = {
-    'scenario_analysis': '场景分析',
-    'sample_generation': '示例生成',
-    'prompt_generation': 'Prompt生成',
-    'flowchart_generation': '流程图生成'
+  function formatScenarioType(type: string): string {
+    const map: Record<string, string> = {
+      scenario_analysis: '场景分析',
+      sample_generation: '示例生成',
+      prompt_generation: 'Prompt生成',
+      flowchart_generation: '流程图生成',
+    }
+    return map[type] || type
   }
-  return map[type] || type
-}
 </script>

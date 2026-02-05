@@ -18,16 +18,19 @@ export default defineEventHandler(async (event) => {
     if (method === 'POST') {
       const body = await readBody(event)
       const data = createScenarioSchema.parse(body)
-      
+
       // TODO: Get actual user ID from session
       const userId = 1
-      
-      const [scenario] = await db.insert(scenarios).values({
-        ...data,
-        companyId: 1, // TODO: Get from session
-        createdBy: userId,
-      }).returning()
-      
+
+      const [scenario] = await db
+        .insert(scenarios)
+        .values({
+          ...data,
+          companyId: 1, // TODO: Get from session
+          createdBy: userId,
+        })
+        .returning()
+
       return successResponse(scenario)
     }
 

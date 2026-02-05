@@ -13,7 +13,7 @@ export default defineEventHandler(async (event) => {
 
     if (method === 'GET') {
       const company = await db.query.companies.findFirst({
-        where: eq(companies.id, id)
+        where: eq(companies.id, id),
       })
       if (!company) throw new AppError(404, 'Company not found')
       return successResponse(company)
@@ -22,23 +22,20 @@ export default defineEventHandler(async (event) => {
     if (method === 'PUT') {
       const body = await readBody(event)
       const data = updateCompanySchema.parse(body)
-      
+
       const [company] = await db
         .update(companies)
         .set({ ...data, updatedAt: new Date() })
         .where(eq(companies.id, id))
         .returning()
-      
+
       if (!company) throw new AppError(404, 'Company not found')
       return successResponse(company)
     }
 
     if (method === 'DELETE') {
-      const [company] = await db
-        .delete(companies)
-        .where(eq(companies.id, id))
-        .returning()
-      
+      const [company] = await db.delete(companies).where(eq(companies.id, id)).returning()
+
       if (!company) throw new AppError(404, 'Company not found')
       return successResponse({ deleted: true })
     }

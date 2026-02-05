@@ -10,11 +10,11 @@ export default defineEventHandler(async (event) => {
   try {
     const idParam = getRouterParam(event, 'id')
     const templateId = idParam ? parseInt(idParam, 10) : null
-    
+
     if (!templateId || isNaN(templateId)) {
       throw createError({
         statusCode: 400,
-        message: 'Invalid template ID'
+        message: 'Invalid template ID',
       })
     }
 
@@ -23,7 +23,7 @@ export default defineEventHandler(async (event) => {
     if (!template) {
       throw createError({
         statusCode: 404,
-        message: 'Prompt template not found'
+        message: 'Prompt template not found',
       })
     }
 
@@ -31,11 +31,11 @@ export default defineEventHandler(async (event) => {
     const { versionId } = activateSchema.parse(body)
 
     // Verify the version belongs to this template
-    const versionExists = template.versions.some(v => v.id === versionId)
+    const versionExists = template.versions.some((v) => v.id === versionId)
     if (!versionExists) {
       throw createError({
         statusCode: 400,
-        message: 'Version does not belong to this template'
+        message: 'Version does not belong to this template',
       })
     }
 
@@ -47,7 +47,7 @@ export default defineEventHandler(async (event) => {
     if (error instanceof z.ZodError) {
       throw createError({
         statusCode: 400,
-        message: 'Invalid input: ' + error.errors.map(e => e.message).join(', ')
+        message: 'Invalid input: ' + error.errors.map((e) => e.message).join(', '),
       })
     }
     if (error instanceof Error && 'statusCode' in error) {
@@ -55,7 +55,7 @@ export default defineEventHandler(async (event) => {
     }
     throw createError({
       statusCode: 500,
-      message: 'Failed to activate prompt version'
+      message: 'Failed to activate prompt version',
     })
   }
 })

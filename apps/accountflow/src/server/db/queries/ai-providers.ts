@@ -32,15 +32,16 @@ export async function createAIProvider(data: {
   defaultModel?: string | null
   isDefault?: boolean
 }) {
-  const [provider] = await db.insert(aiProviders)
-    .values({ 
+  const [provider] = await db
+    .insert(aiProviders)
+    .values({
       name: data.name,
       type: data.type,
       apiEndpoint: data.apiEndpoint,
       apiKey: data.apiKey,
       defaultModel: data.defaultModel || null,
       isDefault: data.isDefault ?? false,
-      status: 'active' as const
+      status: 'active' as const,
     })
     .returning()
   return provider
@@ -66,8 +67,9 @@ export async function updateAIProvider(
   if (data.defaultModel !== undefined) updateData.defaultModel = data.defaultModel
   if (data.isDefault !== undefined) updateData.isDefault = data.isDefault
   if (data.status !== undefined) updateData.status = data.status
-  
-  const [updated] = await db.update(aiProviders)
+
+  const [updated] = await db
+    .update(aiProviders)
     .set({ ...updateData, updatedAt: new Date() })
     .where(eq(aiProviders.id, id))
     .returning()
@@ -87,7 +89,8 @@ export async function createAIModel(data: {
   description?: string | null
   contextLength?: number | null
 }) {
-  const [model] = await db.insert(aiModels)
+  const [model] = await db
+    .insert(aiModels)
     .values({ ...data })
     .returning()
   return model
@@ -102,10 +105,7 @@ export async function updateAIModel(
     contextLength: number | null
   }>
 ) {
-  const [updated] = await db.update(aiModels)
-    .set(data)
-    .where(eq(aiModels.id, id))
-    .returning()
+  const [updated] = await db.update(aiModels).set(data).where(eq(aiModels.id, id)).returning()
   return updated
 }
 
@@ -137,13 +137,15 @@ export async function setUserPreferences(
   })
 
   if (existing) {
-    const [updated] = await db.update(userPreferences)
+    const [updated] = await db
+      .update(userPreferences)
       .set({ ...data, updatedAt: new Date() })
       .where(eq(userPreferences.userId, userId))
       .returning()
     return updated
   } else {
-    const [created] = await db.insert(userPreferences)
+    const [created] = await db
+      .insert(userPreferences)
       .values({ userId, ...data })
       .returning()
     return created

@@ -8,7 +8,7 @@ export default defineEventHandler(async (event) => {
     if (!messageId) {
       return {
         success: false,
-        error: 'Message ID required'
+        error: 'Message ID required',
       }
     }
 
@@ -17,7 +17,7 @@ export default defineEventHandler(async (event) => {
     if (!message) {
       return {
         success: false,
-        error: 'Message not found'
+        error: 'Message not found',
       }
     }
 
@@ -30,14 +30,14 @@ export default defineEventHandler(async (event) => {
         fullPrompt: requestLog?.fullPrompt,
         systemPrompt: requestLog?.systemPrompt,
         contextMessages: requestLog?.contextMessages,
-        variables: requestLog?.variables
-      }
+        variables: requestLog?.variables,
+      },
     }
   } catch (error: any) {
     console.error('Failed to get request log:', error)
     return {
       success: false,
-      error: error.message || 'Failed to get request log'
+      error: error.message || 'Failed to get request log',
     }
   }
 })

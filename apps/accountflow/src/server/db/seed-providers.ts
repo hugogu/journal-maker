@@ -14,7 +14,8 @@ export async function seedDefaultAIProvider() {
   }
 
   // Create default OpenAI provider (placeholder - user needs to configure)
-  const [provider] = await db.insert(aiProviders)
+  const [provider] = await db
+    .insert(aiProviders)
     .values({
       name: 'OpenAI',
       type: 'openai',
@@ -24,7 +25,7 @@ export async function seedDefaultAIProvider() {
       isDefault: true,
       status: 'active',
       createdAt: new Date(),
-      updatedAt: new Date()
+      updatedAt: new Date(),
     })
     .returning()
 

@@ -9,7 +9,7 @@ export default defineEventHandler(async () => {
     console.error('Error fetching AI providers:', error)
     throw createError({
       statusCode: 500,
-      message: 'Failed to fetch AI providers'
+      message: 'Failed to fetch AI providers',
     })
   }
 })

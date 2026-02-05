@@ -15,22 +15,26 @@ export default defineEventHandler(async (event) => {
     const body = await readBody(event)
     const data = sendMessageSchema.parse(body)
     const scenario = await db.query.scenarios.findFirst({
-      where: eq(scenarios.id, scenarioId)
+      where: eq(scenarios.id, scenarioId),
     })
     if (!scenario) throw new AppError(404, 'Scenario not found')
     const userId = 1
-    const [userMessageRecord] = await db.insert(conversationMessages).values({
-      scenarioId,
-      role: 'user',
-      content: data.content,
-      timestamp: new Date(),
-    }).returning()
-    
-    const allAccounts = await db.query.accounts.findMany({
-      where: eq(accounts.companyId, scenario.companyId)
-    }) || []
+    const [userMessageRecord] = await db
+      .insert(conversationMessages)
+      .values({
+        scenarioId,
+        role: 'user',
+        content: data.content,
+        timestamp: new Date(),
+      })
+      .returning()
+
+    const allAccounts =
+      (await db.query.accounts.findMany({
+        where: eq(accounts.companyId, scenario.companyId),
+      })) || []
     const templateScenario = await db.query.scenarios.findFirst({
-      where: eq(scenarios.isTemplate, true)
+      where: eq(scenarios.isTemplate, true),
     })
     setResponseStatus(event, 200)
     setHeader(event, 'Content-Type', 'text/event-stream')
@@ -41,9 +45,9 @@ export default defineEventHandler(async (event) => {
     setHeader(event, 'Content-Encoding', 'identity')
     event._handled = true
     const res = event.node.res
-    
+
     // Send user message ID to frontend
-    res.write(`data: ${JSON.stringify({ type: 'user_saved', id: userMessageRecord.id }) }\n\n`)
+    res.write(`data: ${JSON.stringify({ type: 'user_saved', id: userMessageRecord.id })}\n\n`)
     let fullMessage = ''
     let aiResponse: any = null
     try {
@@ -52,15 +56,17 @@ export default defineEventHandler(async (event) => {
         {
           company: { name: 'Company' },
           accounts: allAccounts,
-          templateScenario: templateScenario ? {
-            name: templateScenario.name,
-            description: templateScenario.description || undefined,
-            rules: []
-          } : undefined,
+          templateScenario: templateScenario
+            ? {
+                name: templateScenario.name,
+                description: templateScenario.description || undefined,
+                rules: [],
+              }
+            : undefined,
           currentScenario: {
             name: scenario.name,
-            description: scenario.description || undefined
-          }
+            description: scenario.description || undefined,
+          },
         },
         (chunk: string) => {
           fullMessage += chunk
@@ -68,7 +74,7 @@ export default defineEventHandler(async (event) => {
           res.write(`data: ${responseData}\n\n`)
           // Flush to ensure real-time streaming
           if (typeof (res as any).flush === 'function') {
-            (res as any).flush()
+            ;(res as any).flush()
           }
         },
         userId,
@@ -78,17 +84,20 @@ export default defineEventHandler(async (event) => {
       const finalData = JSON.stringify({ type: 'complete', message: aiResponse.message })
       res.write(`data: ${finalData}\n\n`)
       if (typeof (res as any).flush === 'function') {
-        (res as any).flush()
+        ;(res as any).flush()
       }
-      const [assistantMessageRecord] = await db.insert(conversationMessages).values({
-        scenarioId,
-        role: 'assistant',
-        content: aiResponse.message,
-        timestamp: new Date(),
-        structuredData: aiResponse.structured,
-        requestLog: aiResponse.requestLog,
-        responseStats: aiResponse.responseStats,
-      }).returning()
+      const [assistantMessageRecord] = await db
+        .insert(conversationMessages)
+        .values({
+          scenarioId,
+          role: 'assistant',
+          content: aiResponse.message,
+          timestamp: new Date(),
+          structuredData: aiResponse.structured,
+          requestLog: aiResponse.requestLog,
+          responseStats: aiResponse.responseStats,
+        })
+        .returning()
 
       const parsed = parseAIResponse(aiResponse.message)
       await createAnalysisArtifacts({
@@ -101,19 +110,19 @@ export default defineEventHandler(async (event) => {
           payload: { mermaid: diagram },
         })),
       })
-      res.write(`data: ${JSON.stringify({ type: 'done', id: assistantMessageRecord.id }) }\n\n`)
+      res.write(`data: ${JSON.stringify({ type: 'done', id: assistantMessageRecord.id })}\n\n`)
       res.end()
     } catch (error) {
       console.error('=== STREAMING ERROR ===')
       console.error('Timestamp:', new Date().toISOString())
       console.error('Error type:', error?.constructor?.name || typeof error)
       console.error('Error message:', error instanceof Error ? error.message : String(error))
-      
+
       if (error instanceof Error && error.stack) {
         console.error('Stack trace:')
         console.error(error.stack)
       }
-      
+
       if (error && typeof error === 'object') {
         console.error('Error properties:', Object.getOwnPropertyNames(error))
         try {
@@ -123,15 +132,15 @@ export default defineEventHandler(async (event) => {
         }
       }
       console.error('=== END STREAMING ERROR ===')
-      
+
       const errorData = JSON.stringify({
         type: 'error',
         message: error instanceof Error ? error.message : 'Unknown error',
         details: {
           type: error?.constructor?.name || 'Unknown',
           stack: error instanceof Error ? error.stack : undefined,
-          timestamp: new Date().toISOString()
-        }
+          timestamp: new Date().toISOString(),
+        },
       })
       res.write(`data: ${errorData}\n\n`)
       res.end()

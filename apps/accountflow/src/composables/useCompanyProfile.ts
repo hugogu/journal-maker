@@ -32,7 +32,7 @@ export const useCompanyProfile = () => {
     try {
       const { data: result } = await useFetch('/api/company-profile', {
         method: 'POST',
-        body: data
+        body: data,
       })
       if (result.value?.profile) {
         profile.value = result.value.profile
@@ -51,6 +51,6 @@ export const useCompanyProfile = () => {
     loading: readonly(loading),
     error: readonly(error),
     fetchProfile,
-    saveProfile
+    saveProfile,
   }
 }

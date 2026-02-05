@@ -23,9 +23,13 @@
     </div>
 
     <div class="diff-content border rounded-lg overflow-hidden">
-      <div class="diff-header bg-gray-100 px-4 py-2 text-sm font-medium border-b flex items-center justify-between">
+      <div
+        class="diff-header bg-gray-100 px-4 py-2 text-sm font-medium border-b flex items-center justify-between"
+      >
         <span>内容对比</span>
-        <span class="text-xs text-gray-500">{{ diffStats.additions }} 处新增, {{ diffStats.deletions }} 处删除</span>
+        <span class="text-xs text-gray-500"
+          >{{ diffStats.additions }} 处新增, {{ diffStats.deletions }} 处删除</span
+        >
       </div>
       <div class="max-h-96 overflow-auto">
         <div
@@ -35,10 +39,12 @@
             'diff-line px-4 py-1 text-sm font-mono whitespace-pre-wrap',
             line.type === 'added' && 'bg-green-50 border-l-4 border-green-400',
             line.type === 'removed' && 'bg-red-50 border-l-4 border-red-400',
-            line.type === 'unchanged' && 'bg-white border-l-4 border-transparent'
+            line.type === 'unchanged' && 'bg-white border-l-4 border-transparent',
           ]"
         >
-          <span class="diff-line-number text-gray-400 select-none w-8 inline-block">{{ line.lineNumber }}</span>
+          <span class="diff-line-number text-gray-400 select-none w-8 inline-block">{{
+            line.lineNumber
+          }}</span>
           <span class="diff-line-content">{{ line.content }}</span>
         </div>
       </div>
@@ -52,106 +58,106 @@
 </template>
 
 <script setup lang="ts">
-import { computed } from 'vue'
+  import { computed } from 'vue'
 
-export interface PromptVersion {
-  id: string
-  versionNumber: number
-  content: string
-  changeDescription?: string
-  createdAt: string
-}
+  export interface PromptVersion {
+    id: string
+    versionNumber: number
+    content: string
+    changeDescription?: string
+    createdAt: string
+  }
 
-interface DiffLine {
-  type: 'added' | 'removed' | 'unchanged'
-  content: string
-  lineNumber: number
-}
+  interface DiffLine {
+    type: 'added' | 'removed' | 'unchanged'
+    content: string
+    lineNumber: number
+  }
 
-const props = defineProps<{
-  oldVersion: PromptVersion
-  newVersion: PromptVersion
-}>()
+  const props = defineProps<{
+    oldVersion: PromptVersion
+    newVersion: PromptVersion
+  }>()
 
-const diffLines = computed((): DiffLine[] => {
-  const oldLines = props.oldVersion.content.split('\n')
-  const newLines = props.newVersion.content.split('\n')
-  const result: DiffLine[] = []
+  const diffLines = computed((): DiffLine[] => {
+    const oldLines = props.oldVersion.content.split('\n')
+    const newLines = props.newVersion.content.split('\n')
+    const result: DiffLine[] = []
 
-  // Simple line-by-line diff
-  const maxLen = Math.max(oldLines.length, newLines.length)
-  let lineNumber = 1
+    // Simple line-by-line diff
+    const maxLen = Math.max(oldLines.length, newLines.length)
+    let lineNumber = 1
 
-  for (let i = 0; i < maxLen; i++) {
-    const oldLine = oldLines[i]
-    const newLine = newLines[i]
+    for (let i = 0; i < maxLen; i++) {
+      const oldLine = oldLines[i]
+      const newLine = newLines[i]
 
-    if (oldLine === undefined) {
-      // Line added
-      result.push({
-        type: 'added',
-        content: newLine,
-        lineNumber: lineNumber++
-      })
-    } else if (newLine === undefined) {
-      // Line removed
-      result.push({
-        type: 'removed',
-        content: oldLine,
-        lineNumber: lineNumber++
-      })
-    } else if (oldLine !== newLine) {
-      // Line changed - show both
-      result.push({
-        type: 'removed',
-        content: oldLine,
-        lineNumber: lineNumber
-      })
-      result.push({
-        type: 'added',
-        content: newLine,
-        lineNumber: lineNumber
-      })
-      lineNumber++
-    } else {
-      // Unchanged
-      result.push({
-        type: 'unchanged',
-        content: oldLine,
-        lineNumber: lineNumber++
-      })
+      if (oldLine === undefined) {
+        // Line added
+        result.push({
+          type: 'added',
+          content: newLine,
+          lineNumber: lineNumber++,
+        })
+      } else if (newLine === undefined) {
+        // Line removed
+        result.push({
+          type: 'removed',
+          content: oldLine,
+          lineNumber: lineNumber++,
+        })
+      } else if (oldLine !== newLine) {
+        // Line changed - show both
+        result.push({
+          type: 'removed',
+          content: oldLine,
+          lineNumber: lineNumber,
+        })
+        result.push({
+          type: 'added',
+          content: newLine,
+          lineNumber: lineNumber,
+        })
+        lineNumber++
+      } else {
+        // Unchanged
+        result.push({
+          type: 'unchanged',
+          content: oldLine,
+          lineNumber: lineNumber++,
+        })
+      }
     }
-  }
 
-  return result
-})
+    return result
+  })
 
-const diffStats = computed(() => {
-  return {
-    additions: diffLines.value.filter(l => l.type === 'added').length,
-    deletions: diffLines.value.filter(l => l.type === 'removed').length
-  }
-})
+  const diffStats = computed(() => {
+    return {
+      additions: diffLines.value.filter((l) => l.type === 'added').length,
+      deletions: diffLines.value.filter((l) => l.type === 'removed').length,
+    }
+  })
 </script>
 
 <style scoped>
-.diff-line {
-  line-height: 1.5;
-}
+  .diff-line {
+    line-height: 1.5;
+  }
 
-.diff-line.added .diff-line-content::before {
-  content: '+ ';
-  color: #16a34a;
-  font-weight: bold;
-}
+  .diff-line.added .diff-line-content::before {
+    content: '+ ';
+    color: #16a34a;
+    font-weight: bold;
+  }
 
-.diff-line.removed .diff-line-content::before {
-  content: '- ';
-  color: #dc2626;
-  font-weight: bold;
-}
+  .diff-line.removed .diff-line-content::before {
+    content: '- ';
+    color: #dc2626;
+    font-weight: bold;
+  }
 
-.diff-line.unchanged .diff-line-content::before {
-  content: '  ';
-}
+  .diff-line.unchanged .diff-line-content::before {
+    content: '  ';
+  }
 </style>

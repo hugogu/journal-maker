@@ -11,19 +11,22 @@ export class AppError extends Error {
   }
 }
 
-export function handleError(error: unknown): { statusCode: number; body: { success: false; error: string; code?: string; details?: any } } {
+export function handleError(error: unknown): {
+  statusCode: number
+  body: { success: false; error: string; code?: string; details?: any }
+} {
   // Log full error details with stack trace
   console.error('=== SERVER ERROR ===')
   console.error('Timestamp:', new Date().toISOString())
   console.error('Error type:', error?.constructor?.name || typeof error)
   console.error('Error message:', error instanceof Error ? error.message : String(error))
-  
+
   // Log stack trace if available
   if (error instanceof Error && error.stack) {
     console.error('Stack trace:')
     console.error(error.stack)
   }
-  
+
   // Log additional error properties
   if (error && typeof error === 'object') {
     console.error('Error properties:', Object.getOwnPropertyNames(error))
@@ -45,8 +48,8 @@ export function handleError(error: unknown): { statusCode: number; body: { succe
         details: {
           type: 'AppError',
           statusCode: error.statusCode,
-          stack: error.stack
-        }
+          stack: error.stack,
+        },
       },
     }
   }
@@ -61,27 +64,29 @@ export function handleError(error: unknown): { statusCode: number; body: { succe
         details: {
           type: 'ZodError',
           errors: error.issues,
-          stack: error.stack
-        }
+          stack: error.stack,
+        },
       },
     }
   }
 
   // For unexpected errors, include full details in development
   const isDevelopment = process.env.NODE_ENV !== 'production'
-  
+
   return {
     statusCode: 500,
     body: {
       success: false,
       error: error instanceof Error ? error.message : 'Internal server error',
       code: 'INTERNAL_ERROR',
-      details: isDevelopment ? {
-        type: error?.constructor?.name || 'Unknown',
-        message: error instanceof Error ? error.message : String(error),
-        stack: error instanceof Error ? error.stack : undefined,
-        raw: error
-      } : undefined
+      details: isDevelopment
+        ? {
+            type: error?.constructor?.name || 'Unknown',
+            message: error instanceof Error ? error.message : String(error),
+            stack: error instanceof Error ? error.stack : undefined,
+            raw: error,
+          }
+        : undefined,
     },
   }
 }

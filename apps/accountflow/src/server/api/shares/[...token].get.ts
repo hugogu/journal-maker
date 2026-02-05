@@ -7,7 +7,7 @@ import { eq } from 'drizzle-orm'
 
 async function getScenario(id: number) {
   return db.query.scenarios.findFirst({
-    where: eq(scenarios.id, id)
+    where: eq(scenarios.id, id),
   })
 }
 
@@ -22,7 +22,7 @@ export default defineEventHandler(async (event) => {
     if (!token) {
       return {
         success: false,
-        error: 'Share token required'
+        error: 'Share token required',
       }
     }
 
@@ -31,7 +31,7 @@ export default defineEventHandler(async (event) => {
     if (!share) {
       return {
         success: false,
-        error: 'Share not found or revoked'
+        error: 'Share not found or revoked',
       }
     }
 
@@ -41,7 +41,7 @@ export default defineEventHandler(async (event) => {
     if (!scenario) {
       return {
         success: false,
-        error: 'Scenario not found'
+        error: 'Scenario not found',
       }
     }
 
@@ -52,7 +52,10 @@ export default defineEventHandler(async (event) => {
     if (isExport) {
       const markdown = generateMarkdownExport(scenario, messages)
       event.node.res.setHeader('Content-Type', 'text/markdown')
-      event.node.res.setHeader('Content-Disposition', `attachment; filename="${scenario.name}-conversation.md"`)
+      event.node.res.setHeader(
+        'Content-Disposition',
+        `attachment; filename="${scenario.name}-conversation.md"`
+      )
       return markdown
     }
 
@@ -63,43 +66,43 @@ export default defineEventHandler(async (event) => {
         scenario: {
           id: scenario.id,
           name: scenario.name,
-          description: scenario.description
+          description: scenario.description,
         },
-        messages: messages.map(m => ({
+        messages: messages.map((m) => ({
           role: m.role,
           content: m.content,
-          timestamp: m.createdAt
+          timestamp: m.createdAt,
         })),
-        sharedAt: share.createdAt
-      }
+        sharedAt: share.createdAt,
+      },
     }
   } catch (error: any) {
     console.error('Failed to get shared conversation:', error)
     return {
       success: false,
-      error: error.message || 'Failed to get shared conversation'
+      error: error.message || 'Failed to get shared conversation',
     }
   }
 })
 
 function generateMarkdownExport(scenario: any, messages: any[]): string {
   const lines: string[] = []
-  
+
   lines.push(`# ${scenario.name}`)
   lines.push('')
-  
+
   if (scenario.description) {
     lines.push(`> ${scenario.description}`)
     lines.push('')
   }
-  
+
   lines.push('---')
   lines.push('')
-  
+
   for (const message of messages) {
     const role = message.role === 'user' ? '**用户**' : '**AI助手**'
     const time = new Date(message.createdAt).toLocaleString('zh-CN')
-    
+
     lines.push(`${role} (${time})`)
     lines.push('')
     lines.push(message.content)
@@ -107,6 +110,6 @@ function generateMarkdownExport(scenario: any, messages: any[]): string {
     lines.push('---')
     lines.push('')
   }
-  
+
   return lines.join('\n')
 }

@@ -14,7 +14,7 @@ export default defineEventHandler(async (event) => {
   try {
     const idParam = getRouterParam(event, 'id')
     const scenarioId = idParam ? parseInt(idParam, 10) : null
-    
+
     if (!scenarioId || isNaN(scenarioId)) {
       throw createError({ statusCode: 400, message: 'Invalid scenario ID' })
     }
@@ -24,7 +24,7 @@ export default defineEventHandler(async (event) => {
 
     const message = await createConversationMessage({
       scenarioId,
-      ...data
+      ...data,
     })
 
     return { message }
@@ -33,12 +33,12 @@ export default defineEventHandler(async (event) => {
     if (error instanceof z.ZodError) {
       throw createError({
         statusCode: 400,
-        message: 'Invalid input: ' + error.errors.map(e => e.message).join(', ')
+        message: 'Invalid input: ' + error.errors.map((e) => e.message).join(', '),
       })
     }
     throw createError({
       statusCode: 500,
-      message: 'Failed to create conversation message'
+      message: 'Failed to create conversation message',
     })
   }
 })

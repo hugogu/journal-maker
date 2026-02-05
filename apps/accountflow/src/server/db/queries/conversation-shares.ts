@@ -12,18 +12,19 @@ function generateToken(): string {
 export async function getConversationShares(scenarioId: number) {
   return db.query.conversationShares.findMany({
     where: eq(conversationShares.scenarioId, scenarioId),
-    orderBy: (shares, { desc }) => [desc(shares.createdAt)]
+    orderBy: (shares, { desc }) => [desc(shares.createdAt)],
   })
 }
 
 // Create a new share
 export async function createConversationShare(scenarioId: number, name?: string) {
   const shareToken = generateToken()
-  const [share] = await db.insert(conversationShares)
+  const [share] = await db
+    .insert(conversationShares)
     .values({
       scenarioId,
       shareToken,
-      createdAt: new Date()
+      createdAt: new Date(),
     })
     .returning()
   return share
@@ -35,13 +36,14 @@ export async function getConversationShareByToken(shareToken: string) {
     where: and(
       eq(conversationShares.shareToken, shareToken),
       eq(conversationShares.isRevoked, false)
-    )
+    ),
   })
 }
 
 // Revoke a share
 export async function revokeConversationShare(shareId: number) {
-  const [share] = await db.update(conversationShares)
+  const [share] = await db
+    .update(conversationShares)
     .set({ isRevoked: true, revokedAt: new Date() })
     .where(eq(conversationShares.id, shareId))
     .returning()

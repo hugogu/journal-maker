@@ -36,7 +36,7 @@ export const useAIProviders = () => {
     try {
       await $fetch('/api/admin/ai-providers', {
         method: 'POST',
-        body: data
+        body: data,
       })
       await fetchProviders()
     } finally {
@@ -44,19 +44,22 @@ export const useAIProviders = () => {
     }
   }
 
-  const updateProvider = async (id: number, data: Partial<{
-    name: string
-    apiEndpoint: string
-    apiKey: string
-    defaultModel: string
-    isDefault: boolean
-    status: 'active' | 'inactive'
-  }>) => {
+  const updateProvider = async (
+    id: number,
+    data: Partial<{
+      name: string
+      apiEndpoint: string
+      apiKey: string
+      defaultModel: string
+      isDefault: boolean
+      status: 'active' | 'inactive'
+    }>
+  ) => {
     loading.value = true
     try {
       await $fetch(`/api/admin/ai-providers/${id}`, {
         method: 'PUT',
-        body: data
+        body: data,
       })
       await fetchProviders()
     } finally {
@@ -81,6 +84,6 @@ export const useAIProviders = () => {
     fetchProviders,
     createProvider,
     updateProvider,
-    deleteProvider
+    deleteProvider,
   }
 }

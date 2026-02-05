@@ -1,4 +1,10 @@
-import { BaseAIAdapter, type AIModel, type ChatCompletionParams, type ChatCompletionResponse, type StreamingChatResponse } from './base'
+import {
+  BaseAIAdapter,
+  type AIModel,
+  type ChatCompletionParams,
+  type ChatCompletionResponse,
+  type StreamingChatResponse,
+} from './base'
 
 interface OllamaModel {
   name: string
@@ -39,13 +45,13 @@ export class OllamaAdapter extends BaseAIAdapter {
       throw new Error(`Failed to fetch Ollama models: ${response.status}`)
     }
 
-    const data = await response.json() as { models?: OllamaModel[] }
+    const data = (await response.json()) as { models?: OllamaModel[] }
 
     if (!data.models || !Array.isArray(data.models)) {
       return []
     }
 
-    return data.models.map(model => ({
+    return data.models.map((model) => ({
       id: model.name,
       name: model.name,
       capabilities: {
@@ -136,16 +142,18 @@ export class OllamaAdapter extends BaseAIAdapter {
 
           try {
             const chunk: OllamaCompletionChunk = JSON.parse(line)
-            
+
             onChunk({
               content: chunk.message?.content || '',
               done: chunk.done,
               model: chunk.model,
-              usage: chunk.done ? {
-                promptTokens: chunk.prompt_eval_count || 0,
-                completionTokens: chunk.eval_count || 0,
-                totalTokens: (chunk.prompt_eval_count || 0) + (chunk.eval_count || 0),
-              } : undefined,
+              usage: chunk.done
+                ? {
+                    promptTokens: chunk.prompt_eval_count || 0,
+                    completionTokens: chunk.eval_count || 0,
+                    totalTokens: (chunk.prompt_eval_count || 0) + (chunk.eval_count || 0),
+                  }
+                : undefined,
             })
           } catch (e) {
             // Skip invalid JSON

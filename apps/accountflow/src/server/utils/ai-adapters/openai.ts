@@ -1,4 +1,10 @@
-import { BaseAIAdapter, type AIModel, type ChatCompletionParams, type ChatCompletionResponse, type StreamingChatResponse } from './base'
+import {
+  BaseAIAdapter,
+  type AIModel,
+  type ChatCompletionParams,
+  type ChatCompletionResponse,
+  type StreamingChatResponse,
+} from './base'
 
 interface OpenAIModel {
   id: string
@@ -35,8 +41,8 @@ export class OpenAIAdapter extends BaseAIAdapter {
     }
 
     return response.data
-      .filter(model => model.id.includes('gpt'))
-      .map(model => ({
+      .filter((model) => model.id.includes('gpt'))
+      .map((model) => ({
         id: model.id,
         name: model.id,
         capabilities: {
@@ -101,7 +107,7 @@ export class OpenAIAdapter extends BaseAIAdapter {
         completionTokens: response.usage.completion_tokens,
         totalTokens: response.usage.total_tokens,
       },
-      toolCalls: message?.tool_calls?.map(tc => ({
+      toolCalls: message?.tool_calls?.map((tc) => ({
         id: tc.id,
         type: tc.type,
         function: {
@@ -109,10 +115,12 @@ export class OpenAIAdapter extends BaseAIAdapter {
           arguments: tc.function.arguments,
         },
       })),
-      functionCall: message?.function_call ? {
-        name: message.function_call.name,
-        arguments: message.function_call.arguments,
-      } : undefined,
+      functionCall: message?.function_call
+        ? {
+            name: message.function_call.name,
+            arguments: message.function_call.arguments,
+          }
+        : undefined,
     }
   }
 
@@ -140,7 +148,7 @@ export class OpenAIAdapter extends BaseAIAdapter {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
-        'Authorization': `Bearer ${this.apiKey}`,
+        Authorization: `Bearer ${this.apiKey}`,
       },
       body: JSON.stringify(requestBody),
     })

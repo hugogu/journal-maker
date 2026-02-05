@@ -1,7 +1,7 @@
 /**
  * Demo endpoint showing how to use function calling with schemas
  * POST /api/scenarios/[id]/ai-function-call
- * 
+ *
  * This demonstrates AI-powered rule generation using function calling
  */
 
@@ -60,7 +60,7 @@ export default defineEventHandler(async (event) => {
         content: `You are an accounting expert helping to analyze business scenarios and create journal entry rules.
         
 Available accounts:
-${allAccounts.map(a => `- ${a.code} ${a.name} (${a.type}, ${a.direction})`).join('\n')}
+${allAccounts.map((a) => `- ${a.code} ${a.name} (${a.type}, ${a.direction})`).join('\n')}
 
 Current scenario: ${scenario.name}
 ${scenario.description ? `Description: ${scenario.description}` : ''}

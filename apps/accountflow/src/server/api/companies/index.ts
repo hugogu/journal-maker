@@ -16,7 +16,7 @@ export default defineEventHandler(async (event) => {
     if (method === 'POST') {
       const body = await readBody(event)
       const data = createCompanySchema.parse(body)
-      
+
       const [company] = await db.insert(companies).values(data).returning()
       return successResponse(company)
     }

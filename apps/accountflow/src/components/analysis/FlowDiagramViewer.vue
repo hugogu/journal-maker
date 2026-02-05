@@ -10,13 +10,13 @@
       v-else
       ref="diagramContainer"
       class="mermaid-container overflow-auto bg-white rounded-lg border border-gray-200 p-4 relative"
-      style="min-height: 300px;"
+      style="min-height: 300px"
     >
       <!-- Loading Overlay -->
       <div v-if="loading" class="absolute inset-0 flex items-center justify-center bg-white/80">
         <div class="animate-spin rounded-full h-6 w-6 border-b-2 border-green-600"></div>
       </div>
-      
+
       <!-- Expand Button -->
       <button
         v-if="!loading && mermaidCode"
@@ -25,13 +25,21 @@
         title="放大查看"
       >
         <svg class="w-4 h-4 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0zM10 7v3m0 0v3m0-3h3m-3 0H7"></path>
+          <path
+            stroke-linecap="round"
+            stroke-linejoin="round"
+            stroke-width="2"
+            d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0zM10 7v3m0 0v3m0-3h3m-3 0H7"
+          ></path>
         </svg>
       </button>
     </div>
 
     <!-- Expanded Modal -->
-    <div v-if="showExpanded" class="fixed inset-0 bg-black/80 flex items-center justify-center p-4 z-50">
+    <div
+      v-if="showExpanded"
+      class="fixed inset-0 bg-black/80 flex items-center justify-center p-4 z-50"
+    >
       <div class="bg-white rounded-lg max-w-6xl max-h-[90vh] w-full overflow-hidden">
         <div class="flex items-center justify-between p-4 border-b">
           <h3 class="text-lg font-semibold">资金/信息流图</h3>
@@ -40,11 +48,16 @@
             class="text-gray-500 hover:text-gray-700 p-2 rounded hover:bg-gray-100"
           >
             <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+              <path
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                stroke-width="2"
+                d="M6 18L18 6M6 6l12 12"
+              ></path>
             </svg>
           </button>
         </div>
-        <div class="p-6 overflow-auto" style="max-height: calc(90vh - 80px);">
+        <div class="p-6 overflow-auto" style="max-height: calc(90vh - 80px)">
           <div ref="expandedContainer" class="bg-white rounded-lg border border-gray-200 p-4">
             <!-- Expanded diagram will be rendered here -->
           </div>
@@ -55,164 +68,170 @@
 </template>
 
 <script setup lang="ts">
-import { ref, watch, onMounted, nextTick } from 'vue'
+  import { ref, watch, onMounted, nextTick } from 'vue'
 
-const props = defineProps<{
-  mermaidCode: string
-}>()
+  const props = defineProps<{
+    mermaidCode: string
+  }>()
 
-const diagramContainer = ref<HTMLElement | null>(null)
-const expandedContainer = ref<HTMLElement | null>(null)
-const loading = ref(false)
-const error = ref(false)
-const showExpanded = ref(false)
+  const diagramContainer = ref<HTMLElement | null>(null)
+  const expandedContainer = ref<HTMLElement | null>(null)
+  const loading = ref(false)
+  const error = ref(false)
+  const showExpanded = ref(false)
 
-let mermaidInitialized = false
-let mermaid: any = null
+  let mermaidInitialized = false
+  let mermaid: any = null
 
-async function initMermaid() {
-  if (mermaidInitialized || typeof window === 'undefined') return
+  async function initMermaid() {
+    if (mermaidInitialized || typeof window === 'undefined') return
 
-  // Dynamic import for client-side only
-  const mermaidModule = await import('mermaid')
-  mermaid = mermaidModule.default
+    // Dynamic import for client-side only
+    const mermaidModule = await import('mermaid')
+    mermaid = mermaidModule.default
 
-  mermaid.initialize({
-    startOnLoad: false,
-    theme: 'default',
-    securityLevel: 'loose',
-    flowchart: {
-      useMaxWidth: true,
-      htmlLabels: true,
-      curve: 'basis',
-    },
-  })
-  mermaidInitialized = true
-}
-
-async function renderDiagram() {
-  if (!props.mermaidCode || !diagramContainer.value || typeof window === 'undefined') {
-    loading.value = false
-    return
+    mermaid.initialize({
+      startOnLoad: false,
+      theme: 'default',
+      securityLevel: 'loose',
+      flowchart: {
+        useMaxWidth: true,
+        htmlLabels: true,
+        curve: 'basis',
+      },
+    })
+    mermaidInitialized = true
   }
 
-  loading.value = true
-  error.value = false
-
-  try {
-    await initMermaid()
-
-    if (!mermaid) {
+  async function renderDiagram() {
+    if (!props.mermaidCode || !diagramContainer.value || typeof window === 'undefined') {
       loading.value = false
-      error.value = true
       return
     }
 
-    // Clear previous content
-    diagramContainer.value.innerHTML = ''
+    loading.value = true
+    error.value = false
 
-    // Generate unique ID for this render
-    const id = `mermaid-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`
+    try {
+      await initMermaid()
 
-    // Render the diagram
-    const result = await mermaid.render(id, props.mermaidCode)
+      if (!mermaid) {
+        loading.value = false
+        error.value = true
+        return
+      }
 
-    if (diagramContainer.value && result.svg) {
-      diagramContainer.value.innerHTML = result.svg
-    } else {
+      // Clear previous content
+      diagramContainer.value.innerHTML = ''
+
+      // Generate unique ID for this render
+      const id = `mermaid-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`
+
+      // Render the diagram
+      const result = await mermaid.render(id, props.mermaidCode)
+
+      if (diagramContainer.value && result.svg) {
+        diagramContainer.value.innerHTML = result.svg
+      } else {
+        error.value = true
+      }
+    } catch (e) {
+      console.error('Mermaid render error:', e)
       error.value = true
+    } finally {
+      loading.value = false
     }
-  } catch (e) {
-    console.error('Mermaid render error:', e)
-    error.value = true
-  } finally {
-    loading.value = false
   }
-}
 
-// Render diagram in expanded modal
-async function renderExpandedDiagram() {
-  if (!props.mermaidCode || !expandedContainer.value) return
+  // Render diagram in expanded modal
+  async function renderExpandedDiagram() {
+    if (!props.mermaidCode || !expandedContainer.value) return
 
-  try {
-    await initMermaid()
+    try {
+      await initMermaid()
 
-    if (!mermaid) return
+      if (!mermaid) return
 
-    // Clear previous content
-    expandedContainer.value.innerHTML = ''
+      // Clear previous content
+      expandedContainer.value.innerHTML = ''
 
-    // Generate unique ID for expanded render
-    const id = `mermaid-expanded-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`
+      // Generate unique ID for expanded render
+      const id = `mermaid-expanded-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`
 
-    // Render the diagram
-    const result = await mermaid.render(id, props.mermaidCode)
+      // Render the diagram
+      const result = await mermaid.render(id, props.mermaidCode)
 
-    if (expandedContainer.value && result.svg) {
-      expandedContainer.value.innerHTML = result.svg
+      if (expandedContainer.value && result.svg) {
+        expandedContainer.value.innerHTML = result.svg
+      }
+    } catch (e) {
+      console.error('Expanded mermaid render error:', e)
     }
-  } catch (e) {
-    console.error('Expanded mermaid render error:', e)
   }
-}
 
-// Wait for both mermaidCode and container to be ready
-async function tryRender(attempt = 0): Promise<void> {
-  const maxAttempts = 5
+  // Wait for both mermaidCode and container to be ready
+  async function tryRender(attempt = 0): Promise<void> {
+    const maxAttempts = 5
 
-  if (props.mermaidCode && diagramContainer.value) {
-    await renderDiagram()
-  } else if (props.mermaidCode && attempt < maxAttempts) {
-    await new Promise(resolve => setTimeout(resolve, 50))
-    await tryRender(attempt + 1)
-  } else if (attempt >= maxAttempts) {
-    loading.value = false
-    error.value = true
-  } else {
-    // No mermaid code, just set loading to false
-    loading.value = false
+    if (props.mermaidCode && diagramContainer.value) {
+      await renderDiagram()
+    } else if (props.mermaidCode && attempt < maxAttempts) {
+      await new Promise((resolve) => setTimeout(resolve, 50))
+      await tryRender(attempt + 1)
+    } else if (attempt >= maxAttempts) {
+      loading.value = false
+      error.value = true
+    } else {
+      // No mermaid code, just set loading to false
+      loading.value = false
+    }
   }
-}
 
-onMounted(async () => {
-  await nextTick()
-  await tryRender()
-})
-
-watch(() => props.mermaidCode, async () => {
-  await nextTick()
-  await tryRender()
-})
-
-// Watch for modal opening to render expanded diagram
-watch(() => showExpanded.value, async (newValue) => {
-  if (newValue) {
+  onMounted(async () => {
     await nextTick()
-    setTimeout(() => {
-      renderExpandedDiagram()
-    }, 100)
-  }
-})
+    await tryRender()
+  })
+
+  watch(
+    () => props.mermaidCode,
+    async () => {
+      await nextTick()
+      await tryRender()
+    }
+  )
+
+  // Watch for modal opening to render expanded diagram
+  watch(
+    () => showExpanded.value,
+    async (newValue) => {
+      if (newValue) {
+        await nextTick()
+        setTimeout(() => {
+          renderExpandedDiagram()
+        }, 100)
+      }
+    }
+  )
 </script>
 
 <style scoped>
-.mermaid-container {
-  min-height: 200px;
-}
+  .mermaid-container {
+    min-height: 200px;
+  }
 
-.mermaid-container :deep(svg) {
-  max-width: 100%;
-  height: auto;
-}
+  .mermaid-container :deep(svg) {
+    max-width: 100%;
+    height: auto;
+  }
 
-.flow-diagram-viewer {
-  position: relative;
-}
+  .flow-diagram-viewer {
+    position: relative;
+  }
 
-/* Expanded modal styles */
-.expanded-container :deep(svg) {
-  max-width: 100%;
-  height: auto;
-  min-width: 800px;
-}
+  /* Expanded modal styles */
+  .expanded-container :deep(svg) {
+    max-width: 100%;
+    height: auto;
+    min-width: 800px;
+  }
 </style>

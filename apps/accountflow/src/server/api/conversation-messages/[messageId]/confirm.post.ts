@@ -12,21 +12,21 @@ export default defineEventHandler(async (event) => {
     if (!messageId || !scenarioId) {
       throw createError({
         statusCode: 400,
-        statusMessage: 'Invalid message ID or scenario ID'
+        statusMessage: 'Invalid message ID or scenario ID',
       })
     }
 
     const result = await confirmMessage(messageId, scenarioId)
-    
+
     return {
       success: true,
-      data: result
+      data: result,
     }
   } catch (error) {
     console.error('Failed to confirm message:', error)
     throw createError({
       statusCode: 500,
-      statusMessage: 'Failed to confirm message'
+      statusMessage: 'Failed to confirm message',
     })
   }
 })

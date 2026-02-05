@@ -18,24 +18,26 @@ export async function upsertCompanyProfile(data: {
   notes?: string | null
 }): Promise<CompanyProfile> {
   const existing = await db.query.companyProfile.findFirst()
-  
+
   if (existing) {
-    const [updated] = await db.update(companyProfile)
+    const [updated] = await db
+      .update(companyProfile)
       .set({
         ...data,
-        updatedAt: new Date()
+        updatedAt: new Date(),
       })
       .where(eq(companyProfile.id, existing.id))
       .returning()
     return updated
   } else {
-    const [created] = await db.insert(companyProfile)
+    const [created] = await db
+      .insert(companyProfile)
       .values({
         name: data.name,
         businessModel: data.businessModel || null,
         industry: data.industry || null,
         accountingPreference: data.accountingPreference || null,
-        notes: data.notes || null
+        notes: data.notes || null,
       })
       .returning()
     return created
@@ -46,12 +48,12 @@ export async function upsertCompanyProfile(data: {
 export async function initializeDefaultProfile(): Promise<CompanyProfile> {
   const existing = await getCompanyProfile()
   if (existing) return existing
-  
+
   return upsertCompanyProfile({
     name: '我的公司',
     businessModel: '',
     industry: '',
     accountingPreference: '',
-    notes: ''
+    notes: '',
   })
 }

@@ -3,16 +3,10 @@
     <div class="flex items-center justify-between mb-6">
       <h1 class="text-2xl font-bold">示例交易</h1>
       <div class="flex gap-3">
-        <button 
-          class="btn-secondary"
-          :disabled="generating"
-          @click="generateSample"
-        >
+        <button class="btn-secondary" :disabled="generating" @click="generateSample">
           {{ generating ? '生成中...' : 'AI 生成示例' }}
         </button>
-        <NuxtLink :to="`/scenarios/${route.params.id}`" class="btn-secondary">
-          返回场景
-        </NuxtLink>
+        <NuxtLink :to="`/scenarios/${route.params.id}`" class="btn-secondary"> 返回场景 </NuxtLink>
       </div>
     </div>
 
@@ -24,14 +18,16 @@
     <div v-for="tx in transactions" :key="tx.id" class="card mb-4">
       <div class="flex items-center justify-between mb-4">
         <h3 class="text-lg font-semibold">{{ tx.description }}</h3>
-        <span 
-          :class="tx.generatedBy === 'ai' ? 'bg-purple-100 text-purple-800' : 'bg-gray-100 text-gray-800'"
+        <span
+          :class="
+            tx.generatedBy === 'ai' ? 'bg-purple-100 text-purple-800' : 'bg-gray-100 text-gray-800'
+          "
           class="px-2 py-1 rounded text-xs"
         >
           {{ tx.generatedBy === 'ai' ? 'AI 生成' : '手动创建' }}
         </span>
       </div>
-      
+
       <table class="w-full">
         <thead class="bg-gray-50">
           <tr>
@@ -73,51 +69,51 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted } from 'vue'
-import { useRoute } from 'vue-router'
+  import { ref, onMounted } from 'vue'
+  import { useRoute } from 'vue-router'
 
-const route = useRoute()
-const transactions = ref([])
-const generating = ref(false)
+  const route = useRoute()
+  const transactions = ref([])
+  const generating = ref(false)
 
-onMounted(async () => {
-  await loadTransactions()
-})
+  onMounted(async () => {
+    await loadTransactions()
+  })
 
-async function loadTransactions() {
-  const response = await $fetch(`/api/scenarios/${route.params.id}/transactions`)
-  if (response.success) {
-    transactions.value = response.data
-  }
-}
-
-async function generateSample() {
-  generating.value = true
-  try {
-    const response = await $fetch(`/api/scenarios/${route.params.id}/transactions`, {
-      method: 'POST',
-      body: { autoGenerate: true }
-    })
+  async function loadTransactions() {
+    const response = await $fetch(`/api/scenarios/${route.params.id}/transactions`)
     if (response.success) {
-      await loadTransactions()
+      transactions.value = response.data
     }
-  } catch (e) {
-    alert('生成失败')
-  } finally {
-    generating.value = false
   }
-}
 
-function formatMoney(amount: number) {
-  if (!amount) return '-'
-  return new Intl.NumberFormat('zh-CN', { style: 'currency', currency: 'CNY' }).format(amount)
-}
+  async function generateSample() {
+    generating.value = true
+    try {
+      const response = await $fetch(`/api/scenarios/${route.params.id}/transactions`, {
+        method: 'POST',
+        body: { autoGenerate: true },
+      })
+      if (response.success) {
+        await loadTransactions()
+      }
+    } catch (e) {
+      alert('生成失败')
+    } finally {
+      generating.value = false
+    }
+  }
 
-function totalDebit(entries: any[]) {
-  return entries.reduce((sum, e) => sum + (e.debit || 0), 0)
-}
+  function formatMoney(amount: number) {
+    if (!amount) return '-'
+    return new Intl.NumberFormat('zh-CN', { style: 'currency', currency: 'CNY' }).format(amount)
+  }
 
-function totalCredit(entries: any[]) {
-  return entries.reduce((sum, e) => sum + (e.credit || 0), 0)
-}
+  function totalDebit(entries: any[]) {
+    return entries.reduce((sum, e) => sum + (e.debit || 0), 0)
+  }
+
+  function totalCredit(entries: any[]) {
+    return entries.reduce((sum, e) => sum + (e.credit || 0), 0)
+  }
 </script>

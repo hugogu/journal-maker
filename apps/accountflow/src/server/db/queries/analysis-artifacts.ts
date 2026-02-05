@@ -39,40 +39,61 @@ export async function listAnalysisArtifacts(params: {
 export async function createAnalysisArtifacts(params: {
   scenarioId: number
   sourceMessageId?: number | null
-  subjects?: Array<{ code: string; name: string; direction: 'debit' | 'credit' | 'both'; description?: string | null; metadata?: any }>
-  entries?: Array<{ lines: any; description?: string | null; amount?: number | null; currency?: string | null; metadata?: any }>
+  subjects?: Array<{
+    code: string
+    name: string
+    direction: 'debit' | 'credit' | 'both'
+    description?: string | null
+    metadata?: any
+  }>
+  entries?: Array<{
+    lines: any
+    description?: string | null
+    amount?: number | null
+    currency?: string | null
+    metadata?: any
+  }>
   diagrams?: Array<{ diagramType: 'mermaid' | 'chart' | 'table'; payload: any; metadata?: any }>
 }) {
   const { scenarioId, sourceMessageId } = params
 
   const createdSubjects = params.subjects?.length
-    ? await db.insert(analysisSubjects).values(
-        params.subjects.map((subject) => ({
-          scenarioId,
-          sourceMessageId: sourceMessageId || null,
-          ...subject,
-        }))
-      ).returning()
+    ? await db
+        .insert(analysisSubjects)
+        .values(
+          params.subjects.map((subject) => ({
+            scenarioId,
+            sourceMessageId: sourceMessageId || null,
+            ...subject,
+          }))
+        )
+        .returning()
     : []
 
   const createdEntries = params.entries?.length
-    ? await db.insert(analysisEntries).values(
-        params.entries.map((entry) => ({
-          scenarioId,
-          sourceMessageId: sourceMessageId || null,
-          ...entry,
-        }))
-      ).returning()
+    ? await db
+        .insert(analysisEntries)
+        .values(
+          params.entries.map((entry) => ({
+            scenarioId,
+            sourceMessageId: sourceMessageId || null,
+            ...entry,
+          }))
+        )
+        .returning()
     : []
 
   const createdDiagrams = params.diagrams?.length
-    ? await db.insert(analysisDiagrams).values(
-        params.diagrams.map((diagram) => ({
-          scenarioId,
-          sourceMessageId: sourceMessageId || null,
-          ...diagram,
-        }))
-      ).returning()
+    ? await db
+        .insert(analysisDiagrams)
+        .values(
+          params.diagrams.map((diagram) => ({
+            scenarioId,
+            sourceMessageId: sourceMessageId || null,
+            ...diagram,
+          }))
+        )
+        .returning()
     : []
 
   return { subjects: createdSubjects, entries: createdEntries, diagrams: createdDiagrams }

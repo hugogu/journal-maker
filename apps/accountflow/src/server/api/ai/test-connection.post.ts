@@ -9,10 +9,10 @@ export default defineEventHandler(async (event) => {
   try {
     const body = await readBody(event)
     const data = testAIConnectionSchema.parse(body)
-    
+
     let apiKey = data.apiKey
     let providerType = data.providerType || 'openai'
-    
+
     // If apiKey is empty and providerId is provided, use stored key from database
     if (!apiKey && data.providerId) {
       const provider = await getAIProvider(data.providerId)
@@ -22,23 +22,23 @@ export default defineEventHandler(async (event) => {
       apiKey = decrypt(provider.apiKey)
       providerType = provider.type
     }
-    
+
     // Validate we have an apiKey
     if (!apiKey) {
       throw new AppError(400, 'API Key is required')
     }
-    
+
     const isConnected = await aiService.testConnection(
       providerType,
       data.apiEndpoint,
       apiKey,
       data.model
     )
-    
+
     if (!isConnected) {
       throw new AppError(400, 'Failed to connect to AI service')
     }
-    
+
     return successResponse({ connected: true })
   } catch (error) {
     const { statusCode, body } = handleError(error)

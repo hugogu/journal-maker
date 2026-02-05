@@ -14,7 +14,7 @@ export const usePromptPreview = () => {
     try {
       const { data } = await useFetch('/api/prompts/preview', {
         method: 'POST',
-        body: { content, variables }
+        body: { content, variables },
       })
       if (data.value) {
         previewResult.value = data.value
@@ -37,6 +37,6 @@ export const usePromptPreview = () => {
     previewError: readonly(previewError),
     previewResult: readonly(previewResult),
     previewPrompt,
-    clearPreview
+    clearPreview,
   }
 }

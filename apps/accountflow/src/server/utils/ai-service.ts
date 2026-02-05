@@ -2,7 +2,13 @@ import type { Account } from '../../types'
 import { db } from '../db'
 import { aiProviders, userPreferences, companyProfile } from '../db/schema'
 import { eq, and } from 'drizzle-orm'
-import { createAIAdapter, type AIProviderAdapter, type ChatMessage } from './ai-adapters'
+import {
+  createAIAdapter,
+  type AIProviderAdapter,
+  type ChatMessage,
+  type ToolCall,
+  type FunctionCall,
+} from './ai-adapters'
 import { decrypt } from './encryption'
 import { getActivePromptContent } from '../db/queries/prompts'
 
@@ -111,7 +117,7 @@ export class AIService {
     // Priority 2: Check user preferences if userId provided
     else if (userId) {
       const prefs = await db.query.userPreferences.findFirst({
-        where: eq(userPreferences.userId, userId)
+        where: eq(userPreferences.userId, userId),
       })
       if (prefs?.preferredProviderId) {
         providerId = prefs.preferredProviderId
@@ -123,22 +129,21 @@ export class AIService {
     let provider
     if (providerId) {
       provider = await db.query.aiProviders.findFirst({
-        where: eq(aiProviders.id, providerId)
+        where: eq(aiProviders.id, providerId),
       })
     }
 
     // Fall back to default provider
     if (!provider) {
       provider = await db.query.aiProviders.findFirst({
-        where: and(
-          eq(aiProviders.isDefault, true),
-          eq(aiProviders.status, 'active')
-        )
+        where: and(eq(aiProviders.isDefault, true), eq(aiProviders.status, 'active')),
       })
     }
 
     if (!provider) {
-      throw new Error('No active AI provider configured. Please configure AI settings in Admin > AI Config.')
+      throw new Error(
+        'No active AI provider configured. Please configure AI settings in Admin > AI Config.'
+      )
     }
 
     // Decrypt API key
@@ -173,7 +178,7 @@ export class AIService {
       adapter,
       model: model || 'gpt-4',
       providerId: String(provider.id),
-      providerName: provider.name
+      providerName: provider.name,
     }
   }
 
@@ -182,7 +187,7 @@ export class AIService {
    */
   private async getCompanyContext(): Promise<AIContext['company']> {
     const profile = await db.query.companyProfile.findFirst()
-    
+
     if (!profile) {
       return { name: 'Default Company' }
     }
@@ -214,34 +219,40 @@ export class AIService {
    */
   private async buildPromptWithContext(context: AIContext, promptType: string): Promise<string> {
     const company = await this.getCompanyContext()
-    
+
     // Try to get active prompt template from database
     // Cast to any to allow flexible prompt types
     const activePromptContent = await getActivePromptContent(promptType as any)
-    
+
     if (!activePromptContent) {
-      throw new Error(`No active prompt template found for ${promptType}. Please configure one in Admin > Prompts.`)
+      throw new Error(
+        `No active prompt template found for ${promptType}. Please configure one in Admin > Prompts.`
+      )
     }
-    
+
     // Build accounts list in multiple formats for flexibility
-    const accountsList = context.accounts.map(a => `${a.code} ${a.name} (${a.type})`).join(', ')
+    const accountsList = context.accounts.map((a) => `${a.code} ${a.name} (${a.type})`).join(', ')
     const accountsListMultiline = context.accounts
-      .map(a => `- ${a.code} ${a.name} (${a.type})`)
+      .map((a) => `- ${a.code} ${a.name} (${a.type})`)
       .join('\n')
-    const accountsJson = JSON.stringify(context.accounts.map(a => ({
-      code: a.code,
-      name: a.name,
-      type: a.type
-    })))
-    
+    const accountsJson = JSON.stringify(
+      context.accounts.map((a) => ({
+        code: a.code,
+        name: a.name,
+        type: a.type,
+      }))
+    )
+
     // Build company context summary
     const companyContextParts = [
       company.name,
       company.businessModel,
       company.industry,
-      company.accountingPreference
-    ].filter(Boolean).join(' | ')
-    
+      company.accountingPreference,
+    ]
+      .filter(Boolean)
+      .join(' | ')
+
     // Replace all variables in the prompt template
     let prompt = activePromptContent
       // Accounts variables
@@ -254,7 +265,7 @@ export class AIService {
       .replace(/\{\{industry\}\}/g, company.industry || '')
       .replace(/\{\{accountingPreference\}\}/g, company.accountingPreference || '')
       .replace(/\{\{companyContext\}\}/g, companyContextParts)
-    
+
     // Scenario variables (if available)
     if (context.currentScenario) {
       prompt = prompt
@@ -266,7 +277,7 @@ export class AIService {
         .replace(/\{\{scenarioName\}\}/g, '')
         .replace(/\{\{scenarioDescription\}\}/g, '')
     }
-    
+
     return prompt
   }
 
@@ -281,12 +292,16 @@ export class AIService {
     explicitModel?: string
   ): Promise<AnalysisResult> {
     const startTime = Date.now()
-    const { adapter, model, providerId, providerName } = await this.getAdapter(userId, explicitProviderId, explicitModel)
-    
+    const { adapter, model, providerId, providerName } = await this.getAdapter(
+      userId,
+      explicitProviderId,
+      explicitModel
+    )
+
     const systemPrompt = await this.buildSystemPrompt(context)
     const messages: ChatMessage[] = [
       { role: 'system', content: systemPrompt },
-      { role: 'user', content: userInput }
+      { role: 'user', content: userInput },
     ]
 
     const response = await adapter.chatCompletion({
@@ -341,12 +356,16 @@ export class AIService {
     explicitModel?: string
   ): Promise<AnalysisResult> {
     const startTime = Date.now()
-    const { adapter, model, providerId, providerName } = await this.getAdapter(userId, explicitProviderId, explicitModel)
-    
+    const { adapter, model, providerId, providerName } = await this.getAdapter(
+      userId,
+      explicitProviderId,
+      explicitModel
+    )
+
     const systemPrompt = await this.buildStreamSystemPrompt(context)
     const messages: ChatMessage[] = [
       { role: 'system', content: systemPrompt },
-      { role: 'user', content: userInput }
+      { role: 'user', content: userInput },
     ]
 
     let fullContent = ''
@@ -444,7 +463,7 @@ export class AIService {
     }
 
     // Extract system prompt from messages
-    const systemPrompt = options.messages.find(m => m.role === 'system')?.content || ''
+    const systemPrompt = options.messages.find((m) => m.role === 'system')?.content || ''
 
     return {
       message: response.content,
@@ -452,7 +471,7 @@ export class AIService {
       requestLog: {
         systemPrompt,
         contextMessages: options.messages,
-        fullPrompt: options.messages.map(m => `${m.role}: ${m.content}`).join('\n\n'),
+        fullPrompt: options.messages.map((m) => `${m.role}: ${m.content}`).join('\n\n'),
         variables: {},
       },
       responseStats: {
@@ -465,6 +484,85 @@ export class AIService {
         durationMs,
       },
       toolCalls: response.toolCalls,
+    }
+  }
+
+  /**
+   * Generic chat completion method for direct AI model calls
+   * Supports function calling via the functions parameter
+   */
+  async callChat(
+    messages: ChatMessage[],
+    opts?: {
+      userId?: number
+      providerId?: number
+      model?: string
+      temperature?: number
+      maxTokens?: number
+      functions?: any[]
+      function_call?: 'auto' | 'none' | { name: string }
+      tools?: any[]
+      tool_choice?: 'auto' | 'none' | { type: 'function'; function: { name: string } }
+    }
+  ): Promise<{
+    content: string
+    model: string
+    usage?: {
+      promptTokens: number
+      completionTokens: number
+      totalTokens: number
+    }
+    toolCalls?: ToolCall[]
+    functionCall?: FunctionCall
+  }> {
+    const { adapter, model, providerId, providerName } = await this.getAdapter(
+      opts?.userId,
+      opts?.providerId,
+      opts?.model
+    )
+
+    // Support both new tools API and legacy functions API
+    const requestParams: any = {
+      model,
+      messages,
+      temperature: opts?.temperature ?? 0.7,
+      maxTokens: opts?.maxTokens,
+    }
+
+    // Prefer tools API if provided
+    if (opts?.tools && opts.tools.length > 0) {
+      requestParams.tools = opts.tools
+      if (opts.tool_choice) {
+        requestParams.tool_choice = opts.tool_choice
+      }
+    }
+    // Fall back to legacy functions API
+    else if (opts?.functions && opts.functions.length > 0) {
+      // Convert functions to tools format
+      requestParams.tools = opts.functions.map((func: any) => ({
+        type: 'function',
+        function: func,
+      }))
+      if (opts.function_call) {
+        if (opts.function_call === 'auto' || opts.function_call === 'none') {
+          requestParams.tool_choice = opts.function_call
+        } else if (typeof opts.function_call === 'object' && opts.function_call.name) {
+          requestParams.tool_choice = {
+            type: 'function',
+            function: { name: opts.function_call.name },
+          }
+        }
+      }
+    }
+
+    const response = await adapter.chatCompletion(requestParams)
+
+    return {
+      content: response.content,
+      model: response.model,
+      usage: response.usage,
+      toolCalls: response.toolCalls,
+      functionCall: response.functionCall,
     }
   }
 

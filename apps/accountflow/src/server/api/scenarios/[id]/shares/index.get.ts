@@ -8,7 +8,7 @@ export default defineEventHandler(async (event) => {
     if (!scenarioId) {
       return {
         success: false,
-        error: 'Scenario ID required'
+        error: 'Scenario ID required',
       }
     }
 
@@ -16,13 +16,13 @@ export default defineEventHandler(async (event) => {
 
     return {
       success: true,
-      data: shares
+      data: shares,
     }
   } catch (error: any) {
     console.error('Failed to get shares:', error)
     return {
       success: false,
-      error: error.message || 'Failed to get shares'
+      error: error.message || 'Failed to get shares',
     }
   }
 })

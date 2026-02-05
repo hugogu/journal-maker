@@ -5,9 +5,16 @@
       <span class="text-xs font-mono bg-purple-100 text-purple-700 px-2 py-0.5 rounded">
         {{ rule.id }}
       </span>
-      <span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-blue-100 text-blue-800" title="AI 建议的会计规则">
+      <span
+        class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-blue-100 text-blue-800"
+        title="AI 建议的会计规则"
+      >
         <svg class="w-3 h-3 mr-1" fill="currentColor" viewBox="0 0 20 20">
-          <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-11a1 1 0 10-2 0v2H7a1 1 0 100 2h2v2a1 1 0 102 0v-2h2a1 1 0 100-2h-2V7z" clip-rule="evenodd"></path>
+          <path
+            fill-rule="evenodd"
+            d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-11a1 1 0 10-2 0v2H7a1 1 0 100 2h2v2a1 1 0 102 0v-2h2a1 1 0 100-2h-2V7z"
+            clip-rule="evenodd"
+          ></path>
         </svg>
         新建议
       </span>
@@ -41,9 +48,9 @@
 </template>
 
 <script setup lang="ts">
-import type { AccountingRule } from '../../types'
+  import type { AccountingRule } from '../../types'
 
-defineProps<{
-  rule: AccountingRule
-}>()
+  defineProps<{
+    rule: AccountingRule
+  }>()
 </script>

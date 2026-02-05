@@ -39,12 +39,12 @@ export function createFunctionDefinition(
   schema: z.ZodType<any>
 ): FunctionDefinition {
   const jsonSchema = zodToJsonSchema(schema)
-  
+
   // Remove $schema field as OpenAI doesn't need it
   if (jsonSchema.$schema) {
     delete jsonSchema.$schema
   }
-  
+
   return {
     name,
     description,

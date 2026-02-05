@@ -4,7 +4,12 @@
       <h3 class="text-lg font-semibold text-gray-900">响应统计</h3>
       <button @click="$emit('close')" class="text-gray-400 hover:text-gray-600 transition-colors">
         <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+          <path
+            stroke-linecap="round"
+            stroke-linejoin="round"
+            stroke-width="2"
+            d="M6 18L18 6M6 6l12 12"
+          ></path>
         </svg>
       </button>
     </div>
@@ -14,7 +19,10 @@
       <p class="text-gray-500 text-sm">加载中...</p>
     </div>
 
-    <div v-else-if="error" class="text-red-600 py-8 px-4 bg-red-50 rounded-lg border border-red-200">
+    <div
+      v-else-if="error"
+      class="text-red-600 py-8 px-4 bg-red-50 rounded-lg border border-red-200"
+    >
       {{ error }}
     </div>
 
@@ -34,8 +42,18 @@
       <!-- Token Usage -->
       <div class="bg-white border border-gray-200 rounded-lg p-5">
         <h4 class="font-medium text-sm text-gray-700 mb-4 flex items-center">
-          <svg class="w-4 h-4 mr-2 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 7h6m0 10v-3m-3 3h.01M9 17h.01M9 14h.01M12 14h.01M15 11h.01M12 11h.01M9 11h.01M7 21h10a2 2 0 002-2V5a2 2 0 00-2-2H7a2 2 0 00-2 2v14a2 2 0 002 2z"></path>
+          <svg
+            class="w-4 h-4 mr-2 text-blue-500"
+            fill="none"
+            stroke="currentColor"
+            viewBox="0 0 24 24"
+          >
+            <path
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              stroke-width="2"
+              d="M9 7h6m0 10v-3m-3 3h.01M9 17h.01M9 14h.01M12 14h.01M15 11h.01M12 11h.01M9 11h.01M7 21h10a2 2 0 002-2V5a2 2 0 00-2-2H7a2 2 0 00-2 2v14a2 2 0 002 2z"
+            ></path>
           </svg>
           Token 使用
         </h4>
@@ -58,23 +76,45 @@
       <!-- Performance -->
       <div class="bg-white border border-gray-200 rounded-lg p-5">
         <h4 class="font-medium text-sm text-gray-700 mb-4 flex items-center">
-          <svg class="w-4 h-4 mr-2 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"></path>
+          <svg
+            class="w-4 h-4 mr-2 text-green-500"
+            fill="none"
+            stroke="currentColor"
+            viewBox="0 0 24 24"
+          >
+            <path
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              stroke-width="2"
+              d="M13 10V3L4 14h7v7l9-11h-7z"
+            ></path>
           </svg>
           性能
         </h4>
         <div class="space-y-3">
           <div class="flex items-center justify-between py-2">
             <span class="text-gray-600 text-sm">响应时间</span>
-            <span class="font-medium text-gray-900 bg-gray-100 px-3 py-1 rounded-full text-sm">{{ formatDuration(stats.durationMs) }}</span>
+            <span class="font-medium text-gray-900 bg-gray-100 px-3 py-1 rounded-full text-sm">{{
+              formatDuration(stats.durationMs)
+            }}</span>
           </div>
         </div>
       </div>
     </div>
 
     <div v-else class="text-gray-500 text-center py-12">
-      <svg class="w-12 h-12 mx-auto mb-3 text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"></path>
+      <svg
+        class="w-12 h-12 mx-auto mb-3 text-gray-300"
+        fill="none"
+        stroke="currentColor"
+        viewBox="0 0 24 24"
+      >
+        <path
+          stroke-linecap="round"
+          stroke-linejoin="round"
+          stroke-width="2"
+          d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"
+        ></path>
       </svg>
       <p class="text-sm">暂无统计数据</p>
     </div>
@@ -82,52 +122,52 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted } from 'vue'
+  import { ref, onMounted } from 'vue'
 
-interface ResponseStats {
-  model?: string
-  providerId?: string
-  providerName?: string
-  inputTokens: number
-  outputTokens: number
-  totalTokens: number
-  durationMs: number
-}
+  interface ResponseStats {
+    model?: string
+    providerId?: string
+    providerName?: string
+    inputTokens: number
+    outputTokens: number
+    totalTokens: number
+    durationMs: number
+  }
 
-const props = defineProps<{
-  messageId: number
-}>()
+  const props = defineProps<{
+    messageId: number
+  }>()
 
-const emit = defineEmits<{
-  close: []
-}>()
+  const emit = defineEmits<{
+    close: []
+  }>()
 
-const loading = ref(false)
-const error = ref('')
-const stats = ref<ResponseStats | null>(null)
+  const loading = ref(false)
+  const error = ref('')
+  const stats = ref<ResponseStats | null>(null)
 
-onMounted(async () => {
-  loading.value = true
-  try {
-    const response = await fetch(`/api/conversations/messages/${props.messageId}/stats`)
-    const data = await response.json()
-    
-    if (data.success) {
-      stats.value = data.data
-    } else {
-      error.value = data.error || '加载失败'
+  onMounted(async () => {
+    loading.value = true
+    try {
+      const response = await fetch(`/api/conversations/messages/${props.messageId}/stats`)
+      const data = await response.json()
+
+      if (data.success) {
+        stats.value = data.data
+      } else {
+        error.value = data.error || '加载失败'
+      }
+    } catch (e) {
+      error.value = '网络错误'
+    } finally {
+      loading.value = false
     }
-  } catch (e) {
-    error.value = '网络错误'
-  } finally {
-    loading.value = false
-  }
-})
+  })
 
-function formatDuration(ms: number): string {
-  if (ms < 1000) {
-    return `${ms}ms`
+  function formatDuration(ms: number): string {
+    if (ms < 1000) {
+      return `${ms}ms`
+    }
+    return `${(ms / 1000).toFixed(2)}s`
   }
-  return `${(ms / 1000).toFixed(2)}s`
-}
 </script>

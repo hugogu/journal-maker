@@ -3,7 +3,14 @@ import { AzureOpenAIAdapter } from './azure'
 import { OllamaAdapter } from './ollama'
 import type { AIProviderAdapter } from './base'
 
-export type { AIProviderAdapter, AIModel, ChatMessage, ChatCompletionParams, ChatCompletionResponse, StreamingChatResponse } from './base'
+export type {
+  AIProviderAdapter,
+  AIModel,
+  ChatMessage,
+  ChatCompletionParams,
+  ChatCompletionResponse,
+  StreamingChatResponse,
+} from './base'
 
 export type ProviderType = 'openai' | 'azure' | 'ollama' | 'custom'
 
@@ -28,7 +35,7 @@ export function createAIAdapter(params: CreateAdapterParams): AIProviderAdapter 
         params.apiEndpoint,
         params.apiKey
       )
-    
+
     case 'azure':
       return new AzureOpenAIAdapter(
         params.providerId,
@@ -37,14 +44,10 @@ export function createAIAdapter(params: CreateAdapterParams): AIProviderAdapter 
         params.apiKey,
         params.deploymentId
       )
-    
+
     case 'ollama':
-      return new OllamaAdapter(
-        params.providerId,
-        params.providerName,
-        params.apiEndpoint
-      )
-    
+      return new OllamaAdapter(params.providerId, params.providerName, params.apiEndpoint)
+
     case 'custom':
       // Custom providers use OpenAI-compatible API format
       return new OpenAIAdapter(
@@ -53,7 +56,7 @@ export function createAIAdapter(params: CreateAdapterParams): AIProviderAdapter 
         params.apiEndpoint,
         params.apiKey
       )
-    
+
     default:
       throw new Error(`Unknown provider type: ${params.providerType}`)
   }

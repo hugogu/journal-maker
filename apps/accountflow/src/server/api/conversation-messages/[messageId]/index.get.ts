@@ -20,7 +20,7 @@ export default defineEventHandler(async (event) => {
     console.error('Error fetching conversation message:', error)
     throw createError({
       statusCode: 500,
-      message: 'Failed to fetch conversation message'
+      message: 'Failed to fetch conversation message',
     })
   }
 })

@@ -9,12 +9,12 @@ interface AIGenerateRequest {
 
 export default defineEventHandler(async (event) => {
   try {
-    const body = await readBody(event) as AIGenerateRequest
-    
+    const body = (await readBody(event)) as AIGenerateRequest
+
     if (!body.requirementDescription || !body.scenarioType) {
       throw createH3Error({
         statusCode: 400,
-        message: 'requirementDescription and scenarioType are required'
+        message: 'requirementDescription and scenarioType are required',
       })
     }
 
@@ -60,7 +60,7 @@ Generate the system prompt:`
     console.error('Error generating prompt:', error)
     throw createH3Error({
       statusCode: 500,
-      message: 'Failed to generate prompt'
+      message: 'Failed to generate prompt',
     })
   }
 })
