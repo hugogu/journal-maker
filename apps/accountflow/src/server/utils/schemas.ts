@@ -325,12 +325,11 @@ export type ScenarioContextSchemaType = z.infer<typeof ScenarioContextSchema>
  * @param zodSchema - The Zod schema to convert
  * @returns JSON Schema representation
  */
-export function zodToJsonSchema(zodSchema: z.ZodType<any>): any {
+export function zodToJsonSchema(zodSchema: any): any {
   try {
     // Try using Zod v4's built-in toJSONSchema method
-    const schemaAny = zodSchema as any
-    if (typeof schemaAny.toJSONSchema === 'function') {
-      const result = schemaAny.toJSONSchema()
+    if (typeof zodSchema.toJSONSchema === 'function') {
+      const result = zodSchema.toJSONSchema()
       if (result && typeof result === 'object') {
         return result
       }
