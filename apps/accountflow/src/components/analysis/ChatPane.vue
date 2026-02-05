@@ -1,13 +1,10 @@
 <template>
-  <div class="card flex flex-col h-full p-4">
+  <div class="flex flex-col h-full p-6">
     <!-- Header -->
-    <div class="border-b pb-4 mb-4">
-      <div class="flex items-start justify-between">
-        <div>
-          <h2 class="text-lg font-semibold">{{ scenario?.name }}</h2>
-          <p class="text-gray-600 text-sm">{{ scenario?.description }}</p>
-        </div>
-        <div class="flex items-center gap-1">
+    <div class="border-b pb-6 mb-6">
+      <div class="flex items-center justify-between mb-2">
+        <h1 class="text-2xl font-bold text-gray-900">{{ scenario?.name }}</h1>
+        <div class="flex items-center gap-2">
           <ExportButton
             :scenario-id="scenarioIdNum"
             :messages="messages"
@@ -24,6 +21,7 @@
           </button>
         </div>
       </div>
+      <p class="text-gray-600 text-sm">{{ scenario?.description }}</p>
     </div>
 
     <!-- Messages -->
@@ -158,32 +156,34 @@
     </div>
 
     <!-- Input Form -->
-    <form @submit.prevent="sendMessage" class="space-y-2">
-      <div class="flex gap-2">
-        <textarea
-          v-model="inputMessage"
-          rows="2"
-          class="input flex-1 resize-none"
-          placeholder="描述业务场景细节..."
-          @keydown.enter.prevent="sendMessage"
-          :disabled="streaming"
-        />
-        <button
-          type="submit"
-          class="btn-primary self-end"
-          :disabled="!inputMessage.trim() || streaming"
-        >
-          发送
-        </button>
-      </div>
-      <div class="flex justify-start">
-        <ProviderModelSelector
-          :providers="aiProviders"
-          :loading="loadingProviders"
-          @change="onProviderChange"
-        />
-      </div>
-    </form>
+    <div class="border-t pt-4 mt-4">
+      <form @submit.prevent="sendMessage" class="space-y-3">
+        <div class="flex gap-3">
+          <textarea
+            v-model="inputMessage"
+            rows="2"
+            class="input flex-1 resize-none"
+            placeholder="描述业务场景细节..."
+            @keydown.enter.prevent="sendMessage"
+            :disabled="streaming"
+          />
+          <button
+            type="submit"
+            class="btn-primary self-end"
+            :disabled="!inputMessage.trim() || streaming"
+          >
+            发送
+          </button>
+        </div>
+        <div class="flex justify-start">
+          <ProviderModelSelector
+            :providers="aiProviders"
+            :loading="loadingProviders"
+            @change="onProviderChange"
+          />
+        </div>
+      </form>
+    </div>
   </div>
 </template>
 
