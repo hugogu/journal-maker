@@ -1,21 +1,8 @@
 <template>
-  <div v-if="scenario" class="max-w-4xl mx-auto">
-    <div class="flex items-center justify-between mb-6">
-      <div class="flex-1">
-        <h1 class="text-2xl font-bold">{{ scenario.name }}</h1>
-        <p class="text-gray-600 mt-2">{{ scenario.description || '暂无描述' }}</p>
-      </div>
-      <div class="flex gap-1">
-        <NuxtLink 
-          :to="`/scenarios/${scenario.id}/edit`"
-          class="text-gray-500 hover:text-gray-700 p-2 rounded hover:bg-gray-100"
-          title="编辑"
-        >
-          <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path>
-          </svg>
-        </NuxtLink>
-      </div>
+  <div v-if="scenario" class="max-w-6xl mx-auto">
+    <div class="mb-6">
+      <h1 class="text-2xl font-bold">{{ scenario.name }}</h1>
+      <p class="text-gray-600 mt-2">{{ scenario.description || '暂无描述' }}</p>
     </div>
 
     <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
@@ -60,6 +47,61 @@
         </button>
       </div>
     </div>
+
+    <!-- Confirmed Analysis Section -->
+    <div v-if="hasConfirmedAnalysis" class="mt-6">
+      <div class="card">
+        <h2 class="text-lg font-semibold mb-4">已确认的分析结果</h2>
+
+        <!-- Accounting Subjects -->
+        <div v-if="confirmedAnalysis.data.value.subjects && confirmedAnalysis.data.value.subjects.length > 0" class="mb-6">
+          <h3 class="text-sm font-semibold text-gray-700 mb-3 flex items-center">
+            <svg class="w-4 h-4 mr-2 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 7h6m0 10v-3m-3 3h.01M9 17h.01M9 14h.01M12 14h.01M15 11h.01M12 11h.01M9 11h.01M7 21h10a2 2 0 002-2V5a2 2 0 00-2-2H7a2 2 0 00-2 2v14a2 2 0 002 2z"></path>
+            </svg>
+            会计科目 ({{ confirmedAnalysis.data.value.subjects.length }})
+          </h3>
+          <AccountingSubjectList :subjects="subjectsWithStatus" />
+        </div>
+
+        <!-- Accounting Rules -->
+        <div v-if="confirmedAnalysis.data.value.rules && confirmedAnalysis.data.value.rules.length > 0" class="mb-6">
+          <h3 class="text-sm font-semibold text-gray-700 mb-3 flex items-center">
+            <svg class="w-4 h-4 mr-2 text-purple-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
+            </svg>
+            会计规则 ({{ confirmedAnalysis.data.value.rules.length }})
+          </h3>
+          <div class="space-y-3">
+            <AccountingRuleCard
+              v-for="rule in confirmedAnalysis.data.value.rules"
+              :key="rule.id"
+              :rule="rule"
+            />
+          </div>
+        </div>
+
+        <!-- Flow Diagram -->
+        <div v-if="confirmedAnalysis.data.value.diagramMermaid">
+          <h3 class="text-sm font-semibold text-gray-700 mb-3 flex items-center">
+            <svg class="w-4 h-4 mr-2 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 21a4 4 0 01-4-4V5a2 2 0 012-2h4a2 2 0 012 2v12a4 4 0 01-4 4zm0 0h12a2 2 0 002-2v-4a2 2 0 00-2-2h-2.343M11 7.343l1.657-1.657a2 2 0 012.828 0l2.829 2.829a2 2 0 010 2.828l-8.486 8.485M7 17h.01"></path>
+            </svg>
+            资金/信息流图
+          </h3>
+          <FlowDiagramViewer :mermaid-code="confirmedAnalysis.data.value.diagramMermaid" />
+        </div>
+
+        <!-- Empty State -->
+        <div v-if="!confirmedAnalysis.data.value.subjects?.length && !confirmedAnalysis.data.value.rules?.length && !confirmedAnalysis.data.value.diagramMermaid" class="text-center py-8 text-gray-400">
+          <svg class="w-16 h-16 mx-auto mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4"></path>
+          </svg>
+          <p>暂无已确认的分析结果</p>
+          <p class="text-sm mt-2">前往 <NuxtLink :to="`/scenarios/${scenario.id}/analyze`" class="text-blue-600 hover:underline">AI 分析</NuxtLink> 页面与 AI 对话并确认分析结果</p>
+        </div>
+      </div>
+    </div>
   </div>
 
   <div v-else class="text-center py-12">
@@ -68,8 +110,13 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted } from 'vue'
+import { ref, onMounted, computed } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
+import { useConfirmedAnalysis } from '../../../composables/useConfirmedAnalysis'
+import AccountingSubjectList from '../../../components/analysis/AccountingSubjectList.vue'
+import AccountingRuleCard from '../../../components/analysis/AccountingRuleCard.vue'
+import FlowDiagramViewer from '../../../components/analysis/FlowDiagramViewer.vue'
+import type { Account } from '../../../types'
 
 interface Scenario {
   id: number
@@ -83,12 +130,60 @@ interface Scenario {
 const route = useRoute()
 const router = useRouter()
 const scenario = ref<Scenario | null>(null)
+const scenarioId = parseInt(route.params.id as string, 10)
+
+// Load confirmed analysis
+const confirmedAnalysis = useConfirmedAnalysis(scenarioId)
+const existingAccounts = ref<Account[]>([])
+
+// Check if there's any confirmed analysis
+const hasConfirmedAnalysis = computed(() => {
+  return !confirmedAnalysis.loading.value && (
+    (confirmedAnalysis.data.value.subjects && confirmedAnalysis.data.value.subjects.length > 0) ||
+    (confirmedAnalysis.data.value.rules && confirmedAnalysis.data.value.rules.length > 0) ||
+    !!confirmedAnalysis.data.value.diagramMermaid
+  )
+})
+
+// Compute subjects with status
+const subjectsWithStatus = computed(() => {
+  if (!confirmedAnalysis.data.value.subjects) return []
+
+  return confirmedAnalysis.data.value.subjects.map(subject => {
+    const existing = existingAccounts.value.find(
+      account => account.code === subject.code
+    )
+    return {
+      ...subject,
+      isExisting: !!existing,
+      existingAccount: existing
+    }
+  })
+})
+
+// Load existing accounts
+async function loadExistingAccounts() {
+  try {
+    const response = await $fetch<{ success: boolean; data: Account[] }>('/api/accounts')
+    if (response.success) {
+      existingAccounts.value = response.data
+    }
+  } catch (error) {
+    console.error('Failed to load existing accounts:', error)
+  }
+}
 
 onMounted(async () => {
   const response = await $fetch<{ success: boolean; data: Scenario }>(`/api/scenarios/${route.params.id}`)
   if (response.success) {
     scenario.value = response.data
   }
+
+  // Load confirmed analysis and existing accounts
+  await Promise.all([
+    confirmedAnalysis.load(),
+    loadExistingAccounts()
+  ])
 })
 
 function statusText(status: string) {
