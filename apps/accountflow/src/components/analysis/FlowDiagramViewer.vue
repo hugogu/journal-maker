@@ -117,12 +117,18 @@ async function renderDiagram() {
 
 onMounted(async () => {
   await nextTick()
-  renderDiagram()
+  // Delay slightly to ensure container is fully rendered
+  setTimeout(() => {
+    renderDiagram()
+  }, 100)
 })
 
 watch(() => props.mermaidCode, async () => {
   await nextTick()
-  renderDiagram()
+  // Delay to ensure DOM update is complete
+  setTimeout(() => {
+    renderDiagram()
+  }, 100)
 })
 </script>
 
