@@ -102,6 +102,11 @@
             </svg>
             资金/信息流图
           </h3>
+          <!-- Debug: Show raw mermaid code -->
+          <details class="mb-2 text-xs">
+            <summary class="cursor-pointer text-gray-500 hover:text-gray-700">查看原始 Mermaid 代码</summary>
+            <pre class="mt-1 p-2 bg-gray-100 rounded overflow-x-auto text-gray-600">{{ data.diagramMermaid }}</pre>
+          </details>
           <FlowDiagramViewer :mermaid-code="data.diagramMermaid" />
         </div>
 
