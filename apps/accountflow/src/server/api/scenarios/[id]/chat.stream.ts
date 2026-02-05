@@ -28,7 +28,7 @@ export default defineEventHandler(async (event) => {
     
     const allAccounts = await db.query.accounts.findMany({
       where: eq(accounts.companyId, scenario.companyId)
-    })
+    }) || []
     const templateScenario = await db.query.scenarios.findFirst({
       where: eq(scenarios.isTemplate, true)
     })
@@ -70,7 +70,10 @@ export default defineEventHandler(async (event) => {
           if (typeof (res as any).flush === 'function') {
             (res as any).flush()
           }
-        }
+        },
+        userId,
+        data.providerId,
+        data.model
       )
       const finalData = JSON.stringify({ type: 'complete', message: aiResponse.message })
       res.write(`data: ${finalData}\n\n`)
@@ -93,7 +96,7 @@ export default defineEventHandler(async (event) => {
         sourceMessageId: assistantMessageRecord.id,
         subjects: parsed.subjects,
         entries: parsed.entries,
-        diagrams: parsed.diagrams.map((diagram) => ({
+        diagrams: (parsed.diagrams || []).map((diagram) => ({
           diagramType: 'mermaid',
           payload: { mermaid: diagram },
         })),
