@@ -66,6 +66,8 @@ export const confirmScenarioSchema = z.object({
 // Conversation schemas
 export const sendMessageSchema = z.object({
   content: z.string().min(1).max(10000),
+  providerId: z.number().int().positive().optional(),
+  model: z.string().optional(),
 })
 
 export const conversationMessageSchema = z.object({

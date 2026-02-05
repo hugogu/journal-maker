@@ -347,7 +347,7 @@ async function sendMessage() {
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
         content: userMessage,
-        providerId: selectedProviderId.value || undefined,
+        providerId: selectedProviderId.value ? parseInt(selectedProviderId.value, 10) : undefined,
         model: selectedModel.value || undefined
       }),
     })
