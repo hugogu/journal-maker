@@ -50,6 +50,13 @@
       "when": 1770183437872,
       "tag": "0006_add_confirmed_analysis",
       "breakpoints": true
+    },
+    {
+      "idx": 7,
+      "version": "7",
+      "when": 1770183437873,
+      "tag": "0007_message_structured_storage",
+      "breakpoints": true
     }
   ]
 }
