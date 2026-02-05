@@ -37,7 +37,16 @@
                 {{ message.role === 'user' ? '你' : 'AI' }}
               </div>
               <div class="font-medium text-sm">
-                {{ message.role === 'user' ? '用户' : 'AI助手' }}
+                <template v-if="message.role === 'user'">用户</template>
+                <template v-else>
+                  <span v-if="message.responseStats?.providerName">
+                    {{ message.responseStats.providerName }}
+                    <span v-if="message.responseStats.model" class="text-xs text-gray-500">
+                      / {{ message.responseStats.model }}
+                    </span>
+                  </span>
+                  <span v-else>AI助手</span>
+                </template>
                 <span v-if="message.role === 'assistant' && streaming && index === messages.length - 1"
                       class="ml-2 inline-block w-2 h-2 bg-blue-500 rounded-full animate-pulse"></span>
               </div>
@@ -98,7 +107,7 @@
               v-if="streaming && index === messages.length - 1 && message.role === 'assistant'"
               class="message-content markdown-content"
               :class="{ 'message-collapsed': !isExpanded(index) && shouldShowExpandButton(streamingContent) }"
-              :key="`streaming-${streamingContent.length}`"
+              :key="`streaming-${streamingKey}`"
               v-html="renderStreamingContent(streamingContent)"
             ></div>
             <div
@@ -233,6 +242,7 @@ md.renderer.rules.fence = function(tokens, idx, options, env, renderer) {
 const inputMessage = ref('')
 const streaming = ref(false)
 const streamingContent = ref('')
+const streamingKey = ref(0) // Key for streaming content updates
 const messagesContainer = ref<HTMLElement>()
 const expandedMessages = ref<Set<number>>(new Set())
 
@@ -333,9 +343,10 @@ async function sendMessage() {
   messages.value.push(userMessageData)
   inputMessage.value = ''
   streaming.value = true
+  streamingKey.value++ // Increment key to force re-render when streaming starts
 
   await nextTick()
-  scrollToBottom()
+  scrollToBottom(true) // Force scroll after user sends message
 
   try {
     streamingContent.value = ''
@@ -366,6 +377,7 @@ async function sendMessage() {
 
       if (done) {
         streaming.value = false
+        streamingKey.value++ // Increment key to force re-render when streaming ends
         scrollToBottom()
         await nextTick()
         renderMermaidDiagrams()
@@ -384,6 +396,8 @@ async function sendMessage() {
               fullContent += data.content
               streamingContent.value = fullContent
               assistantMessage.content = fullContent
+              
+              // Immediate scroll during streaming to prevent jumping
               scrollToBottom()
             } else if (data.type === 'user_saved') {
               const userMessageIndex = messages.value.length - 2
@@ -396,6 +410,7 @@ async function sendMessage() {
               assistantMessage.content = data.message
             } else if (data.type === 'done') {
               streaming.value = false
+              streamingKey.value++ // Increment key to force re-render when streaming ends
               streamingContent.value = ''
               if (data.id) assistantMessage.id = data.id
               await loadMessages()
@@ -411,6 +426,7 @@ async function sendMessage() {
               }
               assistantMessage.content = errorContent
               streaming.value = false
+              streamingKey.value++ // Increment key to force re-render when streaming ends
               scrollToBottom()
               return
             }
@@ -429,6 +445,7 @@ async function sendMessage() {
     const errorResponse = { role: 'assistant' as const, content: errorMessage }
     messages.value.push(errorResponse)
     streaming.value = false
+    streamingKey.value++ // Increment key to force re-render when streaming ends
     await nextTick()
     scrollToBottom()
   }
@@ -493,9 +510,23 @@ async function renderMermaidDiagrams() {
   })
 }
 
-function scrollToBottom() {
-  if (messagesContainer.value) {
-    messagesContainer.value.scrollTop = messagesContainer.value.scrollHeight
+function scrollToBottom(force = false) {
+  if (!messagesContainer.value) return
+
+  const container = messagesContainer.value
+
+  // Force scroll during streaming or if explicitly requested
+  if (force || streaming.value) {
+    // Use immediate scroll for streaming to prevent jumping
+    container.scrollTop = container.scrollHeight
+    return
+  }
+
+  // For non-streaming updates, check if user is near bottom
+  const isNearBottom = container.scrollHeight - container.scrollTop - container.clientHeight < 200
+
+  if (isNearBottom) {
+    container.scrollTop = container.scrollHeight
   }
 }
 
