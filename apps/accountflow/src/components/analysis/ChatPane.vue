@@ -1,5 +1,5 @@
 <template>
-  <div class="card flex flex-col h-full">
+  <div class="card flex flex-col h-full p-4">
     <!-- Header -->
     <div class="border-b pb-4 mb-4">
       <div class="flex items-start justify-between">
@@ -28,7 +28,7 @@
 
     <!-- Messages -->
     <div class="flex-1 overflow-y-auto" ref="messagesContainer">
-      <div v-for="(message, index) in messages" :key="index" class="mb-4">
+      <div v-for="(message, index) in messages" :key="index" class="mb-3">
         <div :class="message.role === 'user' ? 'user-message' : 'assistant-message'">
           <div class="flex items-center mb-2 justify-between">
             <div class="flex items-center">

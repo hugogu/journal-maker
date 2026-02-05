@@ -1,7 +1,7 @@
 <template>
-  <div class="card flex flex-col h-full !p-4">
+  <div class="card flex flex-col h-full p-4">
     <!-- Header -->
-    <div class="border-b pb-3 mb-3">
+    <div class="border-b pb-4 mb-4">
       <div class="flex items-center justify-between">
         <div>
           <h2 class="text-lg font-semibold">分析结果</h2>
@@ -32,7 +32,7 @@
     </div>
 
     <!-- Content -->
-    <div class="flex-1 overflow-y-auto space-y-4">
+    <div class="flex-1 overflow-y-auto space-y-6">
       <!-- Empty State -->
       <div v-if="!hasContent && !loading" class="flex flex-col items-center justify-center h-full text-gray-400">
         <svg class="w-16 h-16 mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">

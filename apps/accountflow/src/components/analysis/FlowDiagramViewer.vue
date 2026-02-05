@@ -10,6 +10,7 @@
       v-else
       ref="diagramContainer"
       class="mermaid-container overflow-auto bg-white rounded-lg border border-gray-200 p-4 relative"
+      style="min-height: 300px;"
     >
       <!-- Loading Overlay -->
       <div v-if="loading" class="absolute inset-0 flex items-center justify-center bg-white/80">

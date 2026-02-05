@@ -7,9 +7,9 @@
       </div>
     </div>
 
-    <!-- Dual-pane layout with flexible column widths -->
-    <div v-else class="grid grid-cols-1 xl:grid-cols-[1.2fr_0.8fr] gap-4 h-full">
-      <!-- Left Pane: Chat (wider) -->
+    <!-- Dual-pane layout with better proportions -->
+    <div v-else class="grid grid-cols-1 lg:grid-cols-3 gap-4 h-full">
+      <!-- Left Pane: Chat (2/3 width) -->
       <ChatPane
         :scenario="scenario"
         :scenario-id="scenarioId"
@@ -17,9 +17,10 @@
         @show-share="showShareModal = true"
         @show-log="showLog"
         @show-stats="showStats"
+        class="lg:col-span-2"
       />
 
-      <!-- Right Pane: Confirmed Analysis State (narrower) -->
+      <!-- Right Pane: Confirmed Analysis State (1/3 width) -->
       <StatePane
         :data="confirmedAnalysis.data.value"
         :loading="confirmedAnalysis.loading.value"
