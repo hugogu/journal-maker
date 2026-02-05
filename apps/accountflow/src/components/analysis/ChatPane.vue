@@ -1,5 +1,5 @@
 <template>
-  <div class="flex flex-col h-full p-6">
+  <div class="card flex flex-col h-full p-6">
     <!-- Header -->
     <div class="border-b pb-6 mb-6">
       <div class="flex items-center justify-between mb-2">

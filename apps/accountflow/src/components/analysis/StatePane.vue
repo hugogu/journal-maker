@@ -1,7 +1,7 @@
 <template>
-  <div class="card flex flex-col h-full p-4">
+  <div class="card flex flex-col h-full p-6">
     <!-- Header -->
-    <div class="border-b pb-4 mb-4">
+    <div class="border-b pb-6 mb-6">
       <div class="flex items-center justify-between">
         <div>
           <h2 class="text-lg font-semibold">分析结果</h2>

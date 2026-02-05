@@ -27,14 +27,14 @@
     </div>
 
     <!-- Debit/Credit Accounts -->
-    <div v-if="rule.debitAccount || rule.creditAccount" class="space-y-1">
-      <div v-if="rule.debitAccount" class="flex items-center text-sm">
+    <div v-if="rule.debitAccount || rule.creditAccount" class="flex items-center gap-4 text-sm">
+      <div v-if="rule.debitAccount" class="flex items-center">
         <span class="w-6 text-center font-medium text-amber-600">借</span>
-        <span class="font-mono text-blue-600 ml-2">{{ rule.debitAccount }}</span>
+        <span class="text-blue-600 font-medium ml-2">{{ rule.debitAccount }}</span>
       </div>
-      <div v-if="rule.creditAccount" class="flex items-center text-sm">
+      <div v-if="rule.creditAccount" class="flex items-center">
         <span class="w-6 text-center font-medium text-emerald-600">贷</span>
-        <span class="font-mono text-blue-600 ml-2">{{ rule.creditAccount }}</span>
+        <span class="text-blue-600 font-medium ml-2">{{ rule.creditAccount }}</span>
       </div>
     </div>
   </div>
