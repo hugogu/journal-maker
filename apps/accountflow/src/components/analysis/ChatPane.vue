@@ -496,7 +496,9 @@ async function renderMermaidDiagrams() {
     startOnLoad: false,
     theme: 'default',
     securityLevel: 'loose',
-    flowchart: { useMaxWidth: true, htmlLabels: true, curve: 'basis' }
+    flowchart: { useMaxWidth: true, htmlLabels: true, curve: 'basis' },
+    // Disable global error handling to prevent errors from appearing at page bottom
+    suppressErrorRendering: true
   })
 
   const containers = document.querySelectorAll('.mermaid-container')
@@ -516,20 +518,23 @@ async function renderMermaidDiagrams() {
       console.error(`Mermaid rendering error for container ${index}:`, error)
       const encodedContent = container.getAttribute('data-content')
       if (encodedContent) {
-        // SECURITY: Create elements safely to prevent XSS
+        // Show user-friendly error message in the container
         const errorDiv = document.createElement('div')
-        errorDiv.className = 'text-red-500 text-sm'
-        errorDiv.textContent = '图表渲染失败'
-
-        const pre = document.createElement('pre')
-        pre.className = 'bg-gray-100 p-2 mt-2 text-xs overflow-x-auto'
-        const code = document.createElement('code')
-        code.textContent = decodeURIComponent(encodedContent) // textContent auto-escapes
-        pre.appendChild(code)
-
+        errorDiv.className = 'text-red-500 text-sm p-3 bg-red-50 rounded border border-red-200'
+        errorDiv.innerHTML = `
+          <div class="flex items-center mb-2">
+            <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+            </svg>
+            图表渲染失败
+          </div>
+          <details class="text-xs">
+            <summary class="cursor-pointer hover:text-red-700">查看源码</summary>
+            <pre class="mt-2 bg-white p-2 rounded border overflow-x-auto">${decodeURIComponent(encodedContent)}</pre>
+          </details>
+        `
         container.innerHTML = ''
         container.appendChild(errorDiv)
-        container.appendChild(pre)
       }
     }
   })
