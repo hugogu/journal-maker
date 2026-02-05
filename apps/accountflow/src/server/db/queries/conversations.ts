@@ -44,3 +44,14 @@ export async function deleteConversationMessages(scenarioId: number) {
   await db.delete(conversationMessages)
     .where(eq(conversationMessages.scenarioId, scenarioId))
 }
+
+// Confirm a message
+export async function confirmMessage(messageId: number, scenarioId: number) {
+  const [message] = await db.update(conversationMessages)
+    .set({ confirmedAt: new Date() })
+    .where(
+      eq(conversationMessages.id, messageId)
+    )
+    .returning()
+  return message
+}

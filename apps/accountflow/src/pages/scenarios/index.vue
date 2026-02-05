@@ -19,7 +19,12 @@
         <div class="p-5">
           <!-- Header with title and meta info -->
           <div class="flex items-start justify-between gap-4 mb-3">
-            <h3 class="text-lg font-semibold text-gray-900 flex-1">{{ scenario.name }}</h3>
+            <NuxtLink
+              :to="`/scenarios/${scenario.id}`"
+              class="text-lg font-semibold text-gray-900 hover:text-blue-600 transition-colors flex-1"
+            >
+              <h3>{{ scenario.name }}</h3>
+            </NuxtLink>
 
             <!-- Status and date on the right -->
             <div class="flex items-center gap-2 flex-shrink-0">
@@ -49,12 +54,6 @@
 
           <!-- Action links (always visible) -->
           <div class="flex items-center gap-4 pt-3 border-t border-gray-100">
-            <NuxtLink
-              :to="`/scenarios/${scenario.id}`"
-              class="text-sm text-gray-600 hover:text-blue-600 font-medium transition-colors"
-            >
-              查看详情
-            </NuxtLink>
             <NuxtLink
               :to="`/scenarios/${scenario.id}/edit`"
               class="text-sm text-gray-600 hover:text-blue-600 font-medium transition-colors"
@@ -107,6 +106,12 @@ function statusText(status: string) {
 }
 
 function formatDate(date: Date | string) {
-  return new Date(date).toLocaleDateString('zh-CN')
+  return new Date(date).toLocaleString('zh-CN', {
+    year: 'numeric',
+    month: '2-digit',
+    day: '2-digit',
+    hour: '2-digit',
+    minute: '2-digit'
+  })
 }
 </script>

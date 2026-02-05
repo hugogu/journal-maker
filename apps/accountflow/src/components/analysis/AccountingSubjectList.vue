@@ -15,25 +15,25 @@
           :key="subject.code"
           class="border-b border-gray-100 hover:bg-gray-50"
         >
-          <td class="py-2 px-3 font-mono text-blue-600">{{ subject.code }}</td>
+          <td class="py-2 px-3 text-blue-600 font-medium">{{ subject.code }}</td>
           <td class="py-2 px-3">{{ subject.name }}</td>
           <td class="py-2 px-3">
             <span
               :class="[
-                'inline-flex items-center px-2 py-0.5 rounded text-xs font-medium',
+                'inline-flex items-center px-1.5 py-0.5 rounded text-xs font-medium',
                 subject.direction === 'debit'
                   ? 'bg-amber-100 text-amber-800'
                   : 'bg-emerald-100 text-emerald-800'
               ]"
             >
-              {{ subject.direction === 'debit' ? '借方' : '贷方' }}
+              {{ subject.direction === 'debit' ? '借' : '贷' }}
             </span>
           </td>
           <td class="py-2 px-3">
             <span
               v-if="subject.isExisting !== undefined"
               :class="[
-                'inline-flex items-center px-2 py-0.5 rounded text-xs font-medium',
+                'inline-flex items-center px-1.5 py-0.5 rounded text-xs font-medium',
                 subject.isExisting
                   ? 'bg-green-100 text-green-800'
                   : 'bg-blue-100 text-blue-800'
@@ -46,7 +46,7 @@
               <svg v-else class="w-3 h-3 mr-1" fill="currentColor" viewBox="0 0 20 20">
                 <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-11a1 1 0 10-2 0v2H7a1 1 0 100 2h2v2a1 1 0 102 0v-2h2a1 1 0 100-2h-2V7z" clip-rule="evenodd"></path>
               </svg>
-              {{ subject.isExisting ? '已存在' : '新建议' }}
+              {{ subject.isExisting ? '存在' : '建议' }}
             </span>
           </td>
         </tr>

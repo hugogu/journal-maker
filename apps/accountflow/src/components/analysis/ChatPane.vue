@@ -1,13 +1,10 @@
 <template>
-  <div class="card flex flex-col h-full p-4">
+  <div class="card flex flex-col h-full p-6">
     <!-- Header -->
-    <div class="border-b pb-4 mb-4">
-      <div class="flex items-start justify-between">
-        <div>
-          <h2 class="text-lg font-semibold">{{ scenario?.name }}</h2>
-          <p class="text-gray-600 text-sm">{{ scenario?.description }}</p>
-        </div>
-        <div class="flex items-center gap-1">
+    <div class="border-b pb-6 mb-6">
+      <div class="flex items-center justify-between mb-2">
+        <h1 class="text-2xl font-bold text-gray-900">{{ scenario?.name }}</h1>
+        <div class="flex items-center gap-2">
           <ExportButton
             :scenario-id="scenarioIdNum"
             :messages="messages"
@@ -24,20 +21,41 @@
           </button>
         </div>
       </div>
+      <p class="text-gray-600 text-sm">{{ scenario?.description }}</p>
     </div>
 
     <!-- Messages -->
     <div class="flex-1 overflow-y-auto" ref="messagesContainer">
       <div v-for="(message, index) in messages" :key="index" class="mb-3">
-        <div :class="message.role === 'user' ? 'user-message' : 'assistant-message'">
+        <div :class="[
+          message.role === 'user' ? 'user-message' : 'assistant-message',
+          message.role === 'assistant' && isConfirmed(message.id) ? 'confirmed-message' : ''
+        ]">
           <div class="flex items-center mb-2 justify-between">
             <div class="flex items-center">
               <div class="w-8 h-8 rounded-full flex items-center justify-center text-white text-sm font-medium mr-3"
                    :class="message.role === 'user' ? 'bg-blue-500' : 'bg-gray-500'">
                 {{ message.role === 'user' ? '你' : 'AI' }}
               </div>
-              <div class="font-medium text-sm">
-                {{ message.role === 'user' ? '用户' : 'AI助手' }}
+              <div class="font-medium text-sm flex items-center gap-2">
+                <template v-if="message.role === 'user'">用户</template>
+                <template v-else>
+                  <span v-if="message.responseStats?.providerName">
+                    {{ message.responseStats.providerName }}
+                    <span v-if="message.responseStats.model" class="text-xs text-gray-500">
+                      / {{ message.responseStats.model }}
+                    </span>
+                  </span>
+                  <span v-else>AI助手</span>
+                </template>
+                <!-- Confirmation Badge -->
+                <span v-if="message.role === 'assistant' && isConfirmed(message.id)" 
+                      class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-emerald-100 text-emerald-800">
+                  <svg class="w-3 h-3 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
+                  </svg>
+                  已确认
+                </span>
                 <span v-if="message.role === 'assistant' && streaming && index === messages.length - 1"
                       class="ml-2 inline-block w-2 h-2 bg-blue-500 rounded-full animate-pulse"></span>
               </div>
@@ -98,7 +116,7 @@
               v-if="streaming && index === messages.length - 1 && message.role === 'assistant'"
               class="message-content markdown-content"
               :class="{ 'message-collapsed': !isExpanded(index) && shouldShowExpandButton(streamingContent) }"
-              :key="`streaming-${streamingContent.length}`"
+              :key="`streaming-${streamingKey}`"
               v-html="renderStreamingContent(streamingContent)"
             ></div>
             <div
@@ -138,32 +156,34 @@
     </div>
 
     <!-- Input Form -->
-    <form @submit.prevent="sendMessage" class="space-y-2">
-      <div class="flex gap-2">
-        <textarea
-          v-model="inputMessage"
-          rows="2"
-          class="input flex-1 resize-none"
-          placeholder="描述业务场景细节..."
-          @keydown.enter.prevent="sendMessage"
-          :disabled="streaming"
-        />
-        <button
-          type="submit"
-          class="btn-primary self-end"
-          :disabled="!inputMessage.trim() || streaming"
-        >
-          发送
-        </button>
-      </div>
-      <div class="flex justify-start">
-        <ProviderModelSelector
-          :providers="aiProviders"
-          :loading="loadingProviders"
-          @change="onProviderChange"
-        />
-      </div>
-    </form>
+    <div class="border-t pt-4 mt-4">
+      <form @submit.prevent="sendMessage" class="space-y-3">
+        <div class="flex gap-3">
+          <textarea
+            v-model="inputMessage"
+            rows="2"
+            class="input flex-1 resize-none"
+            placeholder="描述业务场景细节..."
+            @keydown.enter.prevent="sendMessage"
+            :disabled="streaming"
+          />
+          <button
+            type="submit"
+            class="btn-primary self-end"
+            :disabled="!inputMessage.trim() || streaming"
+          >
+            发送
+          </button>
+        </div>
+        <div class="flex justify-start">
+          <ProviderModelSelector
+            :providers="aiProviders"
+            :loading="loadingProviders"
+            @change="onProviderChange"
+          />
+        </div>
+      </form>
+    </div>
   </div>
 </template>
 
@@ -194,10 +214,18 @@ const { messages: conversationMessages, loading: conversationLoading, loadMessag
 
 // Create a local writable copy for display
 const messages = ref<any[]>([])
+const confirmedMessageIds = ref<Set<number>>(new Set())
 
 // Sync messages when conversation messages change
 watch(conversationMessages, (newMessages) => {
   messages.value = [...newMessages]
+  // Update confirmed message IDs from database
+  confirmedMessageIds.value.clear()
+  newMessages.forEach(msg => {
+    if (msg.confirmedAt) {
+      confirmedMessageIds.value.add(msg.id)
+    }
+  })
 }, { immediate: true })
 
 // Initialize markdown renderer with XSS protection
@@ -233,6 +261,7 @@ md.renderer.rules.fence = function(tokens, idx, options, env, renderer) {
 const inputMessage = ref('')
 const streaming = ref(false)
 const streamingContent = ref('')
+const streamingKey = ref(0) // Key for streaming content updates
 const messagesContainer = ref<HTMLElement>()
 const expandedMessages = ref<Set<number>>(new Set())
 
@@ -308,12 +337,18 @@ function renderStreamingContent(content: string): string {
   return md.render(content)
 }
 
-function toggleExpand(index: number) {
+async function toggleExpand(index: number) {
   if (expandedMessages.value.has(index)) {
     expandedMessages.value.delete(index)
   } else {
     expandedMessages.value.add(index)
   }
+  
+  // Re-render Mermaid diagrams after expansion state changes
+  await nextTick()
+  setTimeout(() => {
+    renderMermaidDiagrams()
+  }, 50)
 }
 
 function isExpanded(index: number): boolean {
@@ -333,9 +368,10 @@ async function sendMessage() {
   messages.value.push(userMessageData)
   inputMessage.value = ''
   streaming.value = true
+  streamingKey.value++ // Increment key to force re-render when streaming starts
 
   await nextTick()
-  scrollToBottom()
+  scrollToBottom(true) // Force scroll after user sends message
 
   try {
     streamingContent.value = ''
@@ -366,6 +402,7 @@ async function sendMessage() {
 
       if (done) {
         streaming.value = false
+        streamingKey.value++ // Increment key to force re-render when streaming ends
         scrollToBottom()
         await nextTick()
         renderMermaidDiagrams()
@@ -384,6 +421,8 @@ async function sendMessage() {
               fullContent += data.content
               streamingContent.value = fullContent
               assistantMessage.content = fullContent
+              
+              // Immediate scroll during streaming to prevent jumping
               scrollToBottom()
             } else if (data.type === 'user_saved') {
               const userMessageIndex = messages.value.length - 2
@@ -396,6 +435,7 @@ async function sendMessage() {
               assistantMessage.content = data.message
             } else if (data.type === 'done') {
               streaming.value = false
+              streamingKey.value++ // Increment key to force re-render when streaming ends
               streamingContent.value = ''
               if (data.id) assistantMessage.id = data.id
               await loadMessages()
@@ -411,6 +451,7 @@ async function sendMessage() {
               }
               assistantMessage.content = errorContent
               streaming.value = false
+              streamingKey.value++ // Increment key to force re-render when streaming ends
               scrollToBottom()
               return
             }
@@ -429,6 +470,7 @@ async function sendMessage() {
     const errorResponse = { role: 'assistant' as const, content: errorMessage }
     messages.value.push(errorResponse)
     streaming.value = false
+    streamingKey.value++ // Increment key to force re-render when streaming ends
     await nextTick()
     scrollToBottom()
   }
@@ -454,7 +496,9 @@ async function renderMermaidDiagrams() {
     startOnLoad: false,
     theme: 'default',
     securityLevel: 'loose',
-    flowchart: { useMaxWidth: true, htmlLabels: true, curve: 'basis' }
+    flowchart: { useMaxWidth: true, htmlLabels: true, curve: 'basis' },
+    // Disable global error handling to prevent errors from appearing at page bottom
+    suppressErrorRendering: true
   })
 
   const containers = document.querySelectorAll('.mermaid-container')
@@ -474,33 +518,69 @@ async function renderMermaidDiagrams() {
       console.error(`Mermaid rendering error for container ${index}:`, error)
       const encodedContent = container.getAttribute('data-content')
       if (encodedContent) {
-        // SECURITY: Create elements safely to prevent XSS
+        // Show user-friendly error message in the container
         const errorDiv = document.createElement('div')
-        errorDiv.className = 'text-red-500 text-sm'
-        errorDiv.textContent = '图表渲染失败'
-
-        const pre = document.createElement('pre')
-        pre.className = 'bg-gray-100 p-2 mt-2 text-xs overflow-x-auto'
-        const code = document.createElement('code')
-        code.textContent = decodeURIComponent(encodedContent) // textContent auto-escapes
-        pre.appendChild(code)
-
+        errorDiv.className = 'text-red-500 text-sm p-3 bg-red-50 rounded border border-red-200'
+        errorDiv.innerHTML = `
+          <div class="flex items-center mb-2">
+            <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+            </svg>
+            图表渲染失败
+          </div>
+          <details class="text-xs">
+            <summary class="cursor-pointer hover:text-red-700">查看源码</summary>
+            <pre class="mt-2 bg-white p-2 rounded border overflow-x-auto">${decodeURIComponent(encodedContent)}</pre>
+          </details>
+        `
         container.innerHTML = ''
         container.appendChild(errorDiv)
-        container.appendChild(pre)
       }
     }
   })
 }
 
-function scrollToBottom() {
-  if (messagesContainer.value) {
-    messagesContainer.value.scrollTop = messagesContainer.value.scrollHeight
+function scrollToBottom(force = false) {
+  if (!messagesContainer.value) return
+
+  const container = messagesContainer.value
+
+  // Force scroll during streaming or if explicitly requested
+  if (force || streaming.value) {
+    // Use immediate scroll for streaming to prevent jumping
+    container.scrollTop = container.scrollHeight
+    return
+  }
+
+  // For non-streaming updates, check if user is near bottom
+  const isNearBottom = container.scrollHeight - container.scrollTop - container.clientHeight < 200
+
+  if (isNearBottom) {
+    container.scrollTop = container.scrollHeight
   }
 }
 
-function handleConfirm(data: { parsed: ParsedAnalysis; messageId?: number }) {
+async function handleConfirm(data: { parsed: ParsedAnalysis; messageId?: number }) {
+  if (data.messageId) {
+    confirmedMessageIds.value.add(data.messageId)
+    
+    // Save confirmation to database
+    try {
+      await $fetch(`/api/conversation-messages/${data.messageId}/confirm`, {
+        method: 'POST',
+        body: { scenarioId: scenarioIdNum.value }
+      })
+    } catch (error) {
+      console.error('Failed to save confirmation:', error)
+      // Remove from local set if API call failed
+      confirmedMessageIds.value.delete(data.messageId)
+    }
+  }
   emit('confirm', data)
+}
+
+function isConfirmed(messageId?: number): boolean {
+  return messageId ? confirmedMessageIds.value.has(messageId) : false
 }
 
 // Expose for parent component access
@@ -518,6 +598,10 @@ defineExpose({
 
 .assistant-message {
   @apply bg-gray-50 border-l-4 border-gray-400 p-4 rounded-r-lg shadow-sm;
+}
+
+.confirmed-message {
+  @apply bg-emerald-50 border-l-4 border-emerald-400;
 }
 
 .message-content {

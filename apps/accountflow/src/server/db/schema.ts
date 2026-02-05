@@ -231,10 +231,12 @@ export const conversationMessages = pgTable('conversation_messages', {
   structuredData: jsonb('structured_data'),
   requestLog: jsonb('request_log'),
   responseStats: jsonb('response_stats'),
+  confirmedAt: timestamp('confirmed_at'), // When user confirmed this message
   createdAt: timestamp('created_at').defaultNow().notNull(),
 }, (table) => [
   index('idx_conversation_messages_scenario_id').on(table.scenarioId),
   index('idx_conversation_messages_timestamp').on(table.timestamp),
+  index('idx_conversation_messages_confirmed_at').on(table.confirmedAt),
 ])
 
 // NEW: Analysis Subjects (extracted from AI analysis)
