@@ -4,7 +4,7 @@ import { getAIProviders } from '../../../db/queries/ai-providers'
 export default defineEventHandler(async () => {
   try {
     const providers = await getAIProviders()
-    return { providers }
+    return { success: true, data: providers }
   } catch (error) {
     console.error('Error fetching AI providers:', error)
     throw createError({
