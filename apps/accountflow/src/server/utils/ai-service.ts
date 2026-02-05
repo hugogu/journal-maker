@@ -87,9 +87,13 @@ export interface AnalysisResult {
 export class AIService {
   /**
    * Get AI provider adapter for a user
-   * If userId is provided, uses user's preferences; otherwise uses default provider
+   * If explicit providerId/model are provided, uses those; otherwise falls back to user preferences or default
    */
-  private async getAdapter(userId?: number): Promise<{
+  private async getAdapter(
+    userId?: number,
+    explicitProviderId?: number,
+    explicitModel?: string
+  ): Promise<{
     adapter: AIProviderAdapter
     model: string
     providerId: string
@@ -99,8 +103,13 @@ export class AIService {
     let model: string | undefined
     let providerName = 'Default'
 
-    // Check user preferences if userId provided
-    if (userId) {
+    // Priority 1: Use explicit provider/model if provided
+    if (explicitProviderId) {
+      providerId = explicitProviderId
+      model = explicitModel
+    }
+    // Priority 2: Check user preferences if userId provided
+    else if (userId) {
       const prefs = await db.query.userPreferences.findFirst({
         where: eq(userPreferences.userId, userId)
       })
@@ -267,10 +276,12 @@ export class AIService {
   async analyzeScenario(
     userInput: string,
     context: AIContext,
-    userId?: number
+    userId?: number,
+    explicitProviderId?: number,
+    explicitModel?: string
   ): Promise<AnalysisResult> {
     const startTime = Date.now()
-    const { adapter, model, providerId, providerName } = await this.getAdapter(userId)
+    const { adapter, model, providerId, providerName } = await this.getAdapter(userId, explicitProviderId, explicitModel)
     
     const systemPrompt = await this.buildSystemPrompt(context)
     const messages: ChatMessage[] = [
@@ -325,10 +336,12 @@ export class AIService {
     userInput: string,
     context: AIContext,
     onChunk: (chunk: string) => void,
-    userId?: number
+    userId?: number,
+    explicitProviderId?: number,
+    explicitModel?: string
   ): Promise<AnalysisResult> {
     const startTime = Date.now()
-    const { adapter, model, providerId, providerName } = await this.getAdapter(userId)
+    const { adapter, model, providerId, providerName } = await this.getAdapter(userId, explicitProviderId, explicitModel)
     
     const systemPrompt = await this.buildStreamSystemPrompt(context)
     const messages: ChatMessage[] = [

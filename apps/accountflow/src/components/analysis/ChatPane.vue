@@ -200,9 +200,9 @@ watch(conversationMessages, (newMessages) => {
   messages.value = [...newMessages]
 }, { immediate: true })
 
-// Initialize markdown renderer
+// Initialize markdown renderer with XSS protection
 const md = new MarkdownIt({
-  html: true,
+  html: false, // SECURITY: Disable raw HTML to prevent XSS attacks
   linkify: true,
   typographer: true
 })
@@ -347,7 +347,7 @@ async function sendMessage() {
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
         content: userMessage,
-        providerId: selectedProviderId.value || undefined,
+        providerId: selectedProviderId.value ? parseInt(selectedProviderId.value, 10) : undefined,
         model: selectedModel.value || undefined
       }),
     })
@@ -474,7 +474,20 @@ async function renderMermaidDiagrams() {
       console.error(`Mermaid rendering error for container ${index}:`, error)
       const encodedContent = container.getAttribute('data-content')
       if (encodedContent) {
-        container.innerHTML = `<div class="text-red-500 text-sm">图表渲染失败</div><pre class="bg-gray-100 p-2 mt-2 text-xs overflow-x-auto"><code>${decodeURIComponent(encodedContent)}</code></pre>`
+        // SECURITY: Create elements safely to prevent XSS
+        const errorDiv = document.createElement('div')
+        errorDiv.className = 'text-red-500 text-sm'
+        errorDiv.textContent = '图表渲染失败'
+
+        const pre = document.createElement('pre')
+        pre.className = 'bg-gray-100 p-2 mt-2 text-xs overflow-x-auto'
+        const code = document.createElement('code')
+        code.textContent = decodeURIComponent(encodedContent) // textContent auto-escapes
+        pre.appendChild(code)
+
+        container.innerHTML = ''
+        container.appendChild(errorDiv)
+        container.appendChild(pre)
       }
     }
   })

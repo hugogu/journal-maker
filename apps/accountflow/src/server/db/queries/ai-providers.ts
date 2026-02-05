@@ -5,33 +5,22 @@ import type { AIProvider, AIModel, UserPreference } from '../types'
 
 // Get all AI providers with their models
 export async function getAIProviders() {
-  const providers = await db.query.aiProviders.findMany({
+  return db.query.aiProviders.findMany({
+    with: {
+      models: true,
+    },
     orderBy: desc(aiProviders.isDefault),
   })
-
-  return Promise.all(
-    providers.map(async (provider) => {
-      const models = await db.query.aiModels.findMany({
-        where: eq(aiModels.providerId, provider.id),
-      })
-      return { ...provider, models }
-    })
-  )
 }
 
 // Get a single provider with models
 export async function getAIProvider(id: number) {
-  const provider = await db.query.aiProviders.findFirst({
+  return db.query.aiProviders.findFirst({
     where: eq(aiProviders.id, id),
+    with: {
+      models: true,
+    },
   })
-
-  if (!provider) return null
-
-  const models = await db.query.aiModels.findMany({
-    where: eq(aiModels.providerId, id),
-  })
-
-  return { ...provider, models }
 }
 
 // Create a new AI provider

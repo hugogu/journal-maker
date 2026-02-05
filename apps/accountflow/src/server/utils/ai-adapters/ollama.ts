@@ -34,13 +34,17 @@ export class OllamaAdapter extends BaseAIAdapter {
 
   async fetchModels(): Promise<AIModel[]> {
     const response = await fetch(`${this.apiEndpoint}/api/tags`)
-    
+
     if (!response.ok) {
       throw new Error(`Failed to fetch Ollama models: ${response.status}`)
     }
 
-    const data = await response.json() as { models: OllamaModel[] }
-    
+    const data = await response.json() as { models?: OllamaModel[] }
+
+    if (!data.models || !Array.isArray(data.models)) {
+      return []
+    }
+
     return data.models.map(model => ({
       id: model.name,
       name: model.name,

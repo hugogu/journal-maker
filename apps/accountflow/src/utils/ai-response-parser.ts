@@ -9,10 +9,10 @@ import type { AccountingSubject, AccountingRule, AnalysisEntry, ParsedAnalysis }
  */
 export function parseAIResponse(content: string): ParsedAnalysis {
   return {
-    subjects: extractSubjects(content),
-    rules: extractRules(content),
-    diagrams: extractMermaidDiagrams(content),
-    entries: extractEntries(content),
+    subjects: extractSubjects(content) || [],
+    rules: extractRules(content) || [],
+    diagrams: extractMermaidDiagrams(content) || [],
+    entries: extractEntries(content) || [],
     rawContent: content,
   }
 }

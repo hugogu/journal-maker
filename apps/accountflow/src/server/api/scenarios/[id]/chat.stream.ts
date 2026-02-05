@@ -28,7 +28,7 @@ export default defineEventHandler(async (event) => {
     
     const allAccounts = await db.query.accounts.findMany({
       where: eq(accounts.companyId, scenario.companyId)
-    })
+    }) || []
     const templateScenario = await db.query.scenarios.findFirst({
       where: eq(scenarios.isTemplate, true)
     })
@@ -70,7 +70,10 @@ export default defineEventHandler(async (event) => {
           if (typeof (res as any).flush === 'function') {
             (res as any).flush()
           }
-        }
+        },
+        userId,
+        data.providerId,
+        data.model
       )
       const finalData = JSON.stringify({ type: 'complete', message: aiResponse.message })
       res.write(`data: ${finalData}\n\n`)
@@ -93,7 +96,7 @@ export default defineEventHandler(async (event) => {
         sourceMessageId: assistantMessageRecord.id,
         subjects: parsed.subjects,
         entries: parsed.entries,
-        diagrams: parsed.diagrams.map((diagram) => ({
+        diagrams: (parsed.diagrams || []).map((diagram) => ({
           diagramType: 'mermaid',
           payload: { mermaid: diagram },
         })),
@@ -101,10 +104,34 @@ export default defineEventHandler(async (event) => {
       res.write(`data: ${JSON.stringify({ type: 'done', id: assistantMessageRecord.id }) }\n\n`)
       res.end()
     } catch (error) {
-      console.error('Streaming error:', error)
+      console.error('=== STREAMING ERROR ===')
+      console.error('Timestamp:', new Date().toISOString())
+      console.error('Error type:', error?.constructor?.name || typeof error)
+      console.error('Error message:', error instanceof Error ? error.message : String(error))
+      
+      if (error instanceof Error && error.stack) {
+        console.error('Stack trace:')
+        console.error(error.stack)
+      }
+      
+      if (error && typeof error === 'object') {
+        console.error('Error properties:', Object.getOwnPropertyNames(error))
+        try {
+          console.error('Error details:', JSON.stringify(error, null, 2))
+        } catch (e) {
+          console.error('Failed to serialize error:', e)
+        }
+      }
+      console.error('=== END STREAMING ERROR ===')
+      
       const errorData = JSON.stringify({
         type: 'error',
-        message: error instanceof Error ? error.message : 'Unknown error'
+        message: error instanceof Error ? error.message : 'Unknown error',
+        details: {
+          type: error?.constructor?.name || 'Unknown',
+          stack: error instanceof Error ? error.stack : undefined,
+          timestamp: new Date().toISOString()
+        }
       })
       res.write(`data: ${errorData}\n\n`)
       res.end()

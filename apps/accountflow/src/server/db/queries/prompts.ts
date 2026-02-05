@@ -1,6 +1,6 @@
 import { db } from '../index'
 import { promptTemplates, promptVersions, users } from '../schema'
-import { eq, desc, asc } from 'drizzle-orm'
+import { eq, desc, asc, count } from 'drizzle-orm'
 import type { PromptTemplate, PromptVersion, NewPromptTemplate, NewPromptVersion } from '../types'
 
 // Get all prompt templates with their active version
@@ -18,20 +18,23 @@ export async function getPromptTemplates() {
     orderBy: asc(promptTemplates.scenarioType),
   })
 
-  // Get version count for each template
-  const templatesWithCount = await Promise.all(
-    templates.map(async (template) => {
-      const versions = await db.query.promptVersions.findMany({
-        where: eq(promptVersions.templateId, template.id),
-      })
-      return {
-        ...template,
-        versionCount: versions.length,
-      }
+  // Get version counts in a single query using SQL aggregation
+  const versionCounts = await db
+    .select({
+      templateId: promptVersions.templateId,
+      count: count(promptVersions.id),
     })
-  )
+    .from(promptVersions)
+    .groupBy(promptVersions.templateId)
 
-  return templatesWithCount
+  // Create a map for quick lookup
+  const countMap = new Map(versionCounts.map(vc => [vc.templateId, vc.count]))
+
+  // Combine the data
+  return templates.map(template => ({
+    ...template,
+    versionCount: countMap.get(template.id) ?? 0,
+  }))
 }
 
 // Get a single prompt template with full details and version history
