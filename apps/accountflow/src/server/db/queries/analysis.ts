@@ -1,7 +1,48 @@
 import { db } from '../index'
-import { analysisSubjects, analysisEntries, analysisDiagrams } from '../schema'
-import { eq, and, desc } from 'drizzle-orm'
+import { analysisSubjects, analysisEntries, analysisDiagrams, accountingEvents } from '../schema'
+import { eq, and, desc, sql } from 'drizzle-orm'
 import type { AccountingSubject, AccountingRule, AnalysisEntryLine } from '../../../types'
+
+// ============================================================================
+// ACCOUNTING EVENTS
+// ============================================================================
+
+/**
+ * Find an existing event by case-insensitive name match, or create a new one.
+ * Returns the event ID.
+ */
+export async function findOrCreateEvent(
+  scenarioId: number,
+  eventName: string,
+  description?: string | null,
+  sourceMessageId?: number | null
+): Promise<number> {
+  // Case-insensitive lookup
+  const existing = await db.query.accountingEvents.findFirst({
+    where: and(
+      eq(accountingEvents.scenarioId, scenarioId),
+      sql`LOWER(${accountingEvents.eventName}) = LOWER(${eventName})`
+    ),
+  })
+
+  if (existing) {
+    return existing.id
+  }
+
+  // Create new event
+  const [created] = await db
+    .insert(accountingEvents)
+    .values({
+      scenarioId,
+      eventName,
+      description: description || null,
+      sourceMessageId: sourceMessageId || null,
+      isConfirmed: false,
+    })
+    .returning()
+
+  return created.id
+}
 
 // ============================================================================
 // ANALYSIS SUBJECTS
@@ -140,6 +181,12 @@ export async function saveAnalysisEntries(
       ),
     })
 
+    // Resolve event if event name is present
+    let eventId: number | null = null
+    if (rule.event) {
+      eventId = await findOrCreateEvent(scenarioId, rule.event, undefined, sourceMessageId)
+    }
+
     if (existing) {
       // Update existing
       const [updated] = await db
@@ -147,6 +194,8 @@ export async function saveAnalysisEntries(
         .set({
           description: rule.description,
           lines,
+          eventId: eventId ?? existing.eventId,
+          eventName: rule.event || existing.eventName,
           metadata: rule.condition ? { condition: rule.condition } : null,
           sourceMessageId: sourceMessageId || existing.sourceMessageId,
           updatedAt: new Date(),
@@ -161,7 +210,9 @@ export async function saveAnalysisEntries(
         .values({
           scenarioId,
           sourceMessageId: sourceMessageId || null,
+          eventId,
           entryId,
+          eventName: rule.event || null,
           description: rule.description,
           lines,
           metadata: rule.condition ? { condition: rule.condition } : null,

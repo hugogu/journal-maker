@@ -4,10 +4,10 @@
     <div class="flex items-center justify-between gap-2 mb-2">
       <div class="flex items-center gap-2">
         <span class="text-xs font-mono bg-purple-100 text-purple-700 px-2 py-0.5 rounded">
-          {{ rule.event || rule.id }}
+          {{ rule.id }}
         </span>
-        <span v-if="rule.event && rule.event !== rule.id" class="text-xs text-gray-500">
-          ({{ rule.id }})
+        <span v-if="rule.event" class="text-xs text-gray-500 truncate max-w-[200px]" :title="rule.event">
+          {{ rule.event }}
         </span>
       </div>
       <div class="flex items-center gap-2">

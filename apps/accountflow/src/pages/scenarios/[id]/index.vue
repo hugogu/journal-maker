@@ -48,6 +48,92 @@
       </div>
     </div>
 
+    <!-- Accounting Events Section -->
+    <div v-if="accountingEvents.events.value.length > 0" class="mt-6">
+      <div class="card">
+        <div class="flex items-center justify-between mb-4">
+          <h2 class="text-lg font-semibold">会计事件</h2>
+          <span class="text-sm text-gray-400">{{ accountingEvents.events.value.length }} 个事件</span>
+        </div>
+
+        <div class="space-y-3">
+          <div
+            v-for="evt in accountingEvents.events.value"
+            :key="evt.id"
+            class="border border-gray-200 rounded-lg p-4 hover:shadow-sm transition-shadow"
+          >
+            <div class="flex items-start justify-between gap-3">
+              <div class="flex-1 min-w-0">
+                <!-- Inline edit for event name -->
+                <div v-if="editingEventId === evt.id" class="space-y-2">
+                  <input
+                    v-model="editEventName"
+                    class="w-full border border-gray-300 rounded px-2 py-1 text-sm focus:outline-none focus:ring-1 focus:ring-blue-500"
+                    placeholder="事件名称"
+                    @keyup.enter="saveEventEdit(evt.id)"
+                    @keyup.escape="cancelEventEdit"
+                  />
+                  <input
+                    v-model="editEventDescription"
+                    class="w-full border border-gray-300 rounded px-2 py-1 text-sm focus:outline-none focus:ring-1 focus:ring-blue-500"
+                    placeholder="事件描述（可选）"
+                    @keyup.enter="saveEventEdit(evt.id)"
+                    @keyup.escape="cancelEventEdit"
+                  />
+                  <div class="flex gap-2">
+                    <button @click="saveEventEdit(evt.id)" class="text-xs text-blue-600 hover:text-blue-700">保存</button>
+                    <button @click="cancelEventEdit" class="text-xs text-gray-400 hover:text-gray-500">取消</button>
+                  </div>
+                </div>
+                <template v-else>
+                  <h3 class="font-medium text-gray-900 truncate">{{ evt.eventName }}</h3>
+                  <p v-if="evt.description" class="text-sm text-gray-500 mt-1 line-clamp-2">{{ evt.description }}</p>
+                </template>
+              </div>
+              <div class="flex items-center gap-2 flex-shrink-0">
+                <span v-if="evt.eventType" class="text-xs bg-gray-100 text-gray-600 px-2 py-0.5 rounded">{{ evt.eventType }}</span>
+                <span class="text-xs text-gray-400">{{ evt.ruleCount }} 规则 · {{ evt.entryCount }} 分录</span>
+                <button
+                  v-if="editingEventId !== evt.id"
+                  @click="startEventEdit(evt)"
+                  class="text-gray-400 hover:text-blue-600 p-1"
+                  title="编辑事件"
+                >
+                  <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"></path>
+                  </svg>
+                </button>
+              </div>
+            </div>
+
+            <!-- Merge action -->
+            <div v-if="mergeSourceId === evt.id" class="mt-3 pt-3 border-t border-gray-100">
+              <p class="text-xs text-gray-500 mb-2">选择合并目标事件：</p>
+              <div class="flex flex-wrap gap-2">
+                <button
+                  v-for="target in accountingEvents.events.value.filter(e => e.id !== evt.id)"
+                  :key="target.id"
+                  @click="executeMerge(evt.id, target.id)"
+                  class="text-xs px-2 py-1 bg-orange-50 text-orange-700 rounded hover:bg-orange-100 transition-colors"
+                >
+                  → {{ target.eventName }}
+                </button>
+                <button @click="mergeSourceId = null" class="text-xs px-2 py-1 text-gray-400 hover:text-gray-500">取消</button>
+              </div>
+            </div>
+            <div v-else-if="accountingEvents.events.value.length > 1" class="mt-2">
+              <button
+                @click="mergeSourceId = evt.id"
+                class="text-xs text-gray-400 hover:text-orange-600 transition-colors"
+              >
+                合并到其他事件…
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
     <!-- Confirmed Analysis Section -->
     <div v-if="hasConfirmedAnalysis" class="mt-6">
       <div class="card">
@@ -113,6 +199,7 @@
 import { ref, onMounted, computed } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { useConfirmedAnalysis } from '../../../composables/useConfirmedAnalysis'
+import { useAccountingEvents } from '../../../composables/useAccountingEvents'
 import AccountingSubjectList from '../../../components/analysis/AccountingSubjectList.vue'
 import AccountingRuleCard from '../../../components/analysis/AccountingRuleCard.vue'
 import FlowDiagramViewer from '../../../components/analysis/FlowDiagramViewer.vue'
@@ -134,7 +221,14 @@ const scenarioId = parseInt(route.params.id as string, 10)
 
 // Load confirmed analysis
 const confirmedAnalysis = useConfirmedAnalysis(scenarioId)
+const accountingEvents = useAccountingEvents(scenarioId)
 const existingAccounts = ref<Account[]>([])
+
+// Event editing state
+const editingEventId = ref<number | null>(null)
+const editEventName = ref('')
+const editEventDescription = ref('')
+const mergeSourceId = ref<number | null>(null)
 
 // Check if there's any confirmed analysis
 const hasConfirmedAnalysis = computed(() => {
@@ -179,12 +273,43 @@ onMounted(async () => {
     scenario.value = response.data
   }
 
-  // Load confirmed analysis and existing accounts
+  // Load confirmed analysis, existing accounts, and events
   await Promise.all([
     confirmedAnalysis.load(),
-    loadExistingAccounts()
+    loadExistingAccounts(),
+    accountingEvents.list()
   ])
 })
+
+function startEventEdit(evt: { id: number; eventName: string; description: string | null }) {
+  editingEventId.value = evt.id
+  editEventName.value = evt.eventName
+  editEventDescription.value = evt.description || ''
+}
+
+function cancelEventEdit() {
+  editingEventId.value = null
+  editEventName.value = ''
+  editEventDescription.value = ''
+}
+
+async function saveEventEdit(eventId: number) {
+  if (!editEventName.value.trim()) return
+  const success = await accountingEvents.update(eventId, {
+    eventName: editEventName.value.trim(),
+    description: editEventDescription.value.trim() || null,
+  })
+  if (success) {
+    cancelEventEdit()
+    await accountingEvents.list()
+  }
+}
+
+async function executeMerge(sourceId: number, targetId: number) {
+  if (!confirm('确定要将此事件合并到目标事件吗？所有关联的规则和分录将被移动到目标事件。')) return
+  await accountingEvents.merge(sourceId, targetId)
+  mergeSourceId.value = null
+}
 
 function statusText(status: string) {
   const map: Record<string, string> = {

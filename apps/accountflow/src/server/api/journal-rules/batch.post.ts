@@ -2,6 +2,7 @@ import { defineEventHandler, readBody } from 'h3'
 import { db } from '../../db'
 import { journalRules, accounts } from '../../db/schema'
 import { eq, like } from 'drizzle-orm'
+import { findOrCreateEvent } from '../../db/queries/analysis'
 
 export default defineEventHandler(async (event) => {
   try {
@@ -41,11 +42,23 @@ export default defineEventHandler(async (event) => {
           creditAccountId = rule.creditAccountId
         }
 
+        // Resolve event entity
+        let eventId: number | null = null
+        if (rule.eventName) {
+          eventId = await findOrCreateEvent(
+            Number(scenarioId),
+            rule.eventName,
+            rule.eventDescription || null,
+            Number(messageId)
+          )
+        }
+
         return {
           scenarioId: Number(scenarioId),
-          messageId: Number(messageId), // 添加message_id
-          ruleKey: rule.eventName || rule.id, // AI返回的event名字作为ruleKey
-          eventName: rule.eventName, // 直接使用AI返回的event.name
+          messageId: Number(messageId),
+          eventId,
+          ruleKey: rule.eventName || rule.id,
+          eventName: rule.eventName,
           eventDescription: rule.eventDescription || null,
           debitAccountId,
           creditAccountId,

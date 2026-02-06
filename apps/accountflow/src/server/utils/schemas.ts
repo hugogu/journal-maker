@@ -148,6 +148,18 @@ export const confirmAnalysisRequestSchema = z.object({
   }
 )
 
+// Accounting Event schemas
+export const updateEventSchema = z.object({
+  eventName: z.string().min(1).max(100).optional(),
+  description: z.string().max(2000).nullable().optional(),
+  eventType: z.string().max(50).nullable().optional(),
+})
+
+export const mergeEventsSchema = z.object({
+  sourceEventId: z.number().int().positive(),
+  targetEventId: z.number().int().positive(),
+})
+
 // Analysis artifact schemas
 export const analysisSubjectSchema = z.object({
   code: z.string().min(1).max(20),

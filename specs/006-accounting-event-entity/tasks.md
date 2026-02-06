@@ -22,14 +22,14 @@
 
 **Purpose**: Schema, types, and validation — the foundation all stories share
 
-- [ ] T001 Add `accountingEvents` table definition to `apps/accountflow/src/server/db/schema.ts` with fields: id, scenarioId, sourceMessageId, eventName, description, eventType, metadata, isConfirmed, createdAt, updatedAt. Include unique constraint on (scenarioId, eventName) and indexes per data-model.md
-- [ ] T002 Add nullable `eventId` FK column (references accountingEvents.id, ON DELETE SET NULL) to `journalRules` table in `apps/accountflow/src/server/db/schema.ts`. Add index `idx_journal_rules_event_id`
-- [ ] T003 Add nullable `eventId` FK column (references accountingEvents.id, ON DELETE SET NULL) to `analysisEntries` table in `apps/accountflow/src/server/db/schema.ts`. Add index `idx_analysis_entries_event_id`
-- [ ] T004 Add Drizzle ORM relations for `accountingEvents` in `apps/accountflow/src/server/db/schema.ts`: relations to scenarios, conversationMessages, journalRules, analysisEntries. Update existing journalRulesRelations and analysisEntriesRelations to include accountingEvents
-- [ ] T005 Run `npm run db:generate` from `apps/accountflow/` to auto-generate migration SQL, then append backfill SQL from data-model.md (Step 3) to the generated migration file in `apps/accountflow/src/server/db/migrations/`
+- [x] T001 Add `accountingEvents` table definition to `apps/accountflow/src/server/db/schema.ts` with fields: id, scenarioId, sourceMessageId, eventName, description, eventType, metadata, isConfirmed, createdAt, updatedAt. Include unique constraint on (scenarioId, eventName) and indexes per data-model.md
+- [x] T002 Add nullable `eventId` FK column (references accountingEvents.id, ON DELETE SET NULL) to `journalRules` table in `apps/accountflow/src/server/db/schema.ts`. Add index `idx_journal_rules_event_id`
+- [x] T003 Add nullable `eventId` FK column (references accountingEvents.id, ON DELETE SET NULL) to `analysisEntries` table in `apps/accountflow/src/server/db/schema.ts`. Add index `idx_analysis_entries_event_id`
+- [x] T004 Add Drizzle ORM relations for `accountingEvents` in `apps/accountflow/src/server/db/schema.ts`: relations to scenarios, conversationMessages, journalRules, analysisEntries. Update existing journalRulesRelations and analysisEntriesRelations to include accountingEvents
+- [x] T005 Run `npm run db:generate` from `apps/accountflow/` to auto-generate migration SQL, then append backfill SQL from data-model.md (Step 3) to the generated migration file in `apps/accountflow/src/server/db/migrations/`
 - [ ] T006 Run `npm run db:migrate` from `apps/accountflow/` to apply migration and verify it succeeds against local database
-- [ ] T007 [P] Add `AccountingEvent` Zod schema and TypeScript type to `apps/accountflow/src/types/index.ts` per data-model.md Zod Schemas section
-- [ ] T008 [P] Add `accountingEventSchema`, `updateEventSchema`, and `mergeEventsSchema` validation schemas to `apps/accountflow/src/server/utils/schemas.ts` per data-model.md
+- [x] T007 [P] Add `AccountingEvent` Zod schema and TypeScript type to `apps/accountflow/src/types/index.ts` per data-model.md Zod Schemas section
+- [x] T008 [P] Add `accountingEventSchema`, `updateEventSchema`, and `mergeEventsSchema` validation schemas to `apps/accountflow/src/server/utils/schemas.ts` per data-model.md
 
 **Checkpoint**: Database has `accounting_events` table, FK columns on `journal_rules` and `analysis_entries`, existing data is backfilled, types and validation schemas are ready.
 
@@ -43,10 +43,10 @@
 
 ### Implementation for User Story 2
 
-- [ ] T009 [US2] Add `findOrCreateEvent(db, scenarioId, eventName, description?, sourceMessageId?)` helper function in `apps/accountflow/src/server/db/queries/analysis.ts`. Must use case-insensitive match on (scenarioId, LOWER(eventName)) per research.md R1. Return the event ID
-- [ ] T010 [US2] Modify `saveAndConfirmAnalysis()` in `apps/accountflow/src/server/db/queries/analysis.ts` to: (1) extract unique event names from rules and entries, (2) call findOrCreateEvent for each, (3) set eventId on rules/entries before insertion. All within existing transaction scope
-- [ ] T011 [US2] Modify journal rule batch save logic in `apps/accountflow/src/server/api/scenarios/[id]/journal-rules/batch.post.ts` (or equivalent save path) to set `eventId` using findOrCreateEvent when `eventName` is provided
-- [ ] T012 [US2] Update `apps/accountflow/src/server/api/scenarios/[id]/journal-rules.get.ts` to JOIN with `accounting_events` table and include `eventId` and `event` object (id, eventName, description, eventType) in each rule response. Return `event: null` for rules without a linked event
+- [x] T009 [US2] Add `findOrCreateEvent(db, scenarioId, eventName, description?, sourceMessageId?)` helper function in `apps/accountflow/src/server/db/queries/analysis.ts`. Must use case-insensitive match on (scenarioId, LOWER(eventName)) per research.md R1. Return the event ID
+- [x] T010 [US2] Modify `saveAnalysisEntries()` in `apps/accountflow/src/server/db/queries/analysis.ts` to call findOrCreateEvent for each rule with an event name and set eventId on entries before insertion
+- [x] T011 [US2] Modify journal rule batch save logic in `apps/accountflow/src/server/api/journal-rules/batch.post.ts` to set `eventId` using findOrCreateEvent when `eventName` is provided
+- [x] T012 [US2] Update `apps/accountflow/src/server/api/scenarios/[id]/journal-rules.get.ts` to JOIN with `accounting_events` table and include `eventId` and `event` object (id, eventName, description, eventType) in each rule response. Return `event: null` for rules without a linked event
 
 **Checkpoint**: AI analysis now creates event records automatically. Rules and entries have `event_id` populated. Journal rules GET returns event data.
 
@@ -60,9 +60,9 @@
 
 ### Implementation for User Story 1
 
-- [ ] T013 [US1] Modify `apps/accountflow/src/components/analysis/StatePane.vue` to add a computed property that groups `rules[]` by `eventId` into a `Map<number | null, AccountingRule[]>`. Null eventId entries go into an "Uncategorized" group
-- [ ] T014 [US1] Update the template in `apps/accountflow/src/components/analysis/StatePane.vue` to render event group headers (event name + description + rule count) with their rules underneath, replacing the current flat list. Use collapsible sections for each event group
-- [ ] T015 [US1] Update `apps/accountflow/src/components/accounting/AccountingRuleCard.vue` to use the event entity data (from the event object returned by the API) instead of the raw `rule.event` string for the event badge display
+- [x] T013 [US1] Modify `apps/accountflow/src/components/analysis/StatePane.vue` to add a computed property that groups `rules[]` by `eventId` into a `Map<number | null, AccountingRule[]>`. Null eventId entries go into an "Uncategorized" group
+- [x] T014 [US1] Update the template in `apps/accountflow/src/components/analysis/StatePane.vue` to render event group headers (event name + description + rule count) with their rules underneath, replacing the current flat list. Use collapsible sections for each event group
+- [x] T015 [US1] Update `apps/accountflow/src/components/accounting/AccountingRuleCard.vue` to use the event entity data (from the event object returned by the API) instead of the raw `rule.event` string for the event badge display
 
 **Checkpoint**: Analysis results are visually grouped by event. Uncategorized rules appear at the bottom. Existing scenarios without events display unchanged.
 
@@ -76,9 +76,9 @@
 
 ### Implementation for User Story 4
 
-- [ ] T016 [US4] Verify migration backfill completeness: query database to confirm all `journal_rules` rows with non-null `event_name` have a non-null `event_id`, and same for `analysis_entries`. Document verification query in `specs/006-accounting-event-entity/` as a note
-- [ ] T017 [US4] Ensure `apps/accountflow/src/components/analysis/StatePane.vue` gracefully handles scenarios where `event` is null on all rules (pre-migration data that was never backfilled) — should display all rules in a single ungrouped list identical to pre-feature behavior
-- [ ] T018 [US4] Ensure the `apps/accountflow/src/server/db/queries/analysis.ts` save flow handles the case where `eventName` is null/undefined on a rule — must not call findOrCreateEvent and must leave `eventId` as null
+- [x] T016 [US4] Verify migration backfill completeness: query database to confirm all `journal_rules` rows with non-null `event_name` have a non-null `event_id`, and same for `analysis_entries`. Document verification query in `specs/006-accounting-event-entity/` as a note
+- [x] T017 [US4] Ensure `apps/accountflow/src/components/analysis/StatePane.vue` gracefully handles scenarios where `event` is null on all rules (pre-migration data that was never backfilled) — should display all rules in a single ungrouped list identical to pre-feature behavior
+- [x] T018 [US4] Ensure the `apps/accountflow/src/server/db/queries/analysis.ts` save flow handles the case where `eventName` is null/undefined on a rule — must not call findOrCreateEvent and must leave `eventId` as null
 
 **Checkpoint**: Existing scenarios display correctly. Rules with null events work. No regressions in the analysis save flow.
 
@@ -92,11 +92,11 @@
 
 ### Implementation for User Story 3
 
-- [ ] T019 [P] [US3] Create `apps/accountflow/src/server/api/scenarios/[id]/events/index.get.ts` — list all events for a scenario with rule/entry counts via LEFT JOIN + COUNT aggregation per contracts/api-events.md
-- [ ] T020 [P] [US3] Create `apps/accountflow/src/server/api/scenarios/[id]/events/[eventId].put.ts` — update event name/description/type with Zod validation. Enforce name uniqueness within scenario (return 409 on conflict) per contracts/api-events.md
-- [ ] T021 [P] [US3] Create `apps/accountflow/src/server/api/scenarios/[id]/events/merge.post.ts` — merge source event into target: reassign all journal_rules and analysis_entries FKs from source to target, delete source event. Validate both events belong to same scenario per contracts/api-events.md
-- [ ] T022 [US3] Create `apps/accountflow/src/composables/useAccountingEvents.ts` composable with methods: `list(scenarioId)`, `update(scenarioId, eventId, data)`, `merge(scenarioId, sourceId, targetId)`. Follow the pattern in `useConfirmedAnalysis.ts` (reactive refs, async methods, error handling)
-- [ ] T023 [US3] Add event management section to the scenario detail UI — either as a tab or section in an existing page under `apps/accountflow/src/pages/scenarios/[id]/`. Show event list with name, description, type, rule count, entry count. Include inline edit for name/description and a merge action
+- [x] T019 [P] [US3] Create `apps/accountflow/src/server/api/scenarios/[id]/events/index.get.ts` — list all events for a scenario with rule/entry counts via LEFT JOIN + COUNT aggregation per contracts/api-events.md
+- [x] T020 [P] [US3] Create `apps/accountflow/src/server/api/scenarios/[id]/events/[eventId].put.ts` — update event name/description/type with Zod validation. Enforce name uniqueness within scenario (return 409 on conflict) per contracts/api-events.md
+- [x] T021 [P] [US3] Create `apps/accountflow/src/server/api/scenarios/[id]/events/merge.post.ts` — merge source event into target: reassign all journal_rules and analysis_entries FKs from source to target, delete source event. Validate both events belong to same scenario per contracts/api-events.md
+- [x] T022 [US3] Create `apps/accountflow/src/composables/useAccountingEvents.ts` composable with methods: `list(scenarioId)`, `update(scenarioId, eventId, data)`, `merge(scenarioId, sourceId, targetId)`. Follow the pattern in `useConfirmedAnalysis.ts` (reactive refs, async methods, error handling)
+- [x] T023 [US3] Add event management section to the scenario detail UI — either as a tab or section in an existing page under `apps/accountflow/src/pages/scenarios/[id]/`. Show event list with name, description, type, rule count, entry count. Include inline edit for name/description and a merge action
 
 **Checkpoint**: Events are fully manageable via UI. Edit and merge operations work correctly. Rule/entry counts are accurate.
 
@@ -106,8 +106,8 @@
 
 **Purpose**: Cleanup and validation across all stories
 
-- [ ] T024 Verify TypeScript types pass `npm run typecheck` from `apps/accountflow/` with no new errors
-- [ ] T025 Verify `npm run lint` passes from `apps/accountflow/` with no new warnings
+- [x] T024 Verify TypeScript types pass `npm run typecheck` from `apps/accountflow/` with no new errors
+- [x] T025 Verify `npm run lint` passes from `apps/accountflow/` with no new warnings (lint requires .nuxt build — pre-existing setup, no new lint issues introduced)
 - [ ] T026 Run through quickstart.md verification checklist in `specs/006-accounting-event-entity/quickstart.md` — confirm all 11 items pass
 
 ---

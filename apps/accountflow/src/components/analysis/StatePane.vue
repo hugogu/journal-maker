@@ -95,7 +95,53 @@
               保存所有规则
             </button>
           </div>
-          <div class="space-y-3">
+
+          <!-- Grouped by Event -->
+          <div v-if="rulesGroupedByEvent.length > 1" class="space-y-4">
+            <div
+              v-for="group in rulesGroupedByEvent"
+              :key="group.eventName || '__uncategorized__'"
+              class="border border-gray-100 rounded-lg overflow-hidden"
+            >
+              <!-- Event Group Header -->
+              <button
+                @click="toggleGroup(group.eventName)"
+                class="w-full flex items-center justify-between px-3 py-2 bg-gray-50 hover:bg-gray-100 transition-colors text-left"
+              >
+                <div class="flex items-center gap-2 min-w-0">
+                  <svg
+                    class="w-3.5 h-3.5 text-gray-400 flex-shrink-0 transition-transform"
+                    :class="{ '-rotate-90': isGroupCollapsed(group.eventName) }"
+                    fill="none" stroke="currentColor" viewBox="0 0 24 24"
+                  >
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
+                  </svg>
+                  <span v-if="group.eventName" class="text-sm font-medium text-gray-800 truncate">
+                    {{ group.eventName }}
+                  </span>
+                  <span v-else class="text-sm font-medium text-gray-400 italic">
+                    未分类
+                  </span>
+                </div>
+                <span class="text-xs text-gray-400 flex-shrink-0 ml-2">
+                  {{ group.rules.length }} 条规则
+                </span>
+              </button>
+
+              <!-- Event Group Rules -->
+              <div v-if="!isGroupCollapsed(group.eventName)" class="p-3 space-y-3">
+                <AccountingRuleCard
+                  v-for="rule in group.rules"
+                  :key="rule.id"
+                  :rule="rule"
+                  @save-rule="handleSaveRule"
+                />
+              </div>
+            </div>
+          </div>
+
+          <!-- Flat list when only one group (no meaningful grouping) -->
+          <div v-else class="space-y-3">
             <AccountingRuleCard
               v-for="rule in rulesWithStatus"
               :key="rule.id"
@@ -192,6 +238,58 @@ const rulesWithStatus = computed(() => {
     }
   })
 })
+
+// Group rules by event name for organized display
+const rulesGroupedByEvent = computed(() => {
+  const rules = rulesWithStatus.value
+  if (!rules.length) return []
+
+  const groups = new Map<string, { eventName: string; rules: typeof rules }>()
+
+  for (const rule of rules) {
+    const key = rule.event || '__uncategorized__'
+    if (!groups.has(key)) {
+      groups.set(key, { eventName: rule.event || '', rules: [] })
+    }
+    groups.get(key)!.rules.push(rule)
+  }
+
+  // Convert to array, uncategorized goes last
+  const result: { eventName: string; rules: typeof rules }[] = []
+  for (const [key, group] of groups) {
+    if (key !== '__uncategorized__') {
+      result.push(group)
+    }
+  }
+  // Sort named groups alphabetically
+  result.sort((a, b) => a.eventName.localeCompare(b.eventName))
+  // Append uncategorized at the end
+  const uncategorized = groups.get('__uncategorized__')
+  if (uncategorized) {
+    result.push({ eventName: '', rules: uncategorized.rules })
+  }
+
+  return result
+})
+
+// Track which event groups are collapsed
+const collapsedGroups = ref<Set<string>>(new Set())
+
+function toggleGroup(eventName: string) {
+  const key = eventName || '__uncategorized__'
+  if (collapsedGroups.value.has(key)) {
+    collapsedGroups.value.delete(key)
+  } else {
+    collapsedGroups.value.add(key)
+  }
+  // Trigger reactivity
+  collapsedGroups.value = new Set(collapsedGroups.value)
+}
+
+function isGroupCollapsed(eventName: string): boolean {
+  const key = eventName || '__uncategorized__'
+  return collapsedGroups.value.has(key)
+}
 
 // Load existing rules from database
 async function loadExistingRules() {
