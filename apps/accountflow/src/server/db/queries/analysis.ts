@@ -1,7 +1,48 @@
 import { db } from '../index'
-import { analysisSubjects, analysisEntries, analysisDiagrams } from '../schema'
-import { eq, and, desc } from 'drizzle-orm'
+import { analysisSubjects, analysisEntries, analysisDiagrams, accountingEvents } from '../schema'
+import { eq, and, desc, sql } from 'drizzle-orm'
 import type { AccountingSubject, AccountingRule, AnalysisEntryLine } from '../../../types'
+
+// ============================================================================
+// ACCOUNTING EVENTS
+// ============================================================================
+
+/**
+ * Find an existing event by case-insensitive name match, or create a new one.
+ * Returns the event ID.
+ */
+export async function findOrCreateEvent(
+  scenarioId: number,
+  eventName: string,
+  description?: string | null,
+  sourceMessageId?: number | null
+): Promise<number> {
+  // Case-insensitive lookup
+  const existing = await db.query.accountingEvents.findFirst({
+    where: and(
+      eq(accountingEvents.scenarioId, scenarioId),
+      sql`LOWER(${accountingEvents.eventName}) = LOWER(${eventName})`
+    ),
+  })
+
+  if (existing) {
+    return existing.id
+  }
+
+  // Create new event
+  const [created] = await db
+    .insert(accountingEvents)
+    .values({
+      scenarioId,
+      eventName,
+      description: description || null,
+      sourceMessageId: sourceMessageId || null,
+      isConfirmed: false,
+    })
+    .returning()
+
+  return created.id
+}
 
 // ============================================================================
 // ANALYSIS SUBJECTS
@@ -125,13 +166,26 @@ export async function saveAnalysisEntries(
       })
     }
 
+    // Use rule.event or rule.id as entryId, ensure it's not empty
+    const entryId = rule.event || rule.id
+    if (!entryId) {
+      console.warn('Skipping rule without event or id:', rule)
+      continue
+    }
+
     // Use upsert pattern
     const existing = await db.query.analysisEntries.findFirst({
       where: and(
         eq(analysisEntries.scenarioId, scenarioId),
-        eq(analysisEntries.entryId, rule.id)
+        eq(analysisEntries.entryId, entryId)
       ),
     })
+
+    // Resolve event if event name is present
+    let eventId: number | null = null
+    if (rule.event) {
+      eventId = await findOrCreateEvent(scenarioId, rule.event, undefined, sourceMessageId)
+    }
 
     if (existing) {
       // Update existing
@@ -140,6 +194,8 @@ export async function saveAnalysisEntries(
         .set({
           description: rule.description,
           lines,
+          eventId: eventId ?? existing.eventId,
+          eventName: rule.event || existing.eventName,
           metadata: rule.condition ? { condition: rule.condition } : null,
           sourceMessageId: sourceMessageId || existing.sourceMessageId,
           updatedAt: new Date(),
@@ -154,7 +210,9 @@ export async function saveAnalysisEntries(
         .values({
           scenarioId,
           sourceMessageId: sourceMessageId || null,
-          entryId: rule.id,
+          eventId,
+          entryId,
+          eventName: rule.event || null,
           description: rule.description,
           lines,
           metadata: rule.condition ? { condition: rule.condition } : null,
@@ -290,10 +348,15 @@ export async function saveAndConfirmAnalysis(
   diagramMermaid?: string | null,
   sourceMessageId?: number
 ) {
-  // Clear existing unconfirmed data
-  await deleteAnalysisSubjects(scenarioId)
-  await deleteAnalysisEntries(scenarioId)
-  await deleteAnalysisDiagrams(scenarioId)
+  // Soft delete existing confirmed data (set is_confirmed = false)
+  await softDeleteConfirmedSubjects(scenarioId)
+  await softDeleteConfirmedEntries(scenarioId)
+  await softDeleteConfirmedDiagrams(scenarioId)
+
+  // Delete unconfirmed data (hard delete)
+  await deleteUnconfirmedSubjects(scenarioId)
+  await deleteUnconfirmedEntries(scenarioId)
+  await deleteUnconfirmedDiagrams(scenarioId)
 
   // Save new data
   await saveAnalysisSubjects(scenarioId, subjects, sourceMessageId)
@@ -308,7 +371,7 @@ export async function saveAndConfirmAnalysis(
     )
   }
 
-  // Confirm all
+  // Confirm all new data
   await confirmAnalysisSubjects(scenarioId)
   await confirmAnalysisEntries(scenarioId)
   await confirmAnalysisDiagrams(scenarioId)
@@ -323,4 +386,69 @@ export async function clearConfirmedAnalysis(scenarioId: number) {
   await deleteAnalysisSubjects(scenarioId)
   await deleteAnalysisEntries(scenarioId)
   await deleteAnalysisDiagrams(scenarioId)
+}
+
+// ============================================================================
+// SOFT DELETE FUNCTIONS (set is_confirmed = false)
+// ============================================================================
+
+export async function softDeleteConfirmedSubjects(scenarioId: number) {
+  return db
+    .update(analysisSubjects)
+    .set({ isConfirmed: false })
+    .where(and(
+      eq(analysisSubjects.scenarioId, scenarioId),
+      eq(analysisSubjects.isConfirmed, true)
+    ))
+}
+
+export async function softDeleteConfirmedEntries(scenarioId: number) {
+  return db
+    .update(analysisEntries)
+    .set({ isConfirmed: false })
+    .where(and(
+      eq(analysisEntries.scenarioId, scenarioId),
+      eq(analysisEntries.isConfirmed, true)
+    ))
+}
+
+export async function softDeleteConfirmedDiagrams(scenarioId: number) {
+  return db
+    .update(analysisDiagrams)
+    .set({ isConfirmed: false })
+    .where(and(
+      eq(analysisDiagrams.scenarioId, scenarioId),
+      eq(analysisDiagrams.isConfirmed, true)
+    ))
+}
+
+// ============================================================================
+// HARD DELETE FUNCTIONS (delete unconfirmed data)
+// ============================================================================
+
+export async function deleteUnconfirmedSubjects(scenarioId: number) {
+  return db
+    .delete(analysisSubjects)
+    .where(and(
+      eq(analysisSubjects.scenarioId, scenarioId),
+      eq(analysisSubjects.isConfirmed, false)
+    ))
+}
+
+export async function deleteUnconfirmedEntries(scenarioId: number) {
+  return db
+    .delete(analysisEntries)
+    .where(and(
+      eq(analysisEntries.scenarioId, scenarioId),
+      eq(analysisEntries.isConfirmed, false)
+    ))
+}
+
+export async function deleteUnconfirmedDiagrams(scenarioId: number) {
+  return db
+    .delete(analysisDiagrams)
+    .where(and(
+      eq(analysisDiagrams.scenarioId, scenarioId),
+      eq(analysisDiagrams.isConfirmed, false)
+    ))
 }

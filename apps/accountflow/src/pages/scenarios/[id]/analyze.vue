@@ -24,6 +24,8 @@
       <StatePane
         :data="confirmedAnalysis.data.value"
         :loading="confirmedAnalysis.loading.value"
+        :scenario-id="scenarioIdNum"
+        :source-message-id="confirmedAnalysis.data.value?.sourceMessageId"
         @clear="handleClear"
       />
     </div>

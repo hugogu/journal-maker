@@ -86,10 +86,31 @@ export const scenarios = pgTable('scenarios', {
   index('idx_scenarios_is_template').on(table.isTemplate),
 ])
 
+export const accountingEvents = pgTable('accounting_events', {
+  id: serial('id').primaryKey(),
+  scenarioId: integer('scenario_id').references(() => scenarios.id, { onDelete: 'cascade' }).notNull(),
+  sourceMessageId: integer('source_message_id').references(() => conversationMessages.id, { onDelete: 'set null' }),
+  eventName: varchar('event_name', { length: 100 }).notNull(),
+  description: text('description'),
+  eventType: varchar('event_type', { length: 50 }),
+  metadata: jsonb('metadata'),
+  isConfirmed: boolean('is_confirmed').default(false).notNull(),
+  createdAt: timestamp('created_at').defaultNow().notNull(),
+  updatedAt: timestamp('updated_at').defaultNow().notNull(),
+}, (table) => [
+  unique('unique_scenario_event_name').on(table.scenarioId, table.eventName),
+  index('idx_accounting_events_scenario_id').on(table.scenarioId),
+  index('idx_accounting_events_source_message_id').on(table.sourceMessageId),
+  index('idx_accounting_events_is_confirmed').on(table.isConfirmed),
+])
+
 export const journalRules = pgTable('journal_rules', {
   id: serial('id').primaryKey(),
   scenarioId: integer('scenario_id').references(() => scenarios.id, { onDelete: 'cascade' }).notNull(),
-  eventName: varchar('event_name', { length: 100 }).notNull(),
+  messageId: integer('message_id').references(() => conversationMessages.id, { onDelete: 'set null' }),
+  eventId: integer('event_id').references(() => accountingEvents.id, { onDelete: 'set null' }),
+  ruleKey: varchar('rule_key', { length: 50 }).notNull(),
+  eventName: varchar('event_name', { length: 100 }).notNull(), // Retained for backward compatibility
   eventDescription: text('event_description'),
   debitAccountId: integer('debit_account_id').references(() => accounts.id, { onDelete: 'set null' }),
   creditAccountId: integer('credit_account_id').references(() => accounts.id, { onDelete: 'set null' }),
@@ -102,7 +123,11 @@ export const journalRules = pgTable('journal_rules', {
   createdAt: timestamp('created_at').defaultNow().notNull(),
   updatedAt: timestamp('updated_at').defaultNow().notNull(),
 }, (table) => [
+  unique('unique_journal_rule').on(table.scenarioId, table.messageId, table.ruleKey),
   index('idx_journal_rules_scenario_id').on(table.scenarioId),
+  index('idx_journal_rules_message_id').on(table.messageId),
+  index('idx_journal_rules_rule_key').on(table.ruleKey),
+  index('idx_journal_rules_event_id').on(table.eventId),
   index('idx_journal_rules_status').on(table.status),
 ])
 
@@ -170,7 +195,7 @@ export const analysisSubjects = pgTable('analysis_subjects', {
   createdAt: timestamp('created_at').defaultNow().notNull(),
   updatedAt: timestamp('updated_at').defaultNow().notNull(),
 }, (table) => [
-  unique('unique_scenario_subject_code').on(table.scenarioId, table.code),
+  unique('unique_scenario_subject_message_code').on(table.scenarioId, table.sourceMessageId, table.code),
   index('idx_analysis_subjects_scenario_id').on(table.scenarioId),
   index('idx_analysis_subjects_source_message_id').on(table.sourceMessageId),
   index('idx_analysis_subjects_code').on(table.code),
@@ -182,7 +207,9 @@ export const analysisEntries = pgTable('analysis_entries', {
   id: serial('id').primaryKey(),
   scenarioId: integer('scenario_id').notNull().references(() => scenarios.id, { onDelete: 'cascade' }),
   sourceMessageId: integer('source_message_id').references(() => conversationMessages.id, { onDelete: 'set null' }),
+  eventId: integer('event_id').references(() => accountingEvents.id, { onDelete: 'set null' }),
   entryId: varchar('entry_id', { length: 50 }).notNull(),
+  eventName: varchar('event_name', { length: 100 }), // Retained for backward compatibility
   description: text('description'),
   lines: jsonb('lines').notNull(),
   amount: numeric('amount', { precision: 18, scale: 2 }),
@@ -192,10 +219,12 @@ export const analysisEntries = pgTable('analysis_entries', {
   createdAt: timestamp('created_at').defaultNow().notNull(),
   updatedAt: timestamp('updated_at').defaultNow().notNull(),
 }, (table) => [
-  unique('unique_scenario_entry_id').on(table.scenarioId, table.entryId),
+  unique('unique_scenario_entry_message_id').on(table.scenarioId, table.sourceMessageId, table.entryId),
   index('idx_analysis_entries_scenario_id').on(table.scenarioId),
   index('idx_analysis_entries_source_message_id').on(table.sourceMessageId),
   index('idx_analysis_entries_entry_id').on(table.entryId),
+  index('idx_analysis_entries_event_id').on(table.eventId),
+  index('idx_analysis_entries_event_name').on(table.eventName),
   index('idx_analysis_entries_is_confirmed').on(table.isConfirmed),
 ])
 
@@ -327,6 +356,34 @@ export const userPreferencesRelations = relations(userPreferences, ({ one }) => 
   }),
 }))
 
+export const accountingEventsRelations = relations(accountingEvents, ({ one, many }) => ({
+  scenario: one(scenarios, {
+    fields: [accountingEvents.scenarioId],
+    references: [scenarios.id],
+  }),
+  sourceMessage: one(conversationMessages, {
+    fields: [accountingEvents.sourceMessageId],
+    references: [conversationMessages.id],
+  }),
+  journalRules: many(journalRules),
+  analysisEntries: many(analysisEntries),
+}))
+
+export const journalRulesRelations = relations(journalRules, ({ one }) => ({
+  scenario: one(scenarios, {
+    fields: [journalRules.scenarioId],
+    references: [scenarios.id],
+  }),
+  message: one(conversationMessages, {
+    fields: [journalRules.messageId],
+    references: [conversationMessages.id],
+  }),
+  accountingEvent: one(accountingEvents, {
+    fields: [journalRules.eventId],
+    references: [accountingEvents.id],
+  }),
+}))
+
 export const analysisSubjectsRelations = relations(analysisSubjects, ({ one }) => ({
   scenario: one(scenarios, {
     fields: [analysisSubjects.scenarioId],
@@ -350,6 +407,10 @@ export const analysisEntriesRelations = relations(analysisEntries, ({ one }) => 
   sourceMessage: one(conversationMessages, {
     fields: [analysisEntries.sourceMessageId],
     references: [conversationMessages.id],
+  }),
+  accountingEvent: one(accountingEvents, {
+    fields: [analysisEntries.eventId],
+    references: [accountingEvents.id],
   }),
 }))
 

@@ -65,22 +65,88 @@
             </svg>
             会计科目 ({{ data.subjects.length }})
           </h3>
-          <AccountingSubjectList :subjects="subjectsWithStatus" />
+          <AccountingSubjectList 
+            :subjects="subjectsWithStatus" 
+            @save-subject="handleSaveSubject"
+          />
         </div>
 
         <!-- Accounting Rules -->
         <div v-if="data.rules && data.rules.length > 0">
-          <h3 class="text-sm font-semibold text-gray-700 mb-3 flex items-center">
-            <svg class="w-4 h-4 mr-2 text-purple-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
-            </svg>
-            会计规则 ({{ data.rules.length }})
-          </h3>
-          <div class="space-y-3">
+          <div class="flex items-center justify-between mb-3">
+            <h3 class="text-sm font-semibold text-gray-700 flex items-center">
+              <svg class="w-4 h-4 mr-2 text-purple-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
+              </svg>
+              会计规则 ({{ data.rules.length }})
+            </h3>
+            <button
+              v-if="hasNewRules"
+              @click="handleSaveAllRules"
+              :disabled="savingAll"
+              class="inline-flex items-center px-3 py-1.5 text-xs font-medium text-blue-600 hover:text-blue-700 hover:bg-blue-50 border border-blue-200 rounded transition-colors disabled:opacity-50"
+            >
+              <svg v-if="!savingAll" class="w-3 h-3 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7H5a2 2 0 00-2 2v9a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-3m-1 4l-3 3m0 0l-3-3m3 3V2"></path>
+              </svg>
+              <svg v-else class="w-3 h-3 mr-1 animate-spin" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path>
+              </svg>
+              保存所有规则
+            </button>
+          </div>
+
+          <!-- Grouped by Event -->
+          <div v-if="rulesGroupedByEvent.length > 1" class="space-y-4">
+            <div
+              v-for="group in rulesGroupedByEvent"
+              :key="group.eventName || '__uncategorized__'"
+              class="border border-gray-100 rounded-lg overflow-hidden"
+            >
+              <!-- Event Group Header -->
+              <button
+                @click="toggleGroup(group.eventName)"
+                class="w-full flex items-center justify-between px-3 py-2 bg-gray-50 hover:bg-gray-100 transition-colors text-left"
+              >
+                <div class="flex items-center gap-2 min-w-0">
+                  <svg
+                    class="w-3.5 h-3.5 text-gray-400 flex-shrink-0 transition-transform"
+                    :class="{ '-rotate-90': isGroupCollapsed(group.eventName) }"
+                    fill="none" stroke="currentColor" viewBox="0 0 24 24"
+                  >
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
+                  </svg>
+                  <span v-if="group.eventName" class="text-sm font-medium text-gray-800 truncate">
+                    {{ group.eventName }}
+                  </span>
+                  <span v-else class="text-sm font-medium text-gray-400 italic">
+                    未分类
+                  </span>
+                </div>
+                <span class="text-xs text-gray-400 flex-shrink-0 ml-2">
+                  {{ group.rules.length }} 条规则
+                </span>
+              </button>
+
+              <!-- Event Group Rules -->
+              <div v-if="!isGroupCollapsed(group.eventName)" class="p-3 space-y-3">
+                <AccountingRuleCard
+                  v-for="rule in group.rules"
+                  :key="rule.id"
+                  :rule="rule"
+                  @save-rule="handleSaveRule"
+                />
+              </div>
+            </div>
+          </div>
+
+          <!-- Flat list when only one group (no meaningful grouping) -->
+          <div v-else class="space-y-3">
             <AccountingRuleCard
-              v-for="rule in data.rules"
+              v-for="rule in rulesWithStatus"
               :key="rule.id"
               :rule="rule"
+              @save-rule="handleSaveRule"
             />
           </div>
         </div>
@@ -106,7 +172,7 @@
 </template>
 
 <script setup lang="ts">
-import { computed, ref, onMounted } from 'vue'
+import { computed, ref, onMounted, watch } from 'vue'
 import AccountingSubjectList from './AccountingSubjectList.vue'
 import AccountingRuleCard from './AccountingRuleCard.vue'
 import FlowDiagramViewer from './FlowDiagramViewer.vue'
@@ -116,6 +182,8 @@ import type { Account } from '../../types'
 const props = defineProps<{
   data: ConfirmedAnalysisState
   loading: boolean
+  scenarioId?: number // Add scenarioId prop
+  sourceMessageId?: number // Add sourceMessageId prop
 }>()
 
 const emit = defineEmits<{
@@ -125,6 +193,8 @@ const emit = defineEmits<{
 const clearing = ref(false)
 const existingAccounts = ref<Account[]>([])
 const loadingAccounts = ref(false)
+const savingAll = ref(false)
+const savedRuleIds = ref<Set<string>>(new Set()) // Track saved rule IDs
 
 const hasContent = computed(() => {
   return (
@@ -132,6 +202,10 @@ const hasContent = computed(() => {
     (props.data.rules && props.data.rules.length > 0) ||
     (props.data.diagramMermaid && props.data.diagramMermaid.trim().length > 0)
   )
+})
+
+const hasNewRules = computed(() => {
+  return props.data.rules && props.data.rules.length > 0
 })
 
 // Compute which subjects are new vs existing
@@ -150,6 +224,104 @@ const subjectsWithStatus = computed(() => {
   })
 })
 
+// Compute which rules are new vs existing
+const rulesWithStatus = computed(() => {
+  if (!props.data.rules) return []
+
+  return props.data.rules.map(rule => {
+    // Use scenarioId + messageId + ruleKey for unique identification
+    const uniqueId = `${props.scenarioId}-${props.sourceMessageId}-${rule.event || rule.id}`
+    return {
+      ...rule,
+      _uniqueId: uniqueId,
+      isExisting: savedRuleIds.value.has(uniqueId)
+    }
+  })
+})
+
+// Group rules by event name for organized display
+const rulesGroupedByEvent = computed(() => {
+  const rules = rulesWithStatus.value
+  if (!rules.length) return []
+
+  const groups = new Map<string, { eventName: string; rules: typeof rules }>()
+
+  for (const rule of rules) {
+    const key = rule.event || '__uncategorized__'
+    if (!groups.has(key)) {
+      groups.set(key, { eventName: rule.event || '', rules: [] })
+    }
+    groups.get(key)!.rules.push(rule)
+  }
+
+  // Convert to array, uncategorized goes last
+  const result: { eventName: string; rules: typeof rules }[] = []
+  for (const [key, group] of groups) {
+    if (key !== '__uncategorized__') {
+      result.push(group)
+    }
+  }
+  // Sort named groups alphabetically
+  result.sort((a, b) => a.eventName.localeCompare(b.eventName))
+  // Append uncategorized at the end
+  const uncategorized = groups.get('__uncategorized__')
+  if (uncategorized) {
+    result.push({ eventName: '', rules: uncategorized.rules })
+  }
+
+  return result
+})
+
+// Track which event groups are collapsed
+const collapsedGroups = ref<Set<string>>(new Set())
+
+function toggleGroup(eventName: string) {
+  const key = eventName || '__uncategorized__'
+  if (collapsedGroups.value.has(key)) {
+    collapsedGroups.value.delete(key)
+  } else {
+    collapsedGroups.value.add(key)
+  }
+  // Trigger reactivity
+  collapsedGroups.value = new Set(collapsedGroups.value)
+}
+
+function isGroupCollapsed(eventName: string): boolean {
+  const key = eventName || '__uncategorized__'
+  return collapsedGroups.value.has(key)
+}
+
+// Load existing rules from database
+async function loadExistingRules() {
+  if (!props.scenarioId || !props.sourceMessageId) return
+  
+  try {
+    const response = await $fetch(`/api/scenarios/${props.scenarioId}/journal-rules`) as { 
+      success: boolean; 
+      data?: any[]; 
+      error?: string 
+    }
+    
+    if (response.success && response.data) {
+      console.log('Loaded existing rules from database:', response.data)
+      console.log('Current AI rules:', props.data.rules)
+      
+      // Build unique IDs from saved rules: scenarioId-messageId-ruleKey
+      const existingRuleIds = new Set(
+        response.data
+          .filter((rule: any) => rule.messageId === props.sourceMessageId) // 只匹配当前消息的规则
+          .map((rule: any) => `${props.scenarioId}-${rule.messageId}-${rule.ruleKey}`)
+      )
+      console.log('Existing rule IDs for current message:', existingRuleIds)
+      
+      savedRuleIds.value = existingRuleIds as Set<string>
+      console.log('Saved rule IDs after loading:', savedRuleIds.value)
+    }
+  } catch (error) {
+    console.error('Failed to load existing rules:', error)
+  }
+}
+
 // Load existing accounts from API
 async function loadExistingAccounts() {
   loadingAccounts.value = true
@@ -167,7 +339,15 @@ async function loadExistingAccounts() {
 
 onMounted(() => {
   loadExistingAccounts()
+  loadExistingRules()
 })
+
+// Watch for changes in rules data and reload existing rules
+watch(() => props.data.rules, () => {
+  if (props.data.rules && props.data.rules.length > 0) {
+    loadExistingRules()
+  }
+}, { immediate: false })
 
 async function handleClear() {
   if (!confirm('确定要清空所有已确认的分析结果吗？')) return
@@ -179,6 +359,127 @@ async function handleClear() {
     setTimeout(() => {
       clearing.value = false
     }, 500)
+  }
+}
+
+// Handle saving subject
+async function handleSaveSubject(subject: any) {
+  try {
+    // Convert AccountingSubject to Account format
+    const accountData = {
+      code: subject.code,
+      name: subject.name,
+      type: subject.type || 'asset',
+      direction: getAccountDirection(subject.type || 'asset'),
+      description: subject.description || '',
+      isActive: true
+    }
+
+    const response = await $fetch<{ success: boolean; data: Account }>('/api/accounts', {
+      method: 'POST',
+      body: accountData
+    })
+
+    if (response.success) {
+      // Refresh existing accounts to update status
+      await loadExistingAccounts()
+      // Show success message
+      console.log('Subject saved successfully:', response.data)
+    }
+  } catch (error) {
+    console.error('Failed to save subject:', error)
+  }
+}
+
+// Handle saving rule
+async function handleSaveRule(rule: any) {
+  try {
+    // This would need a proper API endpoint for saving rules
+    console.log('Save rule:', rule)
+    // For now, let's simulate saving by updating the local state
+    savedRuleIds.value = new Set([...savedRuleIds.value, rule.id]) as Set<string>
+    // TODO: Implement actual rule saving API call
+  } catch (error) {
+    console.error('Failed to save rule:', error)
+  }
+}
+
+// Handle saving all rules
+async function handleSaveAllRules() {
+  if (!props.data.rules || !props.scenarioId) return
+  
+  savingAll.value = true
+  try {
+    const newRules = rulesWithStatus.value.filter(rule => !rule.isExisting)
+    
+    if (newRules.length === 0) {
+      console.log('No new rules to save')
+      return
+    }
+
+    // Prepare rules for API - use AI returned event.name as eventName
+    const rulesToSave = newRules.map(rule => {
+      return {
+        eventName: rule.event || rule.id, // 使用AI返回的event.name，如果不存在则使用rule.id
+        ruleKey: rule.event || rule.id, // AI返回的event名字作为ruleKey
+        eventDescription: rule.description,
+        debitAccountId: rule.debitAccount || null,
+        creditAccountId: rule.creditAccount || null,
+        conditions: rule.condition ? { trigger: rule.condition } : {},
+        debitSide: {},
+        creditSide: {},
+        triggerType: 'manual'
+      }
+    })
+
+    const response = await $fetch('/api/journal-rules/batch', {
+      method: 'POST',
+      body: {
+        scenarioId: props.scenarioId,
+        messageId: props.sourceMessageId, // 添加messageId
+        rules: rulesToSave
+      }
+    }) as { success: boolean; data?: any; error?: string }
+
+    if (response.success && response.data) {
+      console.log(`Successfully saved ${response.data.length} rules:`, response.data)
+      
+      // Update local state to mark rules as existing
+      // Use scenarioId + messageId + event as unique key
+      const newSavedIds = new Set(newRules.map(rule => 
+        `${props.scenarioId}-${props.sourceMessageId}-${rule.event || rule.id}`
+      ))
+      
+      // Update the savedRuleIds set to trigger reactivity
+      savedRuleIds.value = new Set([...savedRuleIds.value, ...newSavedIds]) as Set<string>
+      
+    } else {
+      console.error('Failed to save rules:', response.error)
+    }
+  } catch (error) {
+    console.error('Failed to save all rules:', error)
+  } finally {
+    setTimeout(() => {
+      savingAll.value = false
+    }, 2000)
+  }
+}
+
+// Helper function to determine account direction from type
+function getAccountDirection(type: string): 'debit' | 'credit' | 'both' {
+  switch (type) {
+    case 'asset':
+      return 'debit'
+    case 'liability':
+      return 'credit'
+    case 'equity':
+      return 'credit'
+    case 'revenue':
+      return 'credit'
+    case 'expense':
+      return 'debit'
+    default:
+      return 'both'
   }
 }
 

@@ -52,7 +52,12 @@ export default defineEventHandler(async (event) => {
     if (isExport) {
       const markdown = generateMarkdownExport(scenario, messages)
       event.node.res.setHeader('Content-Type', 'text/markdown')
-      event.node.res.setHeader('Content-Disposition', `attachment; filename="${scenario.name}-conversation.md"`)
+      // Sanitize filename and encode properly
+      const sanitizedFilename = scenario.name
+        .replace(/[^\w\s-]/g, '') // Remove special characters
+        .replace(/\s+/g, '-') // Replace spaces with hyphens
+        .trim() || 'conversation'
+      event.node.res.setHeader('Content-Disposition', `attachment; filename="${sanitizedFilename}-share.md"`)
       return markdown
     }
 

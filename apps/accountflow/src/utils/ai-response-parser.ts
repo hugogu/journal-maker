@@ -75,13 +75,19 @@ export function extractRules(content: string): AccountingRule[] {
   // Try to find structured.rules from nested JSON format
   const structuredData = extractStructuredData(content)
   if (structuredData?.rules && Array.isArray(structuredData.rules)) {
-    const rules = structuredData.rules.map((r: any, index: number) => ({
-      id: r.id || `RULE-${String(index + 1).padStart(3, '0')}`,
-      description: r.description || `${r.event}: ${r.description || ''}`,
-      condition: r.condition,
-      debitAccount: r.debit,
-      creditAccount: r.credit,
-    })).filter(isValidRule)
+    const rules = structuredData.rules.map((r: any, index: number) => {
+      // Extract event name from various possible formats
+      const eventName = r.event?.name || r.event || r.eventName || undefined
+
+      return {
+        id: r.id || `RULE-${String(index + 1).padStart(3, '0')}`,
+        event: eventName, // Properly extract event name
+        description: r.description || r.event?.description || '',
+        condition: r.condition || r.event?.condition,
+        debitAccount: r.debit || r.debitAccount,
+        creditAccount: r.credit || r.creditAccount,
+      }
+    }).filter(isValidRule)
     if (rules.length > 0) return rules
   }
 
@@ -218,6 +224,8 @@ function extractRulesFromList(content: string): AccountingRule[] {
 
   // Look for numbered rules or bullet points with accounting rules
   const rulePatterns = [
+    // Pattern: 1. 事件名：规则描述：借记xxx，贷记xxx
+    /(\d+)\.\s*([^：:]+)[：:]\s*([^：:]+)[：:]\s*借记\s*(\S+)\s*[，,]\s*贷记\s*(\S+)/g,
     // Pattern: 1. 规则描述：借记xxx，贷记xxx
     /(\d+)\.\s*([^：:]+)[：:]\s*借记\s*(\S+)\s*[，,]\s*贷记\s*(\S+)/g,
     // Pattern: - 规则描述
@@ -227,12 +235,28 @@ function extractRulesFromList(content: string): AccountingRule[] {
   for (const pattern of rulePatterns) {
     let match
     while ((match = pattern.exec(content)) !== null) {
-      if (match.length >= 3) {
+      if (match.length >= 6) {
+        // Pattern with event name
+        rules.push({
+          id: `RULE-${match[1] || rules.length + 1}`.padStart(3, '0'),
+          event: match[2]?.trim(),
+          description: match[3]?.trim() || match[0].trim(),
+          debitAccount: match[4]?.trim(),
+          creditAccount: match[5]?.trim(),
+        })
+      } else if (match.length >= 5) {
+        // Pattern without event name
         rules.push({
           id: `RULE-${match[1] || rules.length + 1}`.padStart(3, '0'),
           description: match[2]?.trim() || match[0].trim(),
           debitAccount: match[3]?.trim(),
           creditAccount: match[4]?.trim(),
+        })
+      } else if (match.length >= 3) {
+        // Basic pattern
+        rules.push({
+          id: `RULE-${match[1] || rules.length + 1}`.padStart(3, '0'),
+          description: match[2]?.trim() || match[0].trim(),
         })
       }
     }

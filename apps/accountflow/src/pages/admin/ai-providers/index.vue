@@ -68,8 +68,31 @@
               <input v-model="form.isDefault" type="checkbox" id="isDefault" />
               <label for="isDefault">设为默认 Provider</label>
             </div>
-            <button type="button" @click="testConnection" :disabled="testing" class="text-sm text-blue-600 hover:text-blue-800">
-              {{ testing ? '测试中...' : testResult ? (testSuccess ? '✓ 连接成功' : '✗ 连接失败') : '测试连接' }}
+            <button 
+              type="button" 
+              @click="testConnection" 
+              :disabled="testing" 
+              class="flex items-center gap-2 px-3 py-1.5 text-sm rounded transition-colors"
+              :class="{
+                'text-blue-600 hover:text-blue-800 hover:bg-blue-50': !testResult,
+                'text-green-600 bg-green-50': testResult && testSuccess,
+                'text-red-600 bg-red-50': testResult && !testSuccess,
+                'opacity-50 cursor-not-allowed': testing
+              }"
+            >
+              <svg v-if="testing" class="w-4 h-4 animate-spin" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path>
+              </svg>
+              <svg v-else-if="testResult && testSuccess" class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
+              </svg>
+              <svg v-else-if="testResult && !testSuccess" class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+              </svg>
+              <svg v-else class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1"></path>
+              </svg>
+              {{ testing ? '测试中...' : testResult ? (testSuccess ? '连接成功' : '连接失败') : '测试连接' }}
             </button>
           </div>
           <div class="flex gap-4 pt-4">
@@ -148,10 +171,8 @@ async function testConnection() {
       body
     })
     testSuccess.value = true
-    alert('连接测试成功！')
   } catch (e: any) {
     testSuccess.value = false
-    alert('连接测试失败：' + (e?.data?.message || '请检查配置'))
   } finally {
     testing.value = false
     testResult.value = true

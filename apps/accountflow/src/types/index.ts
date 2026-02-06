@@ -219,6 +219,26 @@ export const AnalysisDiagram = z.object({
 export type AnalysisDiagram = z.infer<typeof AnalysisDiagram>
 
 // ============================================================================
+// ACCOUNTING EVENT TYPES
+// ============================================================================
+
+export const AccountingEvent = z.object({
+  id: z.number(),
+  scenarioId: z.number(),
+  sourceMessageId: z.number().nullable(),
+  eventName: z.string().max(100),
+  description: z.string().nullable(),
+  eventType: z.string().max(50).nullable(),
+  metadata: z.record(z.any()).nullable(),
+  isConfirmed: z.boolean(),
+  ruleCount: z.number().optional(),
+  entryCount: z.number().optional(),
+  createdAt: z.date(),
+  updatedAt: z.date(),
+})
+export type AccountingEvent = z.infer<typeof AccountingEvent>
+
+// ============================================================================
 // UI/API TYPES (For compatibility with existing components)
 // ============================================================================
 
@@ -234,6 +254,7 @@ export type AccountingSubject = z.infer<typeof AccountingSubject>
 // Accounting Rule for UI (simplified from AnalysisEntry)
 export const AccountingRule = z.object({
   id: z.string().min(1).max(50),
+  event: z.string().max(100).optional(), // AI返回的event.name
   description: z.string().min(1).max(500),
   condition: z.string().max(200).optional(),
   debitAccount: z.string().max(20).optional(),

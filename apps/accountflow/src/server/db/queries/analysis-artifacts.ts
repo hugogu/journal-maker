@@ -40,7 +40,7 @@ export async function createAnalysisArtifacts(params: {
   scenarioId: number
   sourceMessageId?: number | null
   subjects?: Array<{ code: string; name: string; direction: 'debit' | 'credit' | 'both'; description?: string | null; metadata?: any }>
-  entries?: Array<{ lines: any; description?: string | null; amount?: number | null; currency?: string | null; metadata?: any }>
+  entries?: Array<{ eventName?: string | null; lines: any; description?: string | null; amount?: number | null; currency?: string | null; metadata?: any }>
   diagrams?: Array<{ diagramType: 'mermaid' | 'chart' | 'table'; payload: any; metadata?: any }>
 }) {
   const { scenarioId, sourceMessageId } = params
@@ -83,10 +83,11 @@ export async function createAnalysisArtifacts(params: {
               scenarioId,
               sourceMessageId: sourceMessageId || null,
               entryId: `entry_${Date.now()}_${index}`, // Generate unique entryId
+              eventName: entry.eventName || null, // Track which event this entry belongs to
               lines: entry.lines,
               description: entry.description || null,
               amount: entry.amount ? entry.amount.toString() : null,
-              currency: entry.currency || 'CNY',
+              currency: entry.currency || null, // Only set if provided (not defaulting to CNY)
               metadata: entry.metadata || null,
             }).returning()
             return result

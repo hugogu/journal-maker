@@ -20,6 +20,11 @@ interface OpenAICompletionChunk {
     }
     finish_reason: string | null
   }>
+  usage?: {
+    prompt_tokens: number
+    completion_tokens: number
+    total_tokens: number
+  }
 }
 
 export class OpenAIAdapter extends BaseAIAdapter {
@@ -126,6 +131,7 @@ export class OpenAIAdapter extends BaseAIAdapter {
       temperature: params.temperature ?? 0.7,
       max_tokens: params.maxTokens,
       stream: true,
+      stream_options: { include_usage: true }, // Ensure usage is included in streaming
     }
 
     // Add tools/functions if provided
@@ -180,10 +186,21 @@ export class OpenAIAdapter extends BaseAIAdapter {
               const content = chunk.choices[0]?.delta?.content || ''
               const isDone = chunk.choices[0]?.finish_reason !== null
 
+              // Extract usage information if available
+              let usage = undefined
+              if (chunk.usage) {
+                usage = {
+                  promptTokens: chunk.usage.prompt_tokens,
+                  completionTokens: chunk.usage.completion_tokens,
+                  totalTokens: chunk.usage.total_tokens,
+                }
+              }
+
               onChunk({
                 content,
                 done: isDone,
                 model: chunk.model,
+                usage,
               })
             } catch (e) {
               // Skip invalid JSON
