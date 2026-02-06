@@ -1,5 +1,5 @@
 import { db } from '../../db'
-import { companies } from '../../db/schema'
+import { companyProfile } from '../../db/schema'
 import { createCompanySchema, updateCompanySchema } from '../../utils/schemas'
 import { AppError, handleError, successResponse } from '../../utils/error'
 
@@ -9,7 +9,7 @@ export default defineEventHandler(async (event) => {
     const method = getMethod(event)
 
     if (method === 'GET') {
-      const allCompanies = await db.query.companies.findMany()
+      const allCompanies = await db.query.companyProfile.findMany()
       return successResponse(allCompanies)
     }
 
@@ -17,7 +17,7 @@ export default defineEventHandler(async (event) => {
       const body = await readBody(event)
       const data = createCompanySchema.parse(body)
       
-      const [company] = await db.insert(companies).values(data).returning()
+      const [company] = await db.insert(companyProfile).values(data).returning()
       return successResponse(company)
     }
 

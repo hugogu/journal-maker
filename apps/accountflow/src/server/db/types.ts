@@ -3,7 +3,7 @@
 
 import type { InferSelectModel, InferInsertModel } from 'drizzle-orm'
 import type {
-  companies,
+  companyProfile,
   users,
   accounts,
   scenarios,
@@ -14,7 +14,6 @@ import type {
   promptVersions,
   aiProviders,
   aiModels,
-  companyProfile,
   userPreferences,
   // Conversation & Analysis
   conversationMessages,
@@ -25,8 +24,8 @@ import type {
 } from './schema'
 
 // Existing types
-export type Company = InferSelectModel<typeof companies>
-export type NewCompany = InferInsertModel<typeof companies>
+export type Company = InferSelectModel<typeof companyProfile>
+export type NewCompany = InferInsertModel<typeof companyProfile>
 
 export type User = InferSelectModel<typeof users>
 export type NewUser = InferInsertModel<typeof users>

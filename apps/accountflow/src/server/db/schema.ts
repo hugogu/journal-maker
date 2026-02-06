@@ -25,18 +25,19 @@ export const analysisDiagramTypeEnum = pgEnum('analysis_diagram_type', ['mermaid
 // CORE BUSINESS TABLES
 // ============================================================================
 
-export const companies = pgTable('companies', {
+export const companyProfile = pgTable('company_profile', {
   id: serial('id').primaryKey(),
   name: varchar('name', { length: 100 }).notNull(),
-  description: text('description'),
+  businessModel: text('business_model'),
   industry: varchar('industry', { length: 50 }),
-  createdAt: timestamp('created_at').defaultNow().notNull(),
+  accountingPreference: text('accounting_preference'),
+  notes: text('notes'),
   updatedAt: timestamp('updated_at').defaultNow().notNull(),
 })
 
 export const users = pgTable('users', {
   id: serial('id').primaryKey(),
-  companyId: integer('company_id').references(() => companies.id, { onDelete: 'cascade' }).notNull(),
+  companyId: integer('company_id').references(() => companyProfile.id, { onDelete: 'cascade' }).notNull(),
   name: varchar('name', { length: 100 }).notNull(),
   email: varchar('email', { length: 255 }).notNull().unique(),
   role: userRoleEnum('role').notNull().default('product'),
@@ -49,7 +50,7 @@ export const users = pgTable('users', {
 
 export const accounts = pgTable('accounts', {
   id: serial('id').primaryKey(),
-  companyId: integer('company_id').references(() => companies.id, { onDelete: 'cascade' }).notNull(),
+  companyId: integer('company_id').references(() => companyProfile.id, { onDelete: 'cascade' }).notNull(),
   code: varchar('code', { length: 20 }).notNull(),
   name: varchar('name', { length: 100 }).notNull(),
   type: accountTypeEnum('type').notNull(),
@@ -69,7 +70,7 @@ export const accounts = pgTable('accounts', {
 
 export const scenarios = pgTable('scenarios', {
   id: serial('id').primaryKey(),
-  companyId: integer('company_id').references(() => companies.id, { onDelete: 'cascade' }).notNull(),
+  companyId: integer('company_id').references(() => companyProfile.id, { onDelete: 'cascade' }).notNull(),
   name: varchar('name', { length: 100 }).notNull(),
   description: text('description'),
   status: scenarioStatusEnum('status').default('draft').notNull(),
@@ -130,11 +131,13 @@ export const conversationMessages = pgTable('conversation_messages', {
   structuredData: jsonb('structured_data'),
   requestLog: jsonb('request_log'),
   responseStats: jsonb('response_stats'),
+  confirmedAt: timestamp('confirmed_at'),
   createdAt: timestamp('created_at').defaultNow().notNull(),
 }, (table) => [
   index('idx_conversation_messages_scenario_id').on(table.scenarioId),
   index('idx_conversation_messages_timestamp').on(table.timestamp),
   index('idx_conversation_messages_role').on(table.role),
+  index('idx_conversation_messages_confirmed_at').on(table.confirmedAt),
 ])
 
 export const conversationShares = pgTable('conversation_shares', {
@@ -268,16 +271,6 @@ export const promptVersions = pgTable('prompt_versions', {
   unique('unique_template_version_number').on(table.templateId, table.versionNumber),
   index('idx_prompt_versions_template_id').on(table.templateId),
 ])
-
-export const companyProfile = pgTable('company_profile', {
-  id: serial('id').primaryKey(),
-  name: varchar('name', { length: 100 }).notNull(),
-  businessModel: text('business_model'),
-  industry: varchar('industry', { length: 50 }),
-  accountingPreference: text('accounting_preference'),
-  notes: text('notes'),
-  updatedAt: timestamp('updated_at').defaultNow().notNull(),
-})
 
 export const userPreferences = pgTable('user_preferences', {
   id: serial('id').primaryKey(),

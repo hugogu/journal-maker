@@ -51,18 +51,19 @@ CREATE TYPE "public"."analysis_diagram_type" AS ENUM('mermaid', 'chart', 'table'
 -- CORE BUSINESS TABLES
 -- ============================================================================
 
--- Companies: Multi-tenant organization entities
-CREATE TABLE "public"."companies" (
+-- Company Profile: Extended company information (single row configuration)
+CREATE TABLE "public"."company_profile" (
   "id" SERIAL PRIMARY KEY,
   "name" VARCHAR(100) NOT NULL,
-  "description" TEXT,
+  "business_model" TEXT,
   "industry" VARCHAR(50),
-  "created_at" TIMESTAMP DEFAULT NOW() NOT NULL,
+  "accounting_preference" TEXT,
+  "notes" TEXT,
   "updated_at" TIMESTAMP DEFAULT NOW() NOT NULL
 );
-COMMENT ON TABLE "public"."companies" IS 'Organization/tenant entities for multi-company support';
-COMMENT ON COLUMN "public"."companies"."name" IS 'Company legal name';
-COMMENT ON COLUMN "public"."companies"."industry" IS 'Industry classification (e.g., manufacturing, retail, services)';
+COMMENT ON TABLE "public"."company_profile" IS 'Extended company profile for AI context (single row configuration)';
+COMMENT ON COLUMN "public"."company_profile"."business_model" IS 'Description of business model for AI context';
+COMMENT ON COLUMN "public"."company_profile"."accounting_preference" IS 'Accounting standards preference (e.g., "China GAAP", "IFRS")';
 
 -- Users: System users with role-based access
 CREATE TABLE "public"."users" (
@@ -75,7 +76,7 @@ CREATE TABLE "public"."users" (
   "updated_at" TIMESTAMP DEFAULT NOW() NOT NULL,
 
   CONSTRAINT "users_company_id_fk" FOREIGN KEY ("company_id")
-    REFERENCES "public"."companies"("id") ON DELETE CASCADE
+    REFERENCES "public"."company_profile"("id") ON DELETE CASCADE
 );
 COMMENT ON TABLE "public"."users" IS 'System users with company affiliation and role-based permissions';
 COMMENT ON COLUMN "public"."users"."role" IS 'User role: admin (full access) or product (business user)';
@@ -98,7 +99,7 @@ CREATE TABLE "public"."accounts" (
   "updated_at" TIMESTAMP DEFAULT NOW() NOT NULL,
 
   CONSTRAINT "accounts_company_id_fk" FOREIGN KEY ("company_id")
-    REFERENCES "public"."companies"("id") ON DELETE CASCADE,
+    REFERENCES "public"."company_profile"("id") ON DELETE CASCADE,
   CONSTRAINT "accounts_parent_id_fk" FOREIGN KEY ("parent_id")
     REFERENCES "public"."accounts"("id") ON DELETE SET NULL,
   CONSTRAINT "unique_company_account_code" UNIQUE("company_id", "code")
@@ -128,7 +129,7 @@ CREATE TABLE "public"."scenarios" (
   "updated_at" TIMESTAMP DEFAULT NOW() NOT NULL,
 
   CONSTRAINT "scenarios_company_id_fk" FOREIGN KEY ("company_id")
-    REFERENCES "public"."companies"("id") ON DELETE CASCADE,
+    REFERENCES "public"."company_profile"("id") ON DELETE CASCADE,
   CONSTRAINT "scenarios_created_by_fk" FOREIGN KEY ("created_by")
     REFERENCES "public"."users"("id") ON DELETE RESTRICT
 );
@@ -210,7 +211,7 @@ CREATE TABLE "public"."conversation_messages" (
   "role" "message_role" NOT NULL,
   "content" TEXT NOT NULL,
   "timestamp" TIMESTAMP DEFAULT NOW() NOT NULL,
-  "confirmed_at" TIMESTAMP WITH TIME ZONE,
+  "confirmed_at" TIMESTAMP,
   "structured_data" JSONB,
   "request_log" JSONB,
   "response_stats" JSONB,
@@ -437,20 +438,6 @@ ALTER TABLE "public"."prompt_templates"
   FOREIGN KEY ("active_version_id")
   REFERENCES "public"."prompt_versions"("id") ON DELETE SET NULL;
 
--- Company Profile: Extended company information
-CREATE TABLE "public"."company_profile" (
-  "id" SERIAL PRIMARY KEY,
-  "name" VARCHAR(100) NOT NULL,
-  "business_model" TEXT,
-  "industry" VARCHAR(50),
-  "accounting_preference" TEXT,
-  "notes" TEXT,
-  "updated_at" TIMESTAMP DEFAULT NOW() NOT NULL
-);
-COMMENT ON TABLE "public"."company_profile" IS 'Extended company profile for AI context (single row configuration)';
-COMMENT ON COLUMN "public"."company_profile"."business_model" IS 'Description of business model for AI context';
-COMMENT ON COLUMN "public"."company_profile"."accounting_preference" IS 'Accounting standards preference (e.g., "China GAAP", "IFRS")';
-
 -- User Preferences: Per-user AI preferences
 CREATE TABLE "public"."user_preferences" (
   "id" SERIAL PRIMARY KEY,
@@ -467,13 +454,5 @@ CREATE TABLE "public"."user_preferences" (
 COMMENT ON TABLE "public"."user_preferences" IS 'User-specific preferences for AI provider and model selection';
 
 CREATE INDEX "idx_user_preferences_user_id" ON "public"."user_preferences"("user_id");
-
--- ============================================================================
--- INITIAL DATA
--- ============================================================================
-
--- Insert default company profile
-INSERT INTO "public"."company_profile" ("name", "business_model", "industry", "accounting_preference")
-VALUES ('默认公司', '请在管理页面配置公司信息', '未指定', '中国企业会计准则');
 
 COMMENT ON DATABASE CURRENT_DATABASE IS 'AccountFlow - AI-assisted accounting analysis platform';
