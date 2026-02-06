@@ -45,24 +45,68 @@ export async function createAnalysisArtifacts(params: {
 }) {
   const { scenarioId, sourceMessageId } = params
 
+  // For subjects, use upsert to avoid duplicates
   const createdSubjects = params.subjects?.length
-    ? await db.insert(analysisSubjects).values(
-        params.subjects.map((subject) => ({
-          scenarioId,
-          sourceMessageId: sourceMessageId || null,
-          ...subject,
-        }))
-      ).returning()
+    ? await Promise.all(
+        params.subjects.map(async (subject) => {
+          try {
+            const [result] = await db.insert(analysisSubjects).values({
+              scenarioId,
+              sourceMessageId: sourceMessageId || null,
+              ...subject,
+            }).returning()
+            return result
+          } catch (error: any) {
+            // If duplicate constraint error, fetch existing record
+            if (error.code === '23505' || (error.cause && error.cause.code === '23505')) {
+              console.log(`Duplicate subject detected: ${subject.code}, fetching existing record`)
+              const existing = await db.select().from(analysisSubjects)
+                .where(and(
+                  eq(analysisSubjects.scenarioId, scenarioId),
+                  eq(analysisSubjects.code, subject.code)
+                ))
+                .limit(1)
+              return existing[0]
+            }
+            console.error('Unexpected error inserting subject:', error)
+            throw error
+          }
+        })
+      )
     : []
 
   const createdEntries = params.entries?.length
-    ? await db.insert(analysisEntries).values(
-        params.entries.map((entry) => ({
-          scenarioId,
-          sourceMessageId: sourceMessageId || null,
-          ...entry,
-        }))
-      ).returning()
+    ? await Promise.all(
+        params.entries.map(async (entry, index) => {
+          try {
+            const [result] = await db.insert(analysisEntries).values({
+              scenarioId,
+              sourceMessageId: sourceMessageId || null,
+              entryId: `entry_${Date.now()}_${index}`, // Generate unique entryId
+              lines: entry.lines,
+              description: entry.description || null,
+              amount: entry.amount ? entry.amount.toString() : null,
+              currency: entry.currency || 'CNY',
+              metadata: entry.metadata || null,
+            }).returning()
+            return result
+          } catch (error: any) {
+            // If duplicate constraint error, fetch existing record
+            if (error.code === '23505' || (error.cause && error.cause.code === '23505')) {
+              console.log(`Duplicate entry detected, fetching existing record`)
+              const existing = await db.select().from(analysisEntries)
+                .where(and(
+                  eq(analysisEntries.scenarioId, scenarioId),
+                  eq(analysisEntries.entryId, `entry_${Date.now()}_${index}`)
+                ))
+                .limit(1)
+              return existing[0]
+            }
+            console.error('Unexpected error inserting entry:', error)
+            throw error
+          }
+        })
+      )
     : []
 
   const createdDiagrams = params.diagrams?.length

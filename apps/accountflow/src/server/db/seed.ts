@@ -1,5 +1,5 @@
 import { db } from './index'
-import { companies, users, aiConfigs, accounts } from './schema'
+import { companies, users, aiProviders, accounts } from './schema'
 
 async function seed() {
   console.log('Seeding database...')
@@ -20,14 +20,15 @@ async function seed() {
     role: 'admin'
   }).onConflictDoNothing()
 
-  // Create default AI config
-  await db.insert(aiConfigs).values({
-    companyId: company?.id || 1,
+  // Create default AI provider
+  await db.insert(aiProviders).values({
+    name: 'OpenAI',
+    type: 'openai',
     apiEndpoint: 'https://api.openai.com/v1',
     apiKey: '',
-    model: 'gpt-4',
-    systemPrompt: 'You are an accounting assistant helping analyze business scenarios.',
-    isActive: true
+    defaultModel: 'gpt-4',
+    isDefault: true,
+    status: 'active'
   }).onConflictDoNothing()
 
   // Create default accounts

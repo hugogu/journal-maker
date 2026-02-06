@@ -1,5 +1,5 @@
 import { db } from '../../../db'
-import { scenarios, journalRules, sampleTransactions, conversationMessages, flowchartData, analysisSubjects, analysisEntries, analysisDiagrams } from '../../../db/schema'
+import { scenarios, journalRules, sampleTransactions, conversationMessages, analysisSubjects, analysisEntries, analysisDiagrams } from '../../../db/schema'
 import { updateScenarioSchema, confirmScenarioSchema } from '../../../utils/schemas'
 import { AppError, handleError, successResponse } from '../../../utils/error'
 import { eq } from 'drizzle-orm'
@@ -35,17 +35,13 @@ export default defineEventHandler(async (event) => {
     }
     
     if (method === 'DELETE') {
-      // Delete related data first
-      await db.delete(conversationMessages).where(eq(conversationMessages.scenarioId, scenarioId))
-      await db.delete(analysisSubjects).where(eq(analysisSubjects.scenarioId, scenarioId))
-      await db.delete(analysisEntries).where(eq(analysisEntries.scenarioId, scenarioId))
-      await db.delete(analysisDiagrams).where(eq(analysisDiagrams.scenarioId, scenarioId))
-      await db.delete(flowchartData).where(eq(flowchartData.scenarioId, scenarioId))
-      await db.delete(sampleTransactions).where(eq(sampleTransactions.scenarioId, scenarioId))
-      await db.delete(journalRules).where(eq(journalRules.scenarioId, scenarioId))
-      
+      // CASCADE DELETE configured in schema will automatically delete:
+      // - conversationMessages
+      // - analysisSubjects, analysisEntries, analysisDiagrams
+      // - sampleTransactions
+      // - journalRules
       await db.delete(scenarios).where(eq(scenarios.id, scenarioId))
-      
+
       return successResponse({ success: true })
     }
     

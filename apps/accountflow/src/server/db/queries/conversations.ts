@@ -1,6 +1,6 @@
 import { db } from '../index'
 import { conversationMessages } from '../schema'
-import { eq, asc } from 'drizzle-orm'
+import { eq, asc, and, isNotNull } from 'drizzle-orm'
 import type { ConversationMessage } from '../types'
 
 // Get all messages for a scenario
@@ -47,6 +47,16 @@ export async function deleteConversationMessages(scenarioId: number) {
 
 // Confirm a message
 export async function confirmMessage(messageId: number, scenarioId: number) {
+  // First, unconfirm all other messages in this scenario
+  await db.update(conversationMessages)
+    .set({ confirmedAt: null })
+    .where(and(
+      eq(conversationMessages.scenarioId, scenarioId),
+      eq(conversationMessages.role, 'assistant'), // Only unconfirm assistant messages
+      isNotNull(conversationMessages.confirmedAt) // Only those that are currently confirmed
+    ))
+  
+  // Then confirm the new message
   const [message] = await db.update(conversationMessages)
     .set({ confirmedAt: new Date() })
     .where(
@@ -54,4 +64,16 @@ export async function confirmMessage(messageId: number, scenarioId: number) {
     )
     .returning()
   return message
+}
+
+// Get the currently confirmed message for a scenario
+export async function getConfirmedMessage(scenarioId: number) {
+  return db.query.conversationMessages.findFirst({
+    where: and(
+      eq(conversationMessages.scenarioId, scenarioId),
+      eq(conversationMessages.role, 'assistant'),
+      isNotNull(conversationMessages.confirmedAt)
+    ),
+    orderBy: asc(conversationMessages.confirmedAt) // Get the most recently confirmed
+  })
 }

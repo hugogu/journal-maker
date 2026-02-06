@@ -1,5 +1,5 @@
 import { defineEventHandler, createError, getRouterParam, readBody } from 'h3'
-import { confirmMessage } from '~/server/db/queries/conversations'
+import { confirmMessage, getConfirmedMessage } from '../../../db/queries/conversations'
 
 export default defineEventHandler(async (event) => {
   try {
@@ -18,9 +18,15 @@ export default defineEventHandler(async (event) => {
 
     const result = await confirmMessage(messageId, scenarioId)
     
+    // Get the currently confirmed message for the scenario
+    const currentConfirmed = await getConfirmedMessage(scenarioId)
+    
     return {
       success: true,
-      data: result
+      data: {
+        confirmedMessage: result,
+        currentConfirmed: currentConfirmed
+      }
     }
   } catch (error) {
     console.error('Failed to confirm message:', error)

@@ -214,18 +214,10 @@ const { messages: conversationMessages, loading: conversationLoading, loadMessag
 
 // Create a local writable copy for display
 const messages = ref<any[]>([])
-const confirmedMessageIds = ref<Set<number>>(new Set())
 
 // Sync messages when conversation messages change
 watch(conversationMessages, (newMessages) => {
   messages.value = [...newMessages]
-  // Update confirmed message IDs from database
-  confirmedMessageIds.value.clear()
-  newMessages.forEach(msg => {
-    if (msg.confirmedAt) {
-      confirmedMessageIds.value.add(msg.id)
-    }
-  })
 }, { immediate: true })
 
 // Initialize markdown renderer with XSS protection
@@ -562,25 +554,31 @@ function scrollToBottom(force = false) {
 
 async function handleConfirm(data: { parsed: ParsedAnalysis; messageId?: number }) {
   if (data.messageId) {
-    confirmedMessageIds.value.add(data.messageId)
-    
     // Save confirmation to database
     try {
-      await $fetch(`/api/conversation-messages/${data.messageId}/confirm`, {
+      const response = await $fetch(`/api/conversation-messages/${data.messageId}/confirm`, {
         method: 'POST',
         body: { scenarioId: scenarioIdNum.value }
       })
+      
+      console.log('Confirmation saved:', response)
+      
+      // Reload messages to reflect the database state
+      await loadMessages()
+      
     } catch (error) {
       console.error('Failed to save confirmation:', error)
-      // Remove from local set if API call failed
-      confirmedMessageIds.value.delete(data.messageId)
+      // Don't update local state if API call failed
     }
   }
   emit('confirm', data)
 }
 
 function isConfirmed(messageId?: number): boolean {
-  return messageId ? confirmedMessageIds.value.has(messageId) : false
+  if (!messageId) return false
+  // Find the message in the current messages array and check its confirmedAt status
+  const message = messages.value.find(msg => msg.id === messageId)
+  return message ? !!message.confirmedAt : false
 }
 
 // Expose for parent component access

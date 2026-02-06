@@ -1,8 +1,11 @@
+import { ref, readonly } from 'vue'
+
 export interface ConversationMessage {
   id?: number
   role: 'user' | 'assistant' | 'system'
   content: string
   timestamp?: Date | string
+  confirmedAt?: Date | string | null
   structuredData?: Record<string, unknown> | null
   requestLog?: Record<string, unknown> | null
   responseStats?: Record<string, unknown> | null
