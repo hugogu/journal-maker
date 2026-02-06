@@ -39,12 +39,27 @@
         </div>
         <div class="flex items-center gap-2 ml-2">
           <button
-            @click="copyUrl(share.shareToken)"
+            @click="copyUrl(share.shareToken, share.id)"
             class="p-2 text-gray-500 hover:text-gray-700 hover:bg-gray-200 rounded"
             title="复制链接"
           >
-            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <svg 
+              v-if="copiedShareId !== share.id"
+              class="w-4 h-4" 
+              fill="none" 
+              stroke="currentColor" 
+              viewBox="0 0 24 24"
+            >
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"></path>
+            </svg>
+            <svg 
+              v-else
+              class="w-4 h-4 text-green-600" 
+              fill="none" 
+              stroke="currentColor" 
+              viewBox="0 0 24 24"
+            >
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
             </svg>
           </button>
           <button
@@ -73,6 +88,8 @@ const props = defineProps<{
 
 const { shares, loading, error, fetchShares, createShare, revokeShare, getShareUrl } = useConversationShare(props.scenarioId)
 
+const copiedShareId = ref<number | null>(null)
+
 const activeShares = computed(() => {
   return [...shares.value].sort((a, b) => {
     // Active shares first, then by creation date
@@ -93,10 +110,13 @@ async function revoke(id: number) {
   await revokeShare(id)
 }
 
-function copyUrl(token: string) {
+function copyUrl(token: string, shareId: number) {
   const url = getShareUrl(token)
   navigator.clipboard.writeText(url).then(() => {
-    alert('链接已复制到剪贴板')
+    copiedShareId.value = shareId
+    setTimeout(() => {
+      copiedShareId.value = null
+    }, 2000)
   })
 }
 

@@ -128,11 +128,9 @@ async function saveScenario() {
         isTemplate: form.value.isTemplate
       }
     })
-    alert('场景已更新')
-    router.push(`/scenarios/${scenarioId}`)
+    router.back()
   } catch (e) {
     console.error('Failed to update scenario:', e)
-    alert('更新失败')
   } finally {
     saving.value = false
   }
