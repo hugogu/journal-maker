@@ -36,6 +36,13 @@
       "when": 1770370351694,
       "tag": "0004_smart_bastion",
       "breakpoints": true
+    },
+    {
+      "idx": 5,
+      "version": "7",
+      "when": 1770371772133,
+      "tag": "0005_flowery_eternals",
+      "breakpoints": true
     }
   ],
   "folders": [

@@ -188,10 +188,11 @@ export const analysisEntries = pgTable('analysis_entries', {
   scenarioId: integer('scenario_id').notNull().references(() => scenarios.id, { onDelete: 'cascade' }),
   sourceMessageId: integer('source_message_id').references(() => conversationMessages.id, { onDelete: 'set null' }),
   entryId: varchar('entry_id', { length: 50 }).notNull(),
+  eventName: varchar('event_name', { length: 100 }), // Event name for grouping entries
   description: text('description'),
   lines: jsonb('lines').notNull(),
-  amount: numeric('amount', { precision: 18, scale: 2 }),
-  currency: varchar('currency', { length: 10 }).default('CNY'),
+  amount: numeric('amount', { precision: 18, scale: 2 }), // Optional: total transaction amount
+  currency: varchar('currency', { length: 10 }).default('CNY'), // Optional: transaction currency
   isConfirmed: boolean('is_confirmed').default(false).notNull(),
   metadata: jsonb('metadata'),
   createdAt: timestamp('created_at').defaultNow().notNull(),
@@ -201,6 +202,7 @@ export const analysisEntries = pgTable('analysis_entries', {
   index('idx_analysis_entries_scenario_id').on(table.scenarioId),
   index('idx_analysis_entries_source_message_id').on(table.sourceMessageId),
   index('idx_analysis_entries_entry_id').on(table.entryId),
+  index('idx_analysis_entries_event_name').on(table.eventName),
   index('idx_analysis_entries_is_confirmed').on(table.isConfirmed),
 ])
 
