@@ -10,9 +10,11 @@ export interface TemplateWithVersionCount extends PromptTemplate {
 }
 
 export interface TemplateWithVersions extends PromptTemplate {
-  activeVersion: PromptVersion & {
-    createdBy: { id: number; name: string } | null
-  } | null
+  activeVersion:
+    | (PromptVersion & {
+        createdBy: { id: number; name: string } | null
+      })
+    | null
   versions: Array<{
     id: number
     versionNumber: number
@@ -72,7 +74,7 @@ export const usePrompts = () => {
     try {
       const { data: result } = await useFetch('/api/prompts', {
         method: 'POST',
-        body: data
+        body: data,
       })
       await fetchTemplates()
       return result.value
@@ -90,7 +92,7 @@ export const usePrompts = () => {
     try {
       const { data } = await useFetch(`/api/prompts/${templateId}/versions`, {
         method: 'POST',
-        body: { content }
+        body: { content },
       })
       await fetchTemplate(templateId)
       return data.value
@@ -108,7 +110,7 @@ export const usePrompts = () => {
     try {
       const { data } = await useFetch(`/api/prompts/${templateId}/activate`, {
         method: 'PUT',
-        body: { versionId }
+        body: { versionId },
       })
       await fetchTemplate(templateId)
       return data.value
@@ -126,7 +128,7 @@ export const usePrompts = () => {
     try {
       const { data } = await useFetch('/api/prompts/generate', {
         method: 'POST',
-        body: { requirementDescription, scenarioType }
+        body: { requirementDescription, scenarioType },
       })
       return data.value as { generatedContent: string; suggestedVariables: string[] }
     } catch (e) {
@@ -147,6 +149,6 @@ export const usePrompts = () => {
     createTemplate,
     createVersion,
     activateVersion,
-    generatePrompt
+    generatePrompt,
   }
 }

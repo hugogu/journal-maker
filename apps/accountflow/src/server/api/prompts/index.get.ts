@@ -9,7 +9,7 @@ export default defineEventHandler(async () => {
     console.error('Error fetching prompt templates:', error)
     throw createError({
       statusCode: 500,
-      message: 'Failed to fetch prompt templates'
+      message: 'Failed to fetch prompt templates',
     })
   }
 })

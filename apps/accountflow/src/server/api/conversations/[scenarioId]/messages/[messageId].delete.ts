@@ -16,12 +16,10 @@ export default defineEventHandler(async (event) => {
     }
 
     // Delete the message, ensuring it belongs to the specified scenario
-    const result = await db.delete(conversationMessages)
+    const result = await db
+      .delete(conversationMessages)
       .where(
-        and(
-          eq(conversationMessages.id, messageId),
-          eq(conversationMessages.scenarioId, scenarioId)
-        )
+        and(eq(conversationMessages.id, messageId), eq(conversationMessages.scenarioId, scenarioId))
       )
       .returning()
 
@@ -31,13 +29,13 @@ export default defineEventHandler(async (event) => {
 
     return {
       success: true,
-      message: 'Message deleted successfully'
+      message: 'Message deleted successfully',
     }
   } catch (error: any) {
     console.error('Error deleting message:', error)
     throw createError({
       statusCode: 500,
-      message: error.message || 'Failed to delete message'
+      message: error.message || 'Failed to delete message',
     })
   }
 })

@@ -13,7 +13,7 @@
           'border rounded-lg p-4 cursor-pointer transition-colors',
           selectedVersion?.id === version.id
             ? 'border-blue-500 bg-blue-50'
-            : 'border-gray-200 hover:border-gray-300'
+            : 'border-gray-200 hover:border-gray-300',
         ]"
         @click="selectVersion(version)"
       >
@@ -67,74 +67,72 @@
     <div v-if="selectedVersion" class="mt-6 border rounded-lg p-4 bg-gray-50">
       <div class="flex items-center justify-between mb-3">
         <h4 class="font-medium">版本 v{{ selectedVersion.versionNumber }} 内容</h4>
-        <button
-          @click="selectedVersion = null"
-          class="text-sm text-gray-500 hover:text-gray-700"
-        >
+        <button @click="selectedVersion = null" class="text-sm text-gray-500 hover:text-gray-700">
           关闭
         </button>
       </div>
-      <pre class="text-sm bg-white p-3 rounded border overflow-auto max-h-96 whitespace-pre-wrap">{{ selectedVersion.content }}</pre>
+      <pre class="text-sm bg-white p-3 rounded border overflow-auto max-h-96 whitespace-pre-wrap">{{
+        selectedVersion.content
+      }}</pre>
     </div>
   </div>
 </template>
 
 <script setup lang="ts">
-import { ref, computed } from 'vue'
+  import { ref, computed } from 'vue'
 
-export interface PromptVersion {
-  id: string
-  versionNumber: number
-  content: string
-  changeDescription?: string
-  createdAt: string
-}
+  export interface PromptVersion {
+    id: string
+    versionNumber: number
+    content: string
+    changeDescription?: string
+    createdAt: string
+  }
 
-export interface PromptTemplate {
-  id: string
-  name: string
-  activeVersionId?: string
-  versions: PromptVersion[]
-}
+  export interface PromptTemplate {
+    id: string
+    name: string
+    activeVersionId?: string
+    versions: PromptVersion[]
+  }
 
-const props = defineProps<{
-  template: PromptTemplate
-  activeVersionId?: string
-}>()
+  const props = defineProps<{
+    template: PromptTemplate
+    activeVersionId?: string
+  }>()
 
-const emit = defineEmits<{
-  activate: [versionId: string]
-  compare: [version: PromptVersion]
-}>()
+  const emit = defineEmits<{
+    activate: [versionId: string]
+    compare: [version: PromptVersion]
+  }>()
 
-const selectedVersion = ref<PromptVersion | null>(null)
+  const selectedVersion = ref<PromptVersion | null>(null)
 
-const sortedVersions = computed(() => {
-  return [...props.template.versions].sort((a, b) => b.versionNumber - a.versionNumber)
-})
-
-function selectVersion(version: PromptVersion) {
-  selectedVersion.value = version
-}
-
-function isActiveVersion(version: PromptVersion): boolean {
-  return props.activeVersionId === version.id ||
-         (props.template.activeVersionId === version.id)
-}
-
-function canCompare(version: PromptVersion): boolean {
-  const activeVersion = props.template.versions.find(v => isActiveVersion(v))
-  return activeVersion !== undefined && activeVersion.id !== version.id
-}
-
-function formatDate(dateStr: string): string {
-  const date = new Date(dateStr)
-  return date.toLocaleDateString('zh-CN', {
-    year: 'numeric',
-    month: '2-digit',
-    day: '2-digit',
-    hour: '2-digit',
-    minute: '2-digit'
+  const sortedVersions = computed(() => {
+    return [...props.template.versions].sort((a, b) => b.versionNumber - a.versionNumber)
   })
-}
+
+  function selectVersion(version: PromptVersion) {
+    selectedVersion.value = version
+  }
+
+  function isActiveVersion(version: PromptVersion): boolean {
+    return props.activeVersionId === version.id || props.template.activeVersionId === version.id
+  }
+
+  function canCompare(version: PromptVersion): boolean {
+    const activeVersion = props.template.versions.find((v) => isActiveVersion(v))
+    return activeVersion !== undefined && activeVersion.id !== version.id
+  }
+
+  function formatDate(dateStr: string): string {
+    const date = new Date(dateStr)
+    return date.toLocaleDateString('zh-CN', {
+      year: 'numeric',
+      month: '2-digit',
+      day: '2-digit',
+      hour: '2-digit',
+      minute: '2-digit',
+    })
+  }
 </script>

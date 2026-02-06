@@ -43,12 +43,14 @@ export function extractSubjects(content: string): AccountingSubject[] {
   // Try to find structured.accounts from nested JSON format
   const structuredData = extractStructuredData(content)
   if (structuredData?.accounts && Array.isArray(structuredData.accounts)) {
-    const subjects = structuredData.accounts.map((a: any) => ({
-      code: a.code,
-      name: a.name,
-      direction: a.type === 'asset' ? 'debit' : a.type === 'liability' ? 'credit' : 'debit',
-      description: a.reason,
-    })).filter(isValidSubject)
+    const subjects = structuredData.accounts
+      .map((a: any) => ({
+        code: a.code,
+        name: a.name,
+        direction: a.type === 'asset' ? 'debit' : a.type === 'liability' ? 'credit' : 'debit',
+        description: a.reason,
+      }))
+      .filter(isValidSubject)
     if (subjects.length > 0) return subjects
   }
 
@@ -75,13 +77,15 @@ export function extractRules(content: string): AccountingRule[] {
   // Try to find structured.rules from nested JSON format
   const structuredData = extractStructuredData(content)
   if (structuredData?.rules && Array.isArray(structuredData.rules)) {
-    const rules = structuredData.rules.map((r: any, index: number) => ({
-      id: r.id || `RULE-${String(index + 1).padStart(3, '0')}`,
-      description: r.description || `${r.event}: ${r.description || ''}`,
-      condition: r.condition,
-      debitAccount: r.debit,
-      creditAccount: r.credit,
-    })).filter(isValidRule)
+    const rules = structuredData.rules
+      .map((r: any, index: number) => ({
+        id: r.id || `RULE-${String(index + 1).padStart(3, '0')}`,
+        description: r.description || `${r.event}: ${r.description || ''}`,
+        condition: r.condition,
+        debitAccount: r.debit,
+        creditAccount: r.credit,
+      }))
+      .filter(isValidRule)
     if (rules.length > 0) return rules
   }
 
@@ -169,9 +173,11 @@ function extractJSONFromCodeBlock<T>(content: string, hint: string): T | null {
     // Check if this block seems related to what we're looking for
     const contextBefore = content.substring(Math.max(0, match.index - 100), match.index)
 
-    if (contextBefore.toLowerCase().includes(hint) ||
-        contextBefore.includes('科目') ||
-        contextBefore.includes('规则')) {
+    if (
+      contextBefore.toLowerCase().includes(hint) ||
+      contextBefore.includes('科目') ||
+      contextBefore.includes('规则')
+    ) {
       try {
         return JSON.parse(jsonContent)
       } catch {

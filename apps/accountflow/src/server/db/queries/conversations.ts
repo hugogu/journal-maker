@@ -7,7 +7,7 @@ import type { ConversationMessage } from '../types'
 export async function getConversationMessages(scenarioId: number) {
   return db.query.conversationMessages.findMany({
     where: eq(conversationMessages.scenarioId, scenarioId),
-    orderBy: asc(conversationMessages.timestamp)
+    orderBy: asc(conversationMessages.timestamp),
   })
 }
 
@@ -20,13 +20,14 @@ export async function createConversationMessage(data: {
   requestLog?: any
   responseStats?: any
 }) {
-  const [message] = await db.insert(conversationMessages)
+  const [message] = await db
+    .insert(conversationMessages)
     .values({
       ...data,
       timestamp: new Date(),
       structuredData: data.structuredData || null,
       requestLog: data.requestLog || null,
-      responseStats: data.responseStats || null
+      responseStats: data.responseStats || null,
     })
     .returning()
   return message
@@ -35,23 +36,21 @@ export async function createConversationMessage(data: {
 // Get a single message by ID
 export async function getConversationMessageById(id: number) {
   return db.query.conversationMessages.findFirst({
-    where: eq(conversationMessages.id, id)
+    where: eq(conversationMessages.id, id),
   })
 }
 
 // Delete all messages for a scenario
 export async function deleteConversationMessages(scenarioId: number) {
-  await db.delete(conversationMessages)
-    .where(eq(conversationMessages.scenarioId, scenarioId))
+  await db.delete(conversationMessages).where(eq(conversationMessages.scenarioId, scenarioId))
 }
 
 // Confirm a message
 export async function confirmMessage(messageId: number, scenarioId: number) {
-  const [message] = await db.update(conversationMessages)
+  const [message] = await db
+    .update(conversationMessages)
     .set({ confirmedAt: new Date() })
-    .where(
-      eq(conversationMessages.id, messageId)
-    )
+    .where(eq(conversationMessages.id, messageId))
     .returning()
   return message
 }

@@ -89,8 +89,8 @@ export const useConfirmedAnalysis = (scenarioId: number) => {
     error.value = null
 
     // Filter out any invalid entries
-    const validSubjects = input.subjects.filter(s => s && s.code && s.name && s.direction)
-    const validRules = input.rules.filter(r => r && r.id && r.description)
+    const validSubjects = input.subjects.filter((s) => s && s.code && s.name && s.direction)
+    const validRules = input.rules.filter((r) => r && r.id && r.description)
 
     try {
       const response = await $fetch<{ success: boolean; data: ConfirmedAnalysis }>(

@@ -5,30 +5,40 @@ async function seed() {
   console.log('Seeding database...')
 
   // Create default company
-  const [company] = await db.insert(companies).values({
-    name: 'Default Company',
-    industry: 'Technology'
-  }).onConflictDoNothing().returning()
+  const [company] = await db
+    .insert(companies)
+    .values({
+      name: 'Default Company',
+      industry: 'Technology',
+    })
+    .onConflictDoNothing()
+    .returning()
 
   console.log('Created company:', company?.id || 'already exists')
 
   // Create admin user
-  await db.insert(users).values({
-    companyId: company?.id || 1,
-    name: 'Admin',
-    email: 'admin@example.com',
-    role: 'admin'
-  }).onConflictDoNothing()
+  await db
+    .insert(users)
+    .values({
+      companyId: company?.id || 1,
+      name: 'Admin',
+      email: 'admin@example.com',
+      role: 'admin',
+    })
+    .onConflictDoNothing()
 
   // Create default AI config
-  await db.insert(aiConfigs).values({
-    companyId: company?.id || 1,
-    apiEndpoint: 'https://api.openai.com/v1',
-    apiKey: '',
-    model: 'gpt-4',
-    systemPrompt: 'You are an accounting assistant helping analyze business scenarios.',
-    isActive: true
-  }).onConflictDoNothing()
+  await db
+    .insert(aiConfigs)
+    .values({
+      companyId: company?.id || 1,
+      apiEndpoint: 'https://api.openai.com/v1',
+      apiKey: '',
+      model: 'gpt-4',
+      systemPrompt: 'You are an accounting assistant helping analyze business scenarios.',
+      isActive: true,
+    })
+    .onConflictDoNothing()
 
   // Create default accounts
   const defaultAccounts = [
@@ -41,13 +51,16 @@ async function seed() {
   ]
 
   for (const acc of defaultAccounts) {
-    await db.insert(accounts).values({
-      companyId: company?.id || 1,
-      code: acc.code,
-      name: acc.name,
-      type: acc.type as any,
-      direction: acc.direction as any
-    }).onConflictDoNothing()
+    await db
+      .insert(accounts)
+      .values({
+        companyId: company?.id || 1,
+        code: acc.code,
+        name: acc.name,
+        type: acc.type as any,
+        direction: acc.direction as any,
+      })
+      .onConflictDoNothing()
   }
 
   console.log('Seed completed!')

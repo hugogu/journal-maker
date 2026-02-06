@@ -20,12 +20,12 @@ export const useConversation = (scenarioId: number) => {
     try {
       // Try to load from API first
       const { data } = await useFetch(`/api/scenarios/${scenarioId}/conversations`, {
-        query: { includeStructured: 'true' }
+        query: { includeStructured: 'true' },
       })
       if (data.value?.messages?.length) {
         messages.value = data.value.messages.map((m: any) => ({
           ...m,
-          timestamp: m.timestamp || m.createdAt
+          timestamp: m.timestamp || m.createdAt,
         }))
       } else {
         // Try to migrate from localStorage
@@ -42,10 +42,10 @@ export const useConversation = (scenarioId: number) => {
   // Migrate old localStorage data to database
   const migrateFromLocalStorage = async () => {
     if (typeof window === 'undefined') return
-    
+
     const storageKey = `scenario-messages-${scenarioId}`
     const stored = localStorage.getItem(storageKey)
-    
+
     if (stored) {
       try {
         const oldMessages = JSON.parse(stored)
@@ -73,12 +73,12 @@ export const useConversation = (scenarioId: number) => {
     try {
       const { data } = await useFetch(`/api/scenarios/${scenarioId}/conversations`, {
         method: 'POST',
-        body: message
+        body: message,
       })
       if (data.value?.message) {
         messages.value.push({
           ...data.value.message,
-          timestamp: data.value.message.timestamp || data.value.message.createdAt
+          timestamp: data.value.message.timestamp || data.value.message.createdAt,
         })
       }
       return data.value?.message
@@ -91,15 +91,15 @@ export const useConversation = (scenarioId: number) => {
   // Delete a message by index and optionally by ID
   const deleteMessage = async (index: number, messageId?: number) => {
     if (!confirm('确定要删除这条消息吗？')) return
-    
+
     // Remove from local array first
     messages.value.splice(index, 1)
-    
+
     // If message has an ID, delete from database
     if (messageId) {
       try {
         await $fetch(`/api/conversations/${scenarioId}/messages/${messageId}`, {
-          method: 'DELETE'
+          method: 'DELETE',
         })
       } catch (e) {
         console.error('Failed to delete message:', e)
@@ -123,6 +123,6 @@ export const useConversation = (scenarioId: number) => {
     loadMessages,
     saveMessage,
     deleteMessage,
-    clearMessages
+    clearMessages,
   }
 }

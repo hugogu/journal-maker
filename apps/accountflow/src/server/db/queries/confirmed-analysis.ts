@@ -25,7 +25,9 @@ export interface UpsertConfirmedAnalysisInput {
 /**
  * Get confirmed analysis for a scenario
  */
-export async function getConfirmedAnalysis(scenarioId: number): Promise<ConfirmedAnalysisData | null> {
+export async function getConfirmedAnalysis(
+  scenarioId: number
+): Promise<ConfirmedAnalysisData | null> {
   const result = await db
     .select()
     .from(confirmedAnalysis)

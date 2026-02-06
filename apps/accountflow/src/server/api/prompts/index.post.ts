@@ -3,7 +3,12 @@ import { createPromptTemplate } from '../../db/queries/prompts'
 import { z } from 'zod'
 
 const createTemplateSchema = z.object({
-  scenarioType: z.enum(['scenario_analysis', 'sample_generation', 'prompt_generation', 'flowchart_generation']),
+  scenarioType: z.enum([
+    'scenario_analysis',
+    'sample_generation',
+    'prompt_generation',
+    'flowchart_generation',
+  ]),
   name: z.string().min(1).max(100),
   description: z.string().optional(),
   initialContent: z.string().min(1),
@@ -40,12 +45,12 @@ export default defineEventHandler(async (event) => {
     if (error instanceof z.ZodError) {
       throw createError({
         statusCode: 400,
-        message: 'Invalid input: ' + error.errors.map(e => e.message).join(', ')
+        message: 'Invalid input: ' + error.errors.map((e) => e.message).join(', '),
       })
     }
     throw createError({
       statusCode: 500,
-      message: 'Failed to create prompt template'
+      message: 'Failed to create prompt template',
     })
   }
 })

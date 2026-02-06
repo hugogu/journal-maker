@@ -8,7 +8,7 @@ export default defineEventHandler(async (event) => {
     if (!shareId) {
       return {
         success: false,
-        error: 'Share ID required'
+        error: 'Share ID required',
       }
     }
 
@@ -16,13 +16,13 @@ export default defineEventHandler(async (event) => {
 
     return {
       success: true,
-      data: share
+      data: share,
     }
   } catch (error: any) {
     console.error('Failed to revoke share:', error)
     return {
       success: false,
-      error: error.message || 'Failed to revoke share'
+      error: error.message || 'Failed to revoke share',
     }
   }
 })

@@ -7,7 +7,7 @@ export default defineEventHandler(async (event) => {
     if (!id) {
       throw createError({
         statusCode: 400,
-        message: 'Provider ID is required'
+        message: 'Provider ID is required',
       })
     }
 
@@ -16,16 +16,16 @@ export default defineEventHandler(async (event) => {
     if (!provider) {
       throw createError({
         statusCode: 404,
-        message: 'Provider not found'
+        message: 'Provider not found',
       })
     }
 
     return {
       success: true,
-      models: (provider.models || []).map(model => ({
+      models: (provider.models || []).map((model) => ({
         id: model.name, // Use model name as ID for selection
-        name: model.name
-      }))
+        name: model.name,
+      })),
     }
   } catch (error) {
     console.error('Error fetching AI provider models:', error)
@@ -34,7 +34,7 @@ export default defineEventHandler(async (event) => {
     }
     throw createError({
       statusCode: 500,
-      message: 'Failed to fetch AI provider models'
+      message: 'Failed to fetch AI provider models',
     })
   }
 })

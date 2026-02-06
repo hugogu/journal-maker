@@ -36,7 +36,7 @@ export function useConversationShare(scenarioId: number) {
     try {
       const response = await fetch(`/api/scenarios/${scenarioId}/shares`, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' }
+        headers: { 'Content-Type': 'application/json' },
       })
       const data = await response.json()
       if (data.success) {
@@ -57,11 +57,11 @@ export function useConversationShare(scenarioId: number) {
   async function revokeShare(shareId: number) {
     try {
       const response = await fetch(`/api/shares/${shareId}/revoke`, {
-        method: 'POST'
+        method: 'POST',
       })
       const data = await response.json()
       if (data.success) {
-        const index = shares.value.findIndex(s => s.id === shareId)
+        const index = shares.value.findIndex((s) => s.id === shareId)
         if (index !== -1) {
           shares.value[index].isRevoked = true
         }
@@ -84,6 +84,6 @@ export function useConversationShare(scenarioId: number) {
     fetchShares,
     createShare,
     revokeShare,
-    getShareUrl
+    getShareUrl,
   }
 }

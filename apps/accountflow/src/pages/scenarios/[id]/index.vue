@@ -25,20 +25,29 @@
         <h2 class="text-lg font-semibold">快捷操作</h2>
       </div>
       <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
-        <NuxtLink :to="`/scenarios/${scenario.id}/analyze`" class="p-4 bg-blue-50 rounded-lg text-center hover:bg-blue-100 transition-colors">
+        <NuxtLink
+          :to="`/scenarios/${scenario.id}/analyze`"
+          class="p-4 bg-blue-50 rounded-lg text-center hover:bg-blue-100 transition-colors"
+        >
           <p class="font-medium text-blue-900">AI 分析</p>
           <p class="text-sm text-blue-700 mt-1">与AI对话分析场景</p>
         </NuxtLink>
-        <NuxtLink :to="`/scenarios/${scenario.id}/transactions`" class="p-4 bg-green-50 rounded-lg text-center hover:bg-green-100 transition-colors">
+        <NuxtLink
+          :to="`/scenarios/${scenario.id}/transactions`"
+          class="p-4 bg-green-50 rounded-lg text-center hover:bg-green-100 transition-colors"
+        >
           <p class="font-medium text-green-900">示例交易</p>
           <p class="text-sm text-green-700 mt-1">查看示例记账数据</p>
         </NuxtLink>
-        <button class="p-4 bg-purple-50 rounded-lg text-center hover:bg-purple-100 transition-colors" @click="exportData('json')">
+        <button
+          class="p-4 bg-purple-50 rounded-lg text-center hover:bg-purple-100 transition-colors"
+          @click="exportData('json')"
+        >
           <p class="font-medium text-purple-900">导出数据</p>
           <p class="text-sm text-purple-700 mt-1">下载分析结果</p>
         </button>
-        <button 
-          v-if="scenario.status === 'draft'" 
+        <button
+          v-if="scenario.status === 'draft'"
           class="p-4 bg-orange-50 rounded-lg text-center hover:bg-orange-100 transition-colors"
           @click="confirmScenario"
         >
@@ -54,10 +63,26 @@
         <h2 class="text-lg font-semibold mb-4">已确认的分析结果</h2>
 
         <!-- Accounting Subjects -->
-        <div v-if="confirmedAnalysis.data.value.subjects && confirmedAnalysis.data.value.subjects.length > 0" class="mb-6">
+        <div
+          v-if="
+            confirmedAnalysis.data.value.subjects &&
+            confirmedAnalysis.data.value.subjects.length > 0
+          "
+          class="mb-6"
+        >
           <h3 class="text-sm font-semibold text-gray-700 mb-3 flex items-center">
-            <svg class="w-4 h-4 mr-2 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 7h6m0 10v-3m-3 3h.01M9 17h.01M9 14h.01M12 14h.01M15 11h.01M12 11h.01M9 11h.01M7 21h10a2 2 0 002-2V5a2 2 0 00-2-2H7a2 2 0 00-2 2v14a2 2 0 002 2z"></path>
+            <svg
+              class="w-4 h-4 mr-2 text-blue-500"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                stroke-width="2"
+                d="M9 7h6m0 10v-3m-3 3h.01M9 17h.01M9 14h.01M12 14h.01M15 11h.01M12 11h.01M9 11h.01M7 21h10a2 2 0 002-2V5a2 2 0 00-2-2H7a2 2 0 00-2 2v14a2 2 0 002 2z"
+              ></path>
             </svg>
             会计科目 ({{ confirmedAnalysis.data.value.subjects.length }})
           </h3>
@@ -65,10 +90,23 @@
         </div>
 
         <!-- Accounting Rules -->
-        <div v-if="confirmedAnalysis.data.value.rules && confirmedAnalysis.data.value.rules.length > 0" class="mb-6">
+        <div
+          v-if="confirmedAnalysis.data.value.rules && confirmedAnalysis.data.value.rules.length > 0"
+          class="mb-6"
+        >
           <h3 class="text-sm font-semibold text-gray-700 mb-3 flex items-center">
-            <svg class="w-4 h-4 mr-2 text-purple-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
+            <svg
+              class="w-4 h-4 mr-2 text-purple-500"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                stroke-width="2"
+                d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
+              ></path>
             </svg>
             会计规则 ({{ confirmedAnalysis.data.value.rules.length }})
           </h3>
@@ -84,8 +122,18 @@
         <!-- Flow Diagram -->
         <div v-if="confirmedAnalysis.data.value.diagramMermaid">
           <h3 class="text-sm font-semibold text-gray-700 mb-3 flex items-center">
-            <svg class="w-4 h-4 mr-2 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 21a4 4 0 01-4-4V5a2 2 0 012-2h4a2 2 0 012 2v12a4 4 0 01-4 4zm0 0h12a2 2 0 002-2v-4a2 2 0 00-2-2h-2.343M11 7.343l1.657-1.657a2 2 0 012.828 0l2.829 2.829a2 2 0 010 2.828l-8.486 8.485M7 17h.01"></path>
+            <svg
+              class="w-4 h-4 mr-2 text-green-500"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                stroke-width="2"
+                d="M7 21a4 4 0 01-4-4V5a2 2 0 012-2h4a2 2 0 012 2v12a4 4 0 01-4 4zm0 0h12a2 2 0 002-2v-4a2 2 0 00-2-2h-2.343M11 7.343l1.657-1.657a2 2 0 012.828 0l2.829 2.829a2 2 0 010 2.828l-8.486 8.485M7 17h.01"
+              ></path>
             </svg>
             资金/信息流图
           </h3>
@@ -93,12 +141,32 @@
         </div>
 
         <!-- Empty State -->
-        <div v-if="!confirmedAnalysis.data.value.subjects?.length && !confirmedAnalysis.data.value.rules?.length && !confirmedAnalysis.data.value.diagramMermaid" class="text-center py-8 text-gray-400">
+        <div
+          v-if="
+            !confirmedAnalysis.data.value.subjects?.length &&
+            !confirmedAnalysis.data.value.rules?.length &&
+            !confirmedAnalysis.data.value.diagramMermaid
+          "
+          class="text-center py-8 text-gray-400"
+        >
           <svg class="w-16 h-16 mx-auto mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4"></path>
+            <path
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              stroke-width="1"
+              d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4"
+            ></path>
           </svg>
           <p>暂无已确认的分析结果</p>
-          <p class="text-sm mt-2">前往 <NuxtLink :to="`/scenarios/${scenario.id}/analyze`" class="text-blue-600 hover:underline">AI 分析</NuxtLink> 页面与 AI 对话并确认分析结果</p>
+          <p class="text-sm mt-2">
+            前往
+            <NuxtLink
+              :to="`/scenarios/${scenario.id}/analyze`"
+              class="text-blue-600 hover:underline"
+              >AI 分析</NuxtLink
+            >
+            页面与 AI 对话并确认分析结果
+          </p>
         </div>
       </div>
     </div>
@@ -110,112 +178,111 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted, computed } from 'vue'
-import { useRoute, useRouter } from 'vue-router'
-import { useConfirmedAnalysis } from '../../../composables/useConfirmedAnalysis'
-import AccountingSubjectList from '../../../components/analysis/AccountingSubjectList.vue'
-import AccountingRuleCard from '../../../components/analysis/AccountingRuleCard.vue'
-import FlowDiagramViewer from '../../../components/analysis/FlowDiagramViewer.vue'
-import type { Account } from '../../../types'
+  import { ref, onMounted, computed } from 'vue'
+  import { useRoute, useRouter } from 'vue-router'
+  import { useConfirmedAnalysis } from '../../../composables/useConfirmedAnalysis'
+  import AccountingSubjectList from '../../../components/analysis/AccountingSubjectList.vue'
+  import AccountingRuleCard from '../../../components/analysis/AccountingRuleCard.vue'
+  import FlowDiagramViewer from '../../../components/analysis/FlowDiagramViewer.vue'
+  import type { Account } from '../../../types'
 
-interface Scenario {
-  id: number
-  name: string
-  description?: string
-  status: string
-  isTemplate?: boolean
-  createdAt: string
-}
+  interface Scenario {
+    id: number
+    name: string
+    description?: string
+    status: string
+    isTemplate?: boolean
+    createdAt: string
+  }
 
-const route = useRoute()
-const router = useRouter()
-const scenario = ref<Scenario | null>(null)
-const scenarioId = parseInt(route.params.id as string, 10)
+  const route = useRoute()
+  const router = useRouter()
+  const scenario = ref<Scenario | null>(null)
+  const scenarioId = parseInt(route.params.id as string, 10)
 
-// Load confirmed analysis
-const confirmedAnalysis = useConfirmedAnalysis(scenarioId)
-const existingAccounts = ref<Account[]>([])
+  // Load confirmed analysis
+  const confirmedAnalysis = useConfirmedAnalysis(scenarioId)
+  const existingAccounts = ref<Account[]>([])
 
-// Check if there's any confirmed analysis
-const hasConfirmedAnalysis = computed(() => {
-  return !confirmedAnalysis.loading.value && (
-    (confirmedAnalysis.data.value.subjects && confirmedAnalysis.data.value.subjects.length > 0) ||
-    (confirmedAnalysis.data.value.rules && confirmedAnalysis.data.value.rules.length > 0) ||
-    !!confirmedAnalysis.data.value.diagramMermaid
-  )
-})
-
-// Compute subjects with status
-const subjectsWithStatus = computed(() => {
-  if (!confirmedAnalysis.data.value.subjects) return []
-
-  return confirmedAnalysis.data.value.subjects.map(subject => {
-    const existing = existingAccounts.value.find(
-      account => account.code === subject.code
+  // Check if there's any confirmed analysis
+  const hasConfirmedAnalysis = computed(() => {
+    return (
+      !confirmedAnalysis.loading.value &&
+      ((confirmedAnalysis.data.value.subjects &&
+        confirmedAnalysis.data.value.subjects.length > 0) ||
+        (confirmedAnalysis.data.value.rules && confirmedAnalysis.data.value.rules.length > 0) ||
+        !!confirmedAnalysis.data.value.diagramMermaid)
     )
-    return {
-      ...subject,
-      isExisting: !!existing,
-      existingAccount: existing
-    }
   })
-})
 
-// Load existing accounts
-async function loadExistingAccounts() {
-  try {
-    const response = await $fetch<{ success: boolean; data: Account[] }>('/api/accounts')
-    if (response.success) {
-      existingAccounts.value = response.data
-    }
-  } catch (error) {
-    console.error('Failed to load existing accounts:', error)
-  }
-}
+  // Compute subjects with status
+  const subjectsWithStatus = computed(() => {
+    if (!confirmedAnalysis.data.value.subjects) return []
 
-onMounted(async () => {
-  const response = await $fetch<{ success: boolean; data: Scenario }>(`/api/scenarios/${route.params.id}`)
-  if (response.success) {
-    scenario.value = response.data
-  }
-
-  // Load confirmed analysis and existing accounts
-  await Promise.all([
-    confirmedAnalysis.load(),
-    loadExistingAccounts()
-  ])
-})
-
-function statusText(status: string) {
-  const map: Record<string, string> = {
-    draft: '草稿',
-    confirmed: '已确认',
-    archived: '已归档'
-  }
-  return map[status] || status
-}
-
-function formatDate(date: string | Date) {
-  return new Date(date).toLocaleDateString('zh-CN')
-}
-
-async function confirmScenario() {
-  if (!scenario.value) return
-  
-  try {
-    await $fetch(`/api/scenarios/${route.params.id}/confirm`, {
-      method: 'POST'
+    return confirmedAnalysis.data.value.subjects.map((subject) => {
+      const existing = existingAccounts.value.find((account) => account.code === subject.code)
+      return {
+        ...subject,
+        isExisting: !!existing,
+        existingAccount: existing,
+      }
     })
-    scenario.value.status = 'confirmed'
-    alert('场景已确认')
-  } catch (e) {
-    console.error('Failed to confirm scenario:', e)
-    alert('操作失败')
-  }
-}
+  })
 
-function exportData(format: string) {
-  const url = `/api/scenarios/${route.params.id}/export?format=${format}`
-  window.open(url, '_blank')
-}
+  // Load existing accounts
+  async function loadExistingAccounts() {
+    try {
+      const response = await $fetch<{ success: boolean; data: Account[] }>('/api/accounts')
+      if (response.success) {
+        existingAccounts.value = response.data
+      }
+    } catch (error) {
+      console.error('Failed to load existing accounts:', error)
+    }
+  }
+
+  onMounted(async () => {
+    const response = await $fetch<{ success: boolean; data: Scenario }>(
+      `/api/scenarios/${route.params.id}`
+    )
+    if (response.success) {
+      scenario.value = response.data
+    }
+
+    // Load confirmed analysis and existing accounts
+    await Promise.all([confirmedAnalysis.load(), loadExistingAccounts()])
+  })
+
+  function statusText(status: string) {
+    const map: Record<string, string> = {
+      draft: '草稿',
+      confirmed: '已确认',
+      archived: '已归档',
+    }
+    return map[status] || status
+  }
+
+  function formatDate(date: string | Date) {
+    return new Date(date).toLocaleDateString('zh-CN')
+  }
+
+  async function confirmScenario() {
+    if (!scenario.value) return
+
+    try {
+      await $fetch(`/api/scenarios/${route.params.id}/confirm`, {
+        method: 'POST',
+      })
+      scenario.value.status = 'confirmed'
+      alert('场景已确认')
+    } catch (e) {
+      console.error('Failed to confirm scenario:', e)
+      alert('操作失败')
+    }
+  }
+
+  function exportData(format: string) {
+    const url = `/api/scenarios/${route.params.id}/export?format=${format}`
+    window.open(url, '_blank')
+  }
 </script>

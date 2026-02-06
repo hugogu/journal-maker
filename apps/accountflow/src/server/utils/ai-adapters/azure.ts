@@ -15,15 +15,17 @@ export class AzureOpenAIAdapter extends OpenAIAdapter {
     super(providerId, providerName, apiEndpoint, apiKey)
   }
 
-  async fetchModels(): Promise<{
-    id: string
-    name: string
-    capabilities: {
-      contextLength?: number
-      supportsStreaming?: boolean
-      supportsFunctions?: boolean
-    }
-  }[]> {
+  async fetchModels(): Promise<
+    {
+      id: string
+      name: string
+      capabilities: {
+        contextLength?: number
+        supportsStreaming?: boolean
+        supportsFunctions?: boolean
+      }
+    }[]
+  > {
     // Azure doesn't have a simple models endpoint like OpenAI
     // Return common Azure OpenAI models
     return [
@@ -66,10 +68,7 @@ export class AzureOpenAIAdapter extends OpenAIAdapter {
     ]
   }
 
-  protected async makeRequest<T>(
-    endpoint: string,
-    options: RequestInit = {}
-  ): Promise<T> {
+  protected async makeRequest<T>(endpoint: string, options: RequestInit = {}): Promise<T> {
     const url = `${this.apiEndpoint}/openai/deployments/${this.deploymentId}${endpoint}?api-version=2024-02-01`
     const headers: Record<string, string> = {
       'Content-Type': 'application/json',

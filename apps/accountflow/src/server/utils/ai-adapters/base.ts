@@ -64,17 +64,17 @@ export interface AIProviderAdapter {
   readonly providerId: string
   readonly providerName: string
   readonly providerType: string
-  
+
   /**
    * Fetch available models from the provider
    */
   fetchModels(): Promise<AIModel[]>
-  
+
   /**
    * Create a chat completion (non-streaming)
    */
   chatCompletion(params: ChatCompletionParams): Promise<ChatCompletionResponse>
-  
+
   /**
    * Create a streaming chat completion
    */
@@ -103,14 +103,11 @@ export abstract class BaseAIAdapter implements AIProviderAdapter {
   /**
    * Make authenticated request to provider API
    */
-  protected async makeRequest<T>(
-    endpoint: string,
-    options: RequestInit = {}
-  ): Promise<T> {
+  protected async makeRequest<T>(endpoint: string, options: RequestInit = {}): Promise<T> {
     const url = `${this.apiEndpoint}${endpoint}`
     const headers: Record<string, string> = {
       'Content-Type': 'application/json',
-      'Authorization': `Bearer ${this.apiKey}`,
+      Authorization: `Bearer ${this.apiKey}`,
       ...((options.headers as Record<string, string>) || {}),
     }
 

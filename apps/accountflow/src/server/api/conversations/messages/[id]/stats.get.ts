@@ -8,7 +8,7 @@ export default defineEventHandler(async (event) => {
     if (!messageId) {
       return {
         success: false,
-        error: 'Message ID required'
+        error: 'Message ID required',
       }
     }
 
@@ -17,7 +17,7 @@ export default defineEventHandler(async (event) => {
     if (!message) {
       return {
         success: false,
-        error: 'Message not found'
+        error: 'Message not found',
       }
     }
 
@@ -32,14 +32,14 @@ export default defineEventHandler(async (event) => {
         inputTokens: responseStats?.inputTokens || 0,
         outputTokens: responseStats?.outputTokens || 0,
         totalTokens: responseStats?.totalTokens || 0,
-        durationMs: responseStats?.durationMs || 0
-      }
+        durationMs: responseStats?.durationMs || 0,
+      },
     }
   } catch (error: any) {
     console.error('Failed to get response stats:', error)
     return {
       success: false,
-      error: error.message || 'Failed to get response stats'
+      error: error.message || 'Failed to get response stats',
     }
   }
 })

@@ -22,7 +22,7 @@ export default defineEventHandler(async (event) => {
       console.error('Error fetching company profile:', error)
       throw createError({
         statusCode: 500,
-        message: 'Failed to fetch company profile'
+        message: 'Failed to fetch company profile',
       })
     }
   }
@@ -31,7 +31,7 @@ export default defineEventHandler(async (event) => {
     try {
       const body = await readBody(event)
       const data = profileSchema.parse(body)
-      
+
       const profile = await upsertCompanyProfile(data)
       return { profile }
     } catch (error) {
@@ -39,18 +39,18 @@ export default defineEventHandler(async (event) => {
       if (error instanceof z.ZodError) {
         throw createError({
           statusCode: 400,
-          message: 'Invalid input: ' + error.errors.map(e => e.message).join(', ')
+          message: 'Invalid input: ' + error.errors.map((e) => e.message).join(', '),
         })
       }
       throw createError({
         statusCode: 500,
-        message: 'Failed to save company profile'
+        message: 'Failed to save company profile',
       })
     }
   }
 
   throw createError({
     statusCode: 405,
-    message: 'Method not allowed'
+    message: 'Method not allowed',
   })
 })

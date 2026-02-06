@@ -52,12 +52,8 @@
           "name": "account_mappings_scenario_id_scenarios_id_fk",
           "tableFrom": "account_mappings",
           "tableTo": "scenarios",
-          "columnsFrom": [
-            "scenario_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["scenario_id"],
+          "columnsTo": ["id"],
           "onDelete": "no action",
           "onUpdate": "no action"
         },
@@ -65,12 +61,8 @@
           "name": "account_mappings_account_id_accounts_id_fk",
           "tableFrom": "account_mappings",
           "tableTo": "accounts",
-          "columnsFrom": [
-            "account_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["account_id"],
+          "columnsTo": ["id"],
           "onDelete": "no action",
           "onUpdate": "no action"
         }
@@ -80,10 +72,7 @@
         "idx_account_mappings_scenario_account": {
           "name": "idx_account_mappings_scenario_account",
           "nullsNotDistinct": false,
-          "columns": [
-            "scenario_id",
-            "account_id"
-          ]
+          "columns": ["scenario_id", "account_id"]
         }
       },
       "policies": {},
@@ -203,12 +192,8 @@
           "name": "accounts_company_id_companies_id_fk",
           "tableFrom": "accounts",
           "tableTo": "companies",
-          "columnsFrom": [
-            "company_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["company_id"],
+          "columnsTo": ["id"],
           "onDelete": "no action",
           "onUpdate": "no action"
         }
@@ -218,10 +203,7 @@
         "idx_accounts_company_code": {
           "name": "idx_accounts_company_code",
           "nullsNotDistinct": false,
-          "columns": [
-            "company_id",
-            "code"
-          ]
+          "columns": ["company_id", "code"]
         }
       },
       "policies": {},
@@ -296,12 +278,8 @@
           "name": "ai_configs_company_id_companies_id_fk",
           "tableFrom": "ai_configs",
           "tableTo": "companies",
-          "columnsFrom": [
-            "company_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["company_id"],
+          "columnsTo": ["id"],
           "onDelete": "no action",
           "onUpdate": "no action"
         }
@@ -311,9 +289,7 @@
         "ai_configs_company_id_unique": {
           "name": "ai_configs_company_id_unique",
           "nullsNotDistinct": false,
-          "columns": [
-            "company_id"
-          ]
+          "columns": ["company_id"]
         }
       },
       "policies": {},
@@ -456,12 +432,8 @@
           "name": "conversations_scenario_id_scenarios_id_fk",
           "tableFrom": "conversations",
           "tableTo": "scenarios",
-          "columnsFrom": [
-            "scenario_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["scenario_id"],
+          "columnsTo": ["id"],
           "onDelete": "no action",
           "onUpdate": "no action"
         },
@@ -469,12 +441,8 @@
           "name": "conversations_user_id_users_id_fk",
           "tableFrom": "conversations",
           "tableTo": "users",
-          "columnsFrom": [
-            "user_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["user_id"],
+          "columnsTo": ["id"],
           "onDelete": "no action",
           "onUpdate": "no action"
         }
@@ -553,12 +521,8 @@
           "name": "flowchart_data_scenario_id_scenarios_id_fk",
           "tableFrom": "flowchart_data",
           "tableTo": "scenarios",
-          "columnsFrom": [
-            "scenario_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["scenario_id"],
+          "columnsTo": ["id"],
           "onDelete": "no action",
           "onUpdate": "no action"
         }
@@ -568,9 +532,7 @@
         "flowchart_data_scenario_id_unique": {
           "name": "flowchart_data_scenario_id_unique",
           "nullsNotDistinct": false,
-          "columns": [
-            "scenario_id"
-          ]
+          "columns": ["scenario_id"]
         }
       },
       "policies": {},
@@ -666,12 +628,8 @@
           "name": "journal_rules_scenario_id_scenarios_id_fk",
           "tableFrom": "journal_rules",
           "tableTo": "scenarios",
-          "columnsFrom": [
-            "scenario_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["scenario_id"],
+          "columnsTo": ["id"],
           "onDelete": "no action",
           "onUpdate": "no action"
         },
@@ -679,12 +637,8 @@
           "name": "journal_rules_debit_account_id_accounts_id_fk",
           "tableFrom": "journal_rules",
           "tableTo": "accounts",
-          "columnsFrom": [
-            "debit_account_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["debit_account_id"],
+          "columnsTo": ["id"],
           "onDelete": "no action",
           "onUpdate": "no action"
         },
@@ -692,12 +646,8 @@
           "name": "journal_rules_credit_account_id_accounts_id_fk",
           "tableFrom": "journal_rules",
           "tableTo": "accounts",
-          "columnsFrom": [
-            "credit_account_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["credit_account_id"],
+          "columnsTo": ["id"],
           "onDelete": "no action",
           "onUpdate": "no action"
         }
@@ -779,12 +729,8 @@
           "name": "sample_transactions_scenario_id_scenarios_id_fk",
           "tableFrom": "sample_transactions",
           "tableTo": "scenarios",
-          "columnsFrom": [
-            "scenario_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["scenario_id"],
+          "columnsTo": ["id"],
           "onDelete": "no action",
           "onUpdate": "no action"
         }
@@ -917,12 +863,8 @@
           "name": "scenarios_company_id_companies_id_fk",
           "tableFrom": "scenarios",
           "tableTo": "companies",
-          "columnsFrom": [
-            "company_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["company_id"],
+          "columnsTo": ["id"],
           "onDelete": "no action",
           "onUpdate": "no action"
         },
@@ -930,12 +872,8 @@
           "name": "scenarios_created_by_users_id_fk",
           "tableFrom": "scenarios",
           "tableTo": "users",
-          "columnsFrom": [
-            "created_by"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["created_by"],
+          "columnsTo": ["id"],
           "onDelete": "no action",
           "onUpdate": "no action"
         }
@@ -1019,12 +957,8 @@
           "name": "users_company_id_companies_id_fk",
           "tableFrom": "users",
           "tableTo": "companies",
-          "columnsFrom": [
-            "company_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["company_id"],
+          "columnsTo": ["id"],
           "onDelete": "no action",
           "onUpdate": "no action"
         }
@@ -1034,9 +968,7 @@
         "users_email_unique": {
           "name": "users_email_unique",
           "nullsNotDistinct": false,
-          "columns": [
-            "email"
-          ]
+          "columns": ["email"]
         }
       },
       "policies": {},
@@ -1048,39 +980,22 @@
     "public.account_direction": {
       "name": "account_direction",
       "schema": "public",
-      "values": [
-        "debit",
-        "credit",
-        "both"
-      ]
+      "values": ["debit", "credit", "both"]
     },
     "public.account_type": {
       "name": "account_type",
       "schema": "public",
-      "values": [
-        "asset",
-        "liability",
-        "equity",
-        "revenue",
-        "expense"
-      ]
+      "values": ["asset", "liability", "equity", "revenue", "expense"]
     },
     "public.scenario_status": {
       "name": "scenario_status",
       "schema": "public",
-      "values": [
-        "draft",
-        "confirmed",
-        "archived"
-      ]
+      "values": ["draft", "confirmed", "archived"]
     },
     "public.user_role": {
       "name": "user_role",
       "schema": "public",
-      "values": [
-        "admin",
-        "product"
-      ]
+      "values": ["admin", "product"]
     }
   },
   "schemas": {},

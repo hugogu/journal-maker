@@ -5,7 +5,7 @@ AI-assisted accounting rule analysis tool for business scenarios.
 ## 功能特性
 
 - **场景分析**：创建业务场景，AI辅助分析会计规则
-- **流程可视化**：实时流程图展示信息流和资金流  
+- **流程可视化**：实时流程图展示信息流和资金流
 - **示例交易**：自动生成完整示例记账数据
 - **结构化导出**：支持JSON和Excel格式导出
 
@@ -70,6 +70,7 @@ MOCK_AI=true  # 使用模拟AI服务，无需真实API Key
 **作用**：用于加密存储在数据库中的AI Provider API密钥。
 
 **npm run 模式配置**：
+
 ```bash
 # 方式1: 设置环境变量
 export AI_KEY_ENCRYPTION_SECRET="your-32-character-secret-key-here"
@@ -81,6 +82,7 @@ npm run dev
 ```
 
 **Docker 模式配置**：
+
 ```bash
 # 方式1: 在 docker-compose.yml 中设置
 # 编辑 docker-compose.yml，在 app 服务的 environment 中添加：
@@ -95,6 +97,7 @@ docker-compose up -d
 ```
 
 **安全提示**：
+
 - 密钥必须是**32个字符**（支持字母、数字、符号）
 - 生产环境**必须**设置自定义密钥，不要使用默认值
 - 更改密钥后，已存储的API密钥将无法解密，需要重新配置

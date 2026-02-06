@@ -31,7 +31,7 @@ export default defineEventHandler(async (event) => {
     console.error('Error creating analysis artifacts:', error)
     throw createError({
       statusCode: error?.statusCode || 500,
-      message: error?.message || 'Failed to create analysis artifacts'
+      message: error?.message || 'Failed to create analysis artifacts',
     })
   }
 })

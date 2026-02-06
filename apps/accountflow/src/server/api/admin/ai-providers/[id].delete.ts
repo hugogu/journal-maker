@@ -5,7 +5,7 @@ export default defineEventHandler(async (event) => {
   try {
     const idParam = getRouterParam(event, 'id')
     const id = idParam ? parseInt(idParam, 10) : null
-    
+
     if (!id || isNaN(id)) {
       throw createError({ statusCode: 400, message: 'Invalid provider ID' })
     }

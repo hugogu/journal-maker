@@ -16,7 +16,8 @@ export default defineEventHandler(async (event) => {
     const body = await readBody(event)
     const data = structuredJournalRuleSchema.parse(body)
 
-    const [updatedRule] = await db.update(journalRules)
+    const [updatedRule] = await db
+      .update(journalRules)
       .set({
         debitSide: data.debitSide,
         creditSide: data.creditSide,
@@ -37,7 +38,7 @@ export default defineEventHandler(async (event) => {
     console.error('Error updating journal rule:', error)
     throw createError({
       statusCode: error?.statusCode || 500,
-      message: error?.message || 'Failed to update journal rule'
+      message: error?.message || 'Failed to update journal rule',
     })
   }
 })

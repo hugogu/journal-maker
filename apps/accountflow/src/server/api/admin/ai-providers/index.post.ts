@@ -35,12 +35,12 @@ export default defineEventHandler(async (event) => {
     if (error instanceof z.ZodError) {
       throw createError({
         statusCode: 400,
-        message: 'Invalid input: ' + error.errors.map(e => e.message).join(', ')
+        message: 'Invalid input: ' + error.errors.map((e) => e.message).join(', '),
       })
     }
     throw createError({
       statusCode: 500,
-      message: 'Failed to create AI provider'
+      message: 'Failed to create AI provider',
     })
   }
 })

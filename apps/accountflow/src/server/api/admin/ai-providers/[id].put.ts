@@ -16,7 +16,7 @@ export default defineEventHandler(async (event) => {
   try {
     const idParam = getRouterParam(event, 'id')
     const id = idParam ? parseInt(idParam, 10) : null
-    
+
     if (!id || isNaN(id)) {
       throw createError({ statusCode: 400, message: 'Invalid provider ID' })
     }
@@ -25,14 +25,14 @@ export default defineEventHandler(async (event) => {
     const data = updateSchema.parse(body)
 
     // Prepare update data - only encrypt apiKey if provided and not empty
-    const updateData: any = { 
+    const updateData: any = {
       name: data.name,
       apiEndpoint: data.apiEndpoint,
       defaultModel: data.defaultModel,
       isDefault: data.isDefault,
       status: data.status,
     }
-    
+
     // Only update apiKey if provided and not empty
     if (data.apiKey && data.apiKey.trim() !== '') {
       updateData.apiKey = encrypt(data.apiKey)
@@ -45,7 +45,7 @@ export default defineEventHandler(async (event) => {
     if (error instanceof z.ZodError) {
       throw createError({
         statusCode: 400,
-        message: 'Invalid input: ' + error.errors.map(e => e.message).join(', ')
+        message: 'Invalid input: ' + error.errors.map((e) => e.message).join(', '),
       })
     }
     throw createError({ statusCode: 500, message: 'Failed to update AI provider' })

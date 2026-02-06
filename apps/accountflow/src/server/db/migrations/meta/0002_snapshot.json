@@ -52,12 +52,8 @@
           "name": "account_mappings_scenario_id_scenarios_id_fk",
           "tableFrom": "account_mappings",
           "tableTo": "scenarios",
-          "columnsFrom": [
-            "scenario_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["scenario_id"],
+          "columnsTo": ["id"],
           "onDelete": "no action",
           "onUpdate": "no action"
         },
@@ -65,12 +61,8 @@
           "name": "account_mappings_account_id_accounts_id_fk",
           "tableFrom": "account_mappings",
           "tableTo": "accounts",
-          "columnsFrom": [
-            "account_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["account_id"],
+          "columnsTo": ["id"],
           "onDelete": "no action",
           "onUpdate": "no action"
         }
@@ -80,10 +72,7 @@
         "idx_account_mappings_scenario_account": {
           "name": "idx_account_mappings_scenario_account",
           "nullsNotDistinct": false,
-          "columns": [
-            "scenario_id",
-            "account_id"
-          ]
+          "columns": ["scenario_id", "account_id"]
         }
       },
       "policies": {},
@@ -203,12 +192,8 @@
           "name": "accounts_company_id_companies_id_fk",
           "tableFrom": "accounts",
           "tableTo": "companies",
-          "columnsFrom": [
-            "company_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["company_id"],
+          "columnsTo": ["id"],
           "onDelete": "no action",
           "onUpdate": "no action"
         }
@@ -218,10 +203,7 @@
         "idx_accounts_company_code": {
           "name": "idx_accounts_company_code",
           "nullsNotDistinct": false,
-          "columns": [
-            "company_id",
-            "code"
-          ]
+          "columns": ["company_id", "code"]
         }
       },
       "policies": {},
@@ -296,12 +278,8 @@
           "name": "ai_configs_company_id_companies_id_fk",
           "tableFrom": "ai_configs",
           "tableTo": "companies",
-          "columnsFrom": [
-            "company_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["company_id"],
+          "columnsTo": ["id"],
           "onDelete": "no action",
           "onUpdate": "no action"
         }
@@ -311,9 +289,7 @@
         "ai_configs_company_id_unique": {
           "name": "ai_configs_company_id_unique",
           "nullsNotDistinct": false,
-          "columns": [
-            "company_id"
-          ]
+          "columns": ["company_id"]
         }
       },
       "policies": {},
@@ -363,12 +339,8 @@
           "name": "ai_models_provider_id_ai_providers_id_fk",
           "tableFrom": "ai_models",
           "tableTo": "ai_providers",
-          "columnsFrom": [
-            "provider_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["provider_id"],
+          "columnsTo": ["id"],
           "onDelete": "cascade",
           "onUpdate": "no action"
         }
@@ -378,10 +350,7 @@
         "idx_ai_models_provider_name": {
           "name": "idx_ai_models_provider_name",
           "nullsNotDistinct": false,
-          "columns": [
-            "provider_id",
-            "name"
-          ]
+          "columns": ["provider_id", "name"]
         }
       },
       "policies": {},
@@ -683,12 +652,8 @@
           "name": "conversation_messages_scenario_id_scenarios_id_fk",
           "tableFrom": "conversation_messages",
           "tableTo": "scenarios",
-          "columnsFrom": [
-            "scenario_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["scenario_id"],
+          "columnsTo": ["id"],
           "onDelete": "cascade",
           "onUpdate": "no action"
         }
@@ -764,12 +729,8 @@
           "name": "conversation_shares_scenario_id_scenarios_id_fk",
           "tableFrom": "conversation_shares",
           "tableTo": "scenarios",
-          "columnsFrom": [
-            "scenario_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["scenario_id"],
+          "columnsTo": ["id"],
           "onDelete": "cascade",
           "onUpdate": "no action"
         }
@@ -779,9 +740,7 @@
         "conversation_shares_share_token_unique": {
           "name": "conversation_shares_share_token_unique",
           "nullsNotDistinct": false,
-          "columns": [
-            "share_token"
-          ]
+          "columns": ["share_token"]
         }
       },
       "policies": {},
@@ -873,12 +832,8 @@
           "name": "conversations_scenario_id_scenarios_id_fk",
           "tableFrom": "conversations",
           "tableTo": "scenarios",
-          "columnsFrom": [
-            "scenario_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["scenario_id"],
+          "columnsTo": ["id"],
           "onDelete": "no action",
           "onUpdate": "no action"
         },
@@ -886,12 +841,8 @@
           "name": "conversations_user_id_users_id_fk",
           "tableFrom": "conversations",
           "tableTo": "users",
-          "columnsFrom": [
-            "user_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["user_id"],
+          "columnsTo": ["id"],
           "onDelete": "no action",
           "onUpdate": "no action"
         }
@@ -970,12 +921,8 @@
           "name": "flowchart_data_scenario_id_scenarios_id_fk",
           "tableFrom": "flowchart_data",
           "tableTo": "scenarios",
-          "columnsFrom": [
-            "scenario_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["scenario_id"],
+          "columnsTo": ["id"],
           "onDelete": "no action",
           "onUpdate": "no action"
         }
@@ -985,9 +932,7 @@
         "flowchart_data_scenario_id_unique": {
           "name": "flowchart_data_scenario_id_unique",
           "nullsNotDistinct": false,
-          "columns": [
-            "scenario_id"
-          ]
+          "columns": ["scenario_id"]
         }
       },
       "policies": {},
@@ -1083,12 +1028,8 @@
           "name": "journal_rules_scenario_id_scenarios_id_fk",
           "tableFrom": "journal_rules",
           "tableTo": "scenarios",
-          "columnsFrom": [
-            "scenario_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["scenario_id"],
+          "columnsTo": ["id"],
           "onDelete": "no action",
           "onUpdate": "no action"
         },
@@ -1096,12 +1037,8 @@
           "name": "journal_rules_debit_account_id_accounts_id_fk",
           "tableFrom": "journal_rules",
           "tableTo": "accounts",
-          "columnsFrom": [
-            "debit_account_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["debit_account_id"],
+          "columnsTo": ["id"],
           "onDelete": "no action",
           "onUpdate": "no action"
         },
@@ -1109,12 +1046,8 @@
           "name": "journal_rules_credit_account_id_accounts_id_fk",
           "tableFrom": "journal_rules",
           "tableTo": "accounts",
-          "columnsFrom": [
-            "credit_account_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["credit_account_id"],
+          "columnsTo": ["id"],
           "onDelete": "no action",
           "onUpdate": "no action"
         }
@@ -1182,9 +1115,7 @@
         "prompt_templates_scenario_type_unique": {
           "name": "prompt_templates_scenario_type_unique",
           "nullsNotDistinct": false,
-          "columns": [
-            "scenario_type"
-          ]
+          "columns": ["scenario_type"]
         }
       },
       "policies": {},
@@ -1246,12 +1177,8 @@
           "name": "prompt_versions_template_id_prompt_templates_id_fk",
           "tableFrom": "prompt_versions",
           "tableTo": "prompt_templates",
-          "columnsFrom": [
-            "template_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["template_id"],
+          "columnsTo": ["id"],
           "onDelete": "cascade",
           "onUpdate": "no action"
         },
@@ -1259,12 +1186,8 @@
           "name": "prompt_versions_created_by_users_id_fk",
           "tableFrom": "prompt_versions",
           "tableTo": "users",
-          "columnsFrom": [
-            "created_by"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["created_by"],
+          "columnsTo": ["id"],
           "onDelete": "no action",
           "onUpdate": "no action"
         }
@@ -1274,10 +1197,7 @@
         "idx_prompt_versions_template_version": {
           "name": "idx_prompt_versions_template_version",
           "nullsNotDistinct": false,
-          "columns": [
-            "template_id",
-            "version_number"
-          ]
+          "columns": ["template_id", "version_number"]
         }
       },
       "policies": {},
@@ -1355,12 +1275,8 @@
           "name": "sample_transactions_scenario_id_scenarios_id_fk",
           "tableFrom": "sample_transactions",
           "tableTo": "scenarios",
-          "columnsFrom": [
-            "scenario_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["scenario_id"],
+          "columnsTo": ["id"],
           "onDelete": "no action",
           "onUpdate": "no action"
         }
@@ -1493,12 +1409,8 @@
           "name": "scenarios_company_id_companies_id_fk",
           "tableFrom": "scenarios",
           "tableTo": "companies",
-          "columnsFrom": [
-            "company_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["company_id"],
+          "columnsTo": ["id"],
           "onDelete": "no action",
           "onUpdate": "no action"
         },
@@ -1506,12 +1418,8 @@
           "name": "scenarios_created_by_users_id_fk",
           "tableFrom": "scenarios",
           "tableTo": "users",
-          "columnsFrom": [
-            "created_by"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["created_by"],
+          "columnsTo": ["id"],
           "onDelete": "no action",
           "onUpdate": "no action"
         }
@@ -1564,12 +1472,8 @@
           "name": "user_preferences_user_id_users_id_fk",
           "tableFrom": "user_preferences",
           "tableTo": "users",
-          "columnsFrom": [
-            "user_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["user_id"],
+          "columnsTo": ["id"],
           "onDelete": "cascade",
           "onUpdate": "no action"
         },
@@ -1577,12 +1481,8 @@
           "name": "user_preferences_preferred_provider_id_ai_providers_id_fk",
           "tableFrom": "user_preferences",
           "tableTo": "ai_providers",
-          "columnsFrom": [
-            "preferred_provider_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["preferred_provider_id"],
+          "columnsTo": ["id"],
           "onDelete": "no action",
           "onUpdate": "no action"
         }
@@ -1592,9 +1492,7 @@
         "user_preferences_user_id_unique": {
           "name": "user_preferences_user_id_unique",
           "nullsNotDistinct": false,
-          "columns": [
-            "user_id"
-          ]
+          "columns": ["user_id"]
         }
       },
       "policies": {},
@@ -1674,12 +1572,8 @@
           "name": "users_company_id_companies_id_fk",
           "tableFrom": "users",
           "tableTo": "companies",
-          "columnsFrom": [
-            "company_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["company_id"],
+          "columnsTo": ["id"],
           "onDelete": "no action",
           "onUpdate": "no action"
         }
@@ -1689,9 +1583,7 @@
         "users_email_unique": {
           "name": "users_email_unique",
           "nullsNotDistinct": false,
-          "columns": [
-            "email"
-          ]
+          "columns": ["email"]
         }
       },
       "policies": {},
@@ -1703,31 +1595,17 @@
     "public.account_direction": {
       "name": "account_direction",
       "schema": "public",
-      "values": [
-        "debit",
-        "credit",
-        "both"
-      ]
+      "values": ["debit", "credit", "both"]
     },
     "public.account_type": {
       "name": "account_type",
       "schema": "public",
-      "values": [
-        "asset",
-        "liability",
-        "equity",
-        "revenue",
-        "expense"
-      ]
+      "values": ["asset", "liability", "equity", "revenue", "expense"]
     },
     "public.message_role": {
       "name": "message_role",
       "schema": "public",
-      "values": [
-        "user",
-        "assistant",
-        "system"
-      ]
+      "values": ["user", "assistant", "system"]
     },
     "public.prompt_scenario_type": {
       "name": "prompt_scenario_type",
@@ -1742,38 +1620,22 @@
     "public.provider_status": {
       "name": "provider_status",
       "schema": "public",
-      "values": [
-        "active",
-        "inactive",
-        "error"
-      ]
+      "values": ["active", "inactive", "error"]
     },
     "public.provider_type": {
       "name": "provider_type",
       "schema": "public",
-      "values": [
-        "openai",
-        "azure",
-        "ollama",
-        "custom"
-      ]
+      "values": ["openai", "azure", "ollama", "custom"]
     },
     "public.scenario_status": {
       "name": "scenario_status",
       "schema": "public",
-      "values": [
-        "draft",
-        "confirmed",
-        "archived"
-      ]
+      "values": ["draft", "confirmed", "archived"]
     },
     "public.user_role": {
       "name": "user_role",
       "schema": "public",
-      "values": [
-        "admin",
-        "product"
-      ]
+      "values": ["admin", "product"]
     }
   },
   "schemas": {},

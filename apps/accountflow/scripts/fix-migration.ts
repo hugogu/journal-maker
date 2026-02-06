@@ -1,6 +1,7 @@
 import postgres from 'postgres'
 
-const connectionString = process.env.DATABASE_URL || 'postgresql://postgres:postgres@localhost:5432/accountflow'
+const connectionString =
+  process.env.DATABASE_URL || 'postgresql://postgres:postgres@localhost:5432/accountflow'
 const sql = postgres(connectionString)
 
 async function migrate() {

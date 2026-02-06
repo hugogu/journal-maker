@@ -54,7 +54,7 @@ export async function seedDefaultPrompts() {
 
   // Check if scenario analysis template already exists
   const existing = await db.query.promptTemplates.findFirst({
-    where: (templates, { eq }) => eq(templates.scenarioType, 'scenario_analysis')
+    where: (templates, { eq }) => eq(templates.scenarioType, 'scenario_analysis'),
   })
 
   if (existing) {
@@ -63,29 +63,32 @@ export async function seedDefaultPrompts() {
   }
 
   // Create template
-  const [template] = await db.insert(promptTemplates)
+  const [template] = await db
+    .insert(promptTemplates)
     .values({
       name: '场景分析助手',
       description: '用于分析业务场景并生成会计分录的AI助手',
       scenarioType: 'scenario_analysis',
       createdAt: new Date(),
-      updatedAt: new Date()
+      updatedAt: new Date(),
     })
     .returning()
 
   // Create first version
-  const [version] = await db.insert(promptVersions)
+  const [version] = await db
+    .insert(promptVersions)
     .values({
       templateId: template.id,
       versionNumber: 1,
       content: defaultScenarioAnalysisPrompt,
       createdBy: 1, // Admin user
-      createdAt: new Date()
+      createdAt: new Date(),
     })
     .returning()
 
   // Activate the version
-  await db.update(promptTemplates)
+  await db
+    .update(promptTemplates)
     .set({ activeVersionId: version.id })
     .where(eq(promptTemplates.id, template.id))
 

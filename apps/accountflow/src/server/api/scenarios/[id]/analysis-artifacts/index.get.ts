@@ -15,7 +15,8 @@ export default defineEventHandler(async (event) => {
 
     const { subjects, entries, diagrams } = await listAnalysisArtifacts({
       scenarioId,
-      sourceMessageId: sourceMessageId && !Number.isNaN(sourceMessageId) ? sourceMessageId : undefined,
+      sourceMessageId:
+        sourceMessageId && !Number.isNaN(sourceMessageId) ? sourceMessageId : undefined,
     })
 
     return {
@@ -29,7 +30,7 @@ export default defineEventHandler(async (event) => {
     console.error('Error fetching analysis artifacts:', error)
     throw createError({
       statusCode: 500,
-      message: 'Failed to fetch analysis artifacts'
+      message: 'Failed to fetch analysis artifacts',
     })
   }
 })

@@ -2,9 +2,7 @@
   <div class="max-w-4xl mx-auto">
     <div class="flex items-center justify-between mb-6">
       <h1 class="text-2xl font-bold">新建 Prompt 模板</h1>
-      <NuxtLink to="/admin/prompts" class="btn-secondary">
-        返回列表
-      </NuxtLink>
+      <NuxtLink to="/admin/prompts" class="btn-secondary"> 返回列表 </NuxtLink>
     </div>
 
     <form @submit.prevent="handleSubmit" class="card space-y-6">
@@ -25,21 +23,40 @@
 
       <div>
         <label class="label">描述</label>
-        <textarea v-model="form.description" rows="2" class="input" placeholder="输入模板描述（可选）" />
+        <textarea
+          v-model="form.description"
+          rows="2"
+          class="input"
+          placeholder="输入模板描述（可选）"
+        />
       </div>
 
       <div>
         <label class="label">初始内容 <span class="text-red-500">*</span></label>
         <div class="flex gap-4 mb-2">
-          <button type="button" @click="showGenerateModal = true" class="text-sm text-blue-600 hover:text-blue-800">
+          <button
+            type="button"
+            @click="showGenerateModal = true"
+            class="text-sm text-blue-600 hover:text-blue-800"
+          >
             🤖 AI 生成
           </button>
-          <button type="button" @click="openPreview" class="text-sm text-green-600 hover:text-green-800">
+          <button
+            type="button"
+            @click="openPreview"
+            class="text-sm text-green-600 hover:text-green-800"
+          >
             👁 预览效果
           </button>
         </div>
-        <textarea v-model="form.initialContent" rows="12" class="input font-mono text-sm" placeholder="输入 Prompt 内容..." required />
-        <p class="text-xs text-gray-500 mt-1">使用 {{variableName}} 语法定义变量</p>
+        <textarea
+          v-model="form.initialContent"
+          rows="12"
+          class="input font-mono text-sm"
+          placeholder="输入 Prompt 内容..."
+          required
+        />
+        <p class="text-xs text-gray-500 mt-1">使用 {{ variableName }} 语法定义变量</p>
       </div>
 
       <div class="flex gap-4 pt-4">
@@ -51,7 +68,10 @@
     </form>
 
     <!-- Generate Modal -->
-    <div v-if="showGenerateModal" class="fixed inset-0 bg-black/50 flex items-center justify-center p-4 z-50">
+    <div
+      v-if="showGenerateModal"
+      class="fixed inset-0 bg-black/50 flex items-center justify-center p-4 z-50"
+    >
       <div class="bg-white rounded-lg max-w-2xl w-full max-h-[90vh] overflow-y-auto p-6">
         <h3 class="text-lg font-semibold mb-4">AI 生成 Prompt</h3>
         <textarea
@@ -62,8 +82,8 @@
         />
         <div class="flex justify-end gap-4">
           <button @click="showGenerateModal = false" class="btn-secondary">取消</button>
-          <button 
-            @click="generatePrompt" 
+          <button
+            @click="generatePrompt"
             class="btn-primary"
             :disabled="!generateDescription || generating"
           >
@@ -73,7 +93,10 @@
       </div>
     </div>
     <!-- Preview Modal -->
-    <div v-if="showPreviewModal" class="fixed inset-0 bg-black/50 flex items-center justify-center p-4 z-50">
+    <div
+      v-if="showPreviewModal"
+      class="fixed inset-0 bg-black/50 flex items-center justify-center p-4 z-50"
+    >
       <div class="bg-white rounded-lg max-w-4xl w-full max-h-[90vh] overflow-y-auto p-6">
         <h3 class="text-lg font-semibold mb-4">Prompt 预览效果</h3>
         <div v-if="previewLoading" class="text-center py-8">加载中...</div>
@@ -86,7 +109,8 @@
             <span class="text-green-600">已使用变量:</span> {{ previewResult.usedVars.join(', ') }}
           </div>
           <div v-if="previewResult.unrenderedVars.length" class="text-sm">
-            <span class="text-yellow-600">未渲染变量:</span> {{ previewResult.unrenderedVars.join(', ') }}
+            <span class="text-yellow-600">未渲染变量:</span>
+            {{ previewResult.unrenderedVars.join(', ') }}
           </div>
         </div>
         <div class="flex justify-end mt-4">
@@ -98,60 +122,60 @@
 </template>
 
 <script setup lang="ts">
-const router = useRouter()
-const { createTemplate, generatePrompt: generate } = usePrompts()
-const { previewPrompt, previewLoading, previewResult } = usePromptPreview()
+  const router = useRouter()
+  const { createTemplate, generatePrompt: generate } = usePrompts()
+  const { previewPrompt, previewLoading, previewResult } = usePromptPreview()
 
-const form = reactive({
-  scenarioType: 'scenario_analysis',
-  name: '',
-  description: '',
-  initialContent: ''
-})
+  const form = reactive({
+    scenarioType: 'scenario_analysis',
+    name: '',
+    description: '',
+    initialContent: '',
+  })
 
-const submitting = ref(false)
-const showGenerateModal = ref(false)
-const generateDescription = ref('')
-const generating = ref(false)
-const showPreviewModal = ref(false)
+  const submitting = ref(false)
+  const showGenerateModal = ref(false)
+  const generateDescription = ref('')
+  const generating = ref(false)
+  const showPreviewModal = ref(false)
 
-async function openPreview() {
-  if (!form.initialContent.trim()) {
-    alert('请先输入 Prompt 内容')
-    return
-  }
-  await previewPrompt(form.initialContent)
-  showPreviewModal.value = true
-}
-
-async function handleSubmit() {
-  submitting.value = true
-  try {
-    const result = await createTemplate({
-      scenarioType: form.scenarioType,
-      name: form.name,
-      description: form.description,
-      initialContent: form.initialContent
-    })
-    if (result?.template?.id) {
-      router.push(`/admin/prompts/${result.template.id}`)
+  async function openPreview() {
+    if (!form.initialContent.trim()) {
+      alert('请先输入 Prompt 内容')
+      return
     }
-  } finally {
-    submitting.value = false
+    await previewPrompt(form.initialContent)
+    showPreviewModal.value = true
   }
-}
 
-async function generatePrompt() {
-  generating.value = true
-  try {
-    const result = await generate(generateDescription.value, form.scenarioType)
-    if (result) {
-      form.initialContent = result.generatedContent
-      showGenerateModal.value = false
-      generateDescription.value = ''
+  async function handleSubmit() {
+    submitting.value = true
+    try {
+      const result = await createTemplate({
+        scenarioType: form.scenarioType,
+        name: form.name,
+        description: form.description,
+        initialContent: form.initialContent,
+      })
+      if (result?.template?.id) {
+        router.push(`/admin/prompts/${result.template.id}`)
+      }
+    } finally {
+      submitting.value = false
     }
-  } finally {
-    generating.value = false
   }
-}
+
+  async function generatePrompt() {
+    generating.value = true
+    try {
+      const result = await generate(generateDescription.value, form.scenarioType)
+      if (result) {
+        form.initialContent = result.generatedContent
+        showGenerateModal.value = false
+        generateDescription.value = ''
+      }
+    } finally {
+      generating.value = false
+    }
+  }
 </script>

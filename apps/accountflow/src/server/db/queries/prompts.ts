@@ -12,8 +12,8 @@ export async function getPromptTemplates() {
           id: true,
           versionNumber: true,
           createdAt: true,
-        }
-      }
+        },
+      },
     },
     orderBy: asc(promptTemplates.scenarioType),
   })
@@ -28,10 +28,10 @@ export async function getPromptTemplates() {
     .groupBy(promptVersions.templateId)
 
   // Create a map for quick lookup
-  const countMap = new Map(versionCounts.map(vc => [vc.templateId, vc.count]))
+  const countMap = new Map(versionCounts.map((vc) => [vc.templateId, vc.count]))
 
   // Combine the data
-  return templates.map(template => ({
+  return templates.map((template) => ({
     ...template,
     versionCount: countMap.get(template.id) ?? 0,
   }))
@@ -48,11 +48,11 @@ export async function getPromptTemplate(id: number) {
             columns: {
               id: true,
               name: true,
-            }
-          }
-        }
-      }
-    }
+            },
+          },
+        },
+      },
+    },
   })
 
   if (!template) return null
@@ -66,14 +66,14 @@ export async function getPromptTemplate(id: number) {
         columns: {
           id: true,
           name: true,
-        }
-      }
-    }
+        },
+      },
+    },
   })
 
   return {
     ...template,
-    versions: versions.map(v => ({
+    versions: versions.map((v) => ({
       id: v.id,
       versionNumber: v.versionNumber,
       createdAt: v.createdAt,
@@ -91,25 +91,23 @@ export async function getPromptVersion(id: number) {
         columns: {
           id: true,
           name: true,
-        }
+        },
       },
       template: {
         columns: {
           id: true,
           scenarioType: true,
           name: true,
-        }
-      }
-    }
+        },
+      },
+    },
   })
 }
 
 // Create a new prompt template
 export async function createPromptTemplate(data: NewPromptTemplate) {
-  const [template] = await db.insert(promptTemplates)
-    .values(data)
-    .returning()
-  
+  const [template] = await db.insert(promptTemplates).values(data).returning()
+
   return template
 }
 
@@ -127,11 +125,12 @@ export async function createPromptVersion(data: {
     limit: 1,
   })
 
-  const versionNumber = existingVersions[0]?.versionNumber 
-    ? existingVersions[0].versionNumber + 1 
+  const versionNumber = existingVersions[0]?.versionNumber
+    ? existingVersions[0].versionNumber + 1
     : 1
 
-  const [version] = await db.insert(promptVersions)
+  const [version] = await db
+    .insert(promptVersions)
     .values({
       ...data,
       versionNumber,
@@ -143,7 +142,8 @@ export async function createPromptVersion(data: {
 
 // Activate a specific version
 export async function activatePromptVersion(templateId: number, versionId: number) {
-  const [updated] = await db.update(promptTemplates)
+  const [updated] = await db
+    .update(promptTemplates)
     .set({
       activeVersionId: versionId,
       updatedAt: new Date(),
@@ -155,7 +155,13 @@ export async function activatePromptVersion(templateId: number, versionId: numbe
 }
 
 // Get the active version content for a scenario type
-export async function getActivePromptContent(scenarioType: 'scenario_analysis' | 'sample_generation' | 'prompt_generation' | 'flowchart_generation') {
+export async function getActivePromptContent(
+  scenarioType:
+    | 'scenario_analysis'
+    | 'sample_generation'
+    | 'prompt_generation'
+    | 'flowchart_generation'
+) {
   const template = await db.query.promptTemplates.findFirst({
     where: eq(promptTemplates.scenarioType, scenarioType),
     with: {
@@ -163,9 +169,9 @@ export async function getActivePromptContent(scenarioType: 'scenario_analysis' |
         columns: {
           id: true,
           content: true,
-        }
+        },
       },
-    }
+    },
   })
 
   return template?.activeVersion?.content ?? null

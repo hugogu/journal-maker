@@ -24,7 +24,7 @@ export default defineEventHandler(async (event) => {
     console.error('Error creating conversation message:', error)
     throw createError({
       statusCode: error?.statusCode || 500,
-      message: error?.message || 'Failed to create conversation message'
+      message: error?.message || 'Failed to create conversation message',
     })
   }
 })
