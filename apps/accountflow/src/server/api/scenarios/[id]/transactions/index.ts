@@ -1,5 +1,5 @@
 import { db } from '../../../../db'
-import { scenarios, accounts, journalRules, sampleTransactions, conversations } from '../../../../db/schema'
+import { scenarios, accounts, journalRules, sampleTransactions } from '../../../../db/schema'
 import { AppError, handleError, successResponse } from '../../../../utils/error'
 import { aiService } from '../../../../utils/ai-service'
 import { eq } from 'drizzle-orm'

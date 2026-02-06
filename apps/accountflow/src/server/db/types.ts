@@ -8,22 +8,20 @@ import type {
   accounts,
   scenarios,
   journalRules,
-  conversations,
   sampleTransactions,
-  flowchartData,
-  accountMappings,
-  // New tables
+  // AI Management
   promptTemplates,
   promptVersions,
   aiProviders,
   aiModels,
   companyProfile,
+  userPreferences,
+  // Conversation & Analysis
   conversationMessages,
+  conversationShares,
   analysisSubjects,
   analysisEntries,
   analysisDiagrams,
-  conversationShares,
-  userPreferences,
 } from './schema'
 
 // Existing types
@@ -42,19 +40,10 @@ export type NewScenario = InferInsertModel<typeof scenarios>
 export type JournalRule = InferSelectModel<typeof journalRules>
 export type NewJournalRule = InferInsertModel<typeof journalRules>
 
-export type Conversation = InferSelectModel<typeof conversations>
-export type NewConversation = InferInsertModel<typeof conversations>
-
 export type SampleTransaction = InferSelectModel<typeof sampleTransactions>
 export type NewSampleTransaction = InferInsertModel<typeof sampleTransactions>
 
-export type FlowchartData = InferSelectModel<typeof flowchartData>
-export type NewFlowchartData = InferInsertModel<typeof flowchartData>
-
-export type AccountMapping = InferSelectModel<typeof accountMappings>
-export type NewAccountMapping = InferInsertModel<typeof accountMappings>
-
-// New types for 002-prompt-ai-management
+// AI Management types
 export type PromptTemplate = InferSelectModel<typeof promptTemplates>
 export type NewPromptTemplate = InferInsertModel<typeof promptTemplates>
 
