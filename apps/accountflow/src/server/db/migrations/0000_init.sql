@@ -210,6 +210,7 @@ CREATE TABLE "public"."conversation_messages" (
   "role" "message_role" NOT NULL,
   "content" TEXT NOT NULL,
   "timestamp" TIMESTAMP DEFAULT NOW() NOT NULL,
+  "confirmed_at" TIMESTAMP WITH TIME ZONE,
   "structured_data" JSONB,
   "request_log" JSONB,
   "response_stats" JSONB,
@@ -224,7 +225,9 @@ COMMENT ON COLUMN "public"."conversation_messages"."content" IS 'Message text co
 COMMENT ON COLUMN "public"."conversation_messages"."structured_data" IS 'Parsed structured data from AI response (accounts, rules, diagrams)';
 COMMENT ON COLUMN "public"."conversation_messages"."request_log" IS 'AI request metadata: {systemPrompt, contextMessages, fullPrompt, variables}';
 COMMENT ON COLUMN "public"."conversation_messages"."response_stats" IS 'AI response statistics: {model, providerId, inputTokens, outputTokens, durationMs}';
+COMMENT ON COLUMN "public"."conversation_messages"."confirmed_at" IS 'Timestamp when message was confirmed by user (null means not confirmed)';
 
+CREATE INDEX "idx_conversation_messages_confirmed_at" ON "public"."conversation_messages"("confirmed_at") WHERE confirmed_at IS NOT NULL;
 CREATE INDEX "idx_conversation_messages_scenario_id" ON "public"."conversation_messages"("scenario_id");
 CREATE INDEX "idx_conversation_messages_timestamp" ON "public"."conversation_messages"("timestamp");
 CREATE INDEX "idx_conversation_messages_role" ON "public"."conversation_messages"("role");
