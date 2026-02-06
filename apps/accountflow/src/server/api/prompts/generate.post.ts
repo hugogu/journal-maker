@@ -1,6 +1,7 @@
 import { defineEventHandler, createError, readBody } from 'h3'
 import { aiService } from '../../utils/ai-service'
 import { createError as createH3Error } from 'h3'
+import { getActivePromptContent } from '../../db/queries/prompts'
 
 interface AIGenerateRequest {
   requirementDescription: string
@@ -18,16 +19,15 @@ export default defineEventHandler(async (event) => {
       })
     }
 
-    const systemPrompt = `You are an expert at writing system prompts for AI assistants. 
-Your task is to generate a high-quality system prompt based on the user's requirements.
-
-The prompt should:
-1. Be clear and specific about the AI's role
-2. Include relevant context and constraints
-3. Specify the expected output format
-4. Use {{variableName}} syntax for dynamic variables where appropriate
-
-Respond with only the generated prompt text, no explanations.`
+    // Get the system prompt from database for prompt_generation scenario
+    const systemPrompt = await getActivePromptContent('prompt_generation')
+    
+    if (!systemPrompt) {
+      throw createH3Error({
+        statusCode: 500,
+        message: 'No active prompt template found for prompt_generation. Please configure one in Admin > Prompts.',
+      })
+    }
 
     const userPrompt = `Generate a system prompt for the following use case:
 

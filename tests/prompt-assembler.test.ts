@@ -90,12 +90,6 @@ describe('assembleSystemPrompt', () => {
     expect(prompt).toContain('Scenario ID: 42')
   })
 
-  it('should not exceed 1500 characters', async () => {
-    const prompt = await assembleSystemPrompt(1)
-
-    expect(prompt.length).toBeLessThanOrEqual(1500)
-  })
-
   it('should format accounts as code:name pairs', async () => {
     const prompt = await assembleSystemPrompt(1)
 
@@ -104,7 +98,7 @@ describe('assembleSystemPrompt', () => {
     expect(prompt).toContain(', 1002:Accounts Receivable, ')
   })
 
-  it('should truncate accounts list if it exceeds character limit', async () => {
+  it('should handle large number of accounts without truncation', async () => {
     // Mock a large number of accounts
     const manyAccounts = Array.from({ length: 200 }, (_, i) => ({
       id: i + 1,
@@ -125,8 +119,11 @@ describe('assembleSystemPrompt', () => {
 
     const prompt = await assembleSystemPrompt(1)
 
-    expect(prompt.length).toBeLessThanOrEqual(1500)
-    expect(prompt).toContain('... (truncated)')
+    expect(prompt).toBeDefined()
+    expect(prompt).toContain('1000:Account 1')
+    expect(prompt).toContain('1199:Account 200')
+    // Should include all accounts without truncation
+    expect(prompt).not.toContain('... (truncated)')
   })
 
   it('should handle empty accounts list', async () => {
@@ -137,7 +134,6 @@ describe('assembleSystemPrompt', () => {
 
     expect(prompt).toBeDefined()
     expect(prompt).toContain('You are an accounting AI assistant')
-    expect(prompt.length).toBeLessThanOrEqual(1500)
   })
 
   it('should handle both companyId and scenarioId parameters', async () => {
@@ -146,7 +142,6 @@ describe('assembleSystemPrompt', () => {
     expect(prompt).toBeDefined()
     expect(prompt).toContain('Scenario ID: 100')
     expect(prompt).toContain('1001:Cash')
-    expect(prompt.length).toBeLessThanOrEqual(1500)
   })
 
   it('should maintain account order from database', async () => {

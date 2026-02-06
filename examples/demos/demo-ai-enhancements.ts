@@ -3,9 +3,9 @@
  * This script demonstrates how to use the new AI service features
  */
 
-import { aiService } from '../apps/accountflow/src/server/utils/ai-service'
-import { assembleSystemPrompt } from '../apps/accountflow/src/server/utils/prompt-assembler'
-import type { ChatMessage } from '../apps/accountflow/src/server/utils/ai-adapters/base'
+import { aiService } from '../../apps/accountflow/src/server/utils/ai-service'
+import { assembleSystemPrompt } from '../../apps/accountflow/src/server/utils/prompt-assembler'
+import type { ChatMessage } from '../../apps/accountflow/src/server/utils/ai-adapters/base'
 
 async function demoCallChat() {
   console.log('=== Demo: callChat with function calling ===\n')

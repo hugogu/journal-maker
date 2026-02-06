@@ -49,6 +49,14 @@ async callChat(
 **New Function**: `assembleSystemPrompt(companyId, scenarioId?)`
 
 #### Features:
+- ✅ Fetches active accounts from database
+- ✅ Formats accounts as "code:name" pairs (e.g., "1001:Cash, 1002:AR, ...")
+- ✅ Includes all active accounts without artificial limits
+- ✅ Optional scenario ID context
+- ✅ Orders accounts by code for consistency
+- ✅ Maintains consistency with database-stored prompts
+
+#### Features:
 - ✅ Pulls active accounts from database using Drizzle ORM
 - ✅ Formats accounts as "code:name" pairs (e.g., "1001:Cash, 1002:AR, ...")
 - ✅ Guarantees output ≤1500 characters

@@ -148,14 +148,22 @@ Promise resolving to a string containing:
 - System role description
 - Active accounts formatted as "code:name" pairs
 - Optional scenario ID reference
-- **Guaranteed to be ≤1500 characters** (truncates accounts if needed)
 
 #### Features
 
 - Fetches only active accounts (`isActive = true`)
 - Orders accounts by code
-- Intelligent truncation: If output exceeds 1500 chars, truncates at last complete account
-- Appends "... (truncated)" indicator when accounts are cut off
+- No artificial character limits - includes all active accounts
+- Maintains consistency with database-stored prompts
+
+## Demo and Examples
+
+Demo code and example implementations have been moved to the `/examples` directory:
+
+- `/examples/demos/` - Standalone demonstration scripts
+- `/examples/api-endpoints/` - Reference API endpoint implementations
+
+See `/examples/README.md` for more information.
 
 ## Integration Examples
 
