@@ -234,6 +234,7 @@ export type AccountingSubject = z.infer<typeof AccountingSubject>
 // Accounting Rule for UI (simplified from AnalysisEntry)
 export const AccountingRule = z.object({
   id: z.string().min(1).max(50),
+  event: z.string().max(100).optional(), // AI返回的event.name
   description: z.string().min(1).max(500),
   condition: z.string().max(200).optional(),
   debitAccount: z.string().max(20).optional(),

@@ -63,6 +63,25 @@ export async function confirmMessage(messageId: number, scenarioId: number) {
       eq(conversationMessages.id, messageId)
     )
     .returning()
+  
+  // Save and confirm analysis data from this message
+  if (message.structuredData) {
+    const structuredData = message.structuredData as any
+    const { subjects, rules, diagrams } = structuredData
+    if (subjects || rules || diagrams) {
+      // Import the analysis functions
+      const { saveAndConfirmAnalysis } = await import('./analysis')
+      
+      await saveAndConfirmAnalysis(
+        scenarioId,
+        subjects || [],
+        rules || [],
+        diagrams?.mermaid || null,
+        messageId
+      )
+    }
+  }
+  
   return message
 }
 

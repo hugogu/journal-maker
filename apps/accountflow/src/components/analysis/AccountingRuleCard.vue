@@ -2,9 +2,14 @@
   <div class="border border-gray-200 rounded-lg p-4 bg-white hover:shadow-sm transition-shadow">
     <!-- Rule ID and Status -->
     <div class="flex items-center justify-between gap-2 mb-2">
-      <span class="text-xs font-mono bg-purple-100 text-purple-700 px-2 py-0.5 rounded">
-        {{ rule.id }}
-      </span>
+      <div class="flex items-center gap-2">
+        <span class="text-xs font-mono bg-purple-100 text-purple-700 px-2 py-0.5 rounded">
+          {{ rule.event || rule.id }}
+        </span>
+        <span v-if="rule.event && rule.event !== rule.id" class="text-xs text-gray-500">
+          ({{ rule.id }})
+        </span>
+      </div>
       <div class="flex items-center gap-2">
         <button
           v-if="!rule.isExisting"

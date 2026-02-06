@@ -126,7 +126,7 @@
 </template>
 
 <script setup lang="ts">
-import { computed, ref, onMounted } from 'vue'
+import { computed, ref, onMounted, watch } from 'vue'
 import AccountingSubjectList from './AccountingSubjectList.vue'
 import AccountingRuleCard from './AccountingRuleCard.vue'
 import FlowDiagramViewer from './FlowDiagramViewer.vue'
@@ -136,6 +136,8 @@ import type { Account } from '../../types'
 const props = defineProps<{
   data: ConfirmedAnalysisState
   loading: boolean
+  scenarioId?: number // Add scenarioId prop
+  sourceMessageId?: number // Add sourceMessageId prop
 }>()
 
 const emit = defineEmits<{
@@ -146,6 +148,7 @@ const clearing = ref(false)
 const existingAccounts = ref<Account[]>([])
 const loadingAccounts = ref(false)
 const savingAll = ref(false)
+const savedRuleIds = ref<Set<string>>(new Set()) // Track saved rule IDs
 
 const hasContent = computed(() => {
   return (
@@ -179,11 +182,47 @@ const subjectsWithStatus = computed(() => {
 const rulesWithStatus = computed(() => {
   if (!props.data.rules) return []
 
-  return props.data.rules.map(rule => ({
-    ...rule,
-    isExisting: false // All rules from AI analysis are new suggestions
-  }))
+  return props.data.rules.map(rule => {
+    // Use scenarioId + messageId + ruleKey for unique identification
+    const uniqueId = `${props.scenarioId}-${props.sourceMessageId}-${rule.event || rule.id}`
+    return {
+      ...rule,
+      _uniqueId: uniqueId,
+      isExisting: savedRuleIds.value.has(uniqueId)
+    }
+  })
 })
+
+// Load existing rules from database
+async function loadExistingRules() {
+  if (!props.scenarioId || !props.sourceMessageId) return
+  
+  try {
+    const response = await $fetch(`/api/scenarios/${props.scenarioId}/journal-rules`) as { 
+      success: boolean; 
+      data?: any[]; 
+      error?: string 
+    }
+    
+    if (response.success && response.data) {
+      console.log('Loaded existing rules from database:', response.data)
+      console.log('Current AI rules:', props.data.rules)
+      
+      // Build unique IDs from saved rules: scenarioId-messageId-ruleKey
+      const existingRuleIds = new Set(
+        response.data
+          .filter((rule: any) => rule.messageId === props.sourceMessageId) // 只匹配当前消息的规则
+          .map((rule: any) => `${props.scenarioId}-${rule.messageId}-${rule.ruleKey}`)
+      )
+      console.log('Existing rule IDs for current message:', existingRuleIds)
+      
+      savedRuleIds.value = existingRuleIds as Set<string>
+      console.log('Saved rule IDs after loading:', savedRuleIds.value)
+    }
+  } catch (error) {
+    console.error('Failed to load existing rules:', error)
+  }
+}
 
 // Load existing accounts from API
 async function loadExistingAccounts() {
@@ -202,7 +241,15 @@ async function loadExistingAccounts() {
 
 onMounted(() => {
   loadExistingAccounts()
+  loadExistingRules()
 })
+
+// Watch for changes in rules data and reload existing rules
+watch(() => props.data.rules, () => {
+  if (props.data.rules && props.data.rules.length > 0) {
+    loadExistingRules()
+  }
+}, { immediate: false })
 
 async function handleClear() {
   if (!confirm('确定要清空所有已确认的分析结果吗？')) return
@@ -251,7 +298,9 @@ async function handleSaveRule(rule: any) {
   try {
     // This would need a proper API endpoint for saving rules
     console.log('Save rule:', rule)
-    // TODO: Implement rule saving API call
+    // For now, let's simulate saving by updating the local state
+    savedRuleIds.value = new Set([...savedRuleIds.value, rule.id]) as Set<string>
+    // TODO: Implement actual rule saving API call
   } catch (error) {
     console.error('Failed to save rule:', error)
   }
@@ -259,13 +308,56 @@ async function handleSaveRule(rule: any) {
 
 // Handle saving all rules
 async function handleSaveAllRules() {
-  if (!props.data.rules) return
+  if (!props.data.rules || !props.scenarioId) return
   
   savingAll.value = true
   try {
     const newRules = rulesWithStatus.value.filter(rule => !rule.isExisting)
-    console.log('Save all rules:', newRules)
-    // TODO: Implement batch rule saving API call
+    
+    if (newRules.length === 0) {
+      console.log('No new rules to save')
+      return
+    }
+
+    // Prepare rules for API - use AI returned event.name as eventName
+    const rulesToSave = newRules.map(rule => {
+      return {
+        eventName: rule.event || rule.id, // 使用AI返回的event.name，如果不存在则使用rule.id
+        ruleKey: rule.event || rule.id, // AI返回的event名字作为ruleKey
+        eventDescription: rule.description,
+        debitAccountId: rule.debitAccount || null,
+        creditAccountId: rule.creditAccount || null,
+        conditions: rule.condition ? { trigger: rule.condition } : {},
+        debitSide: {},
+        creditSide: {},
+        triggerType: 'manual'
+      }
+    })
+
+    const response = await $fetch('/api/journal-rules/batch', {
+      method: 'POST',
+      body: {
+        scenarioId: props.scenarioId,
+        messageId: props.sourceMessageId, // 添加messageId
+        rules: rulesToSave
+      }
+    }) as { success: boolean; data?: any; error?: string }
+
+    if (response.success && response.data) {
+      console.log(`Successfully saved ${response.data.length} rules:`, response.data)
+      
+      // Update local state to mark rules as existing
+      // Use scenarioId + messageId + event as unique key
+      const newSavedIds = new Set(newRules.map(rule => 
+        `${props.scenarioId}-${props.sourceMessageId}-${rule.event || rule.id}`
+      ))
+      
+      // Update the savedRuleIds set to trigger reactivity
+      savedRuleIds.value = new Set([...savedRuleIds.value, ...newSavedIds]) as Set<string>
+      
+    } else {
+      console.error('Failed to save rules:', response.error)
+    }
   } catch (error) {
     console.error('Failed to save all rules:', error)
   } finally {

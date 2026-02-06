@@ -13,7 +13,28 @@
       "idx": 1,
       "version": "7",
       "when": 1770357123890,
-      "tag": "0001_init_data", 
+      "tag": "0001_init_data",
+      "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1770367997159,
+      "tag": "0002_youthful_nicolaos",
+      "breakpoints": true
+    },
+    {
+      "idx": 3,
+      "version": "7",
+      "when": 1770369762040,
+      "tag": "0003_hesitant_ikaris",
+      "breakpoints": true
+    },
+    {
+      "idx": 4,
+      "version": "7",
+      "when": 1770370351694,
+      "tag": "0004_smart_bastion",
       "breakpoints": true
     }
   ],

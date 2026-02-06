@@ -89,7 +89,9 @@ export const scenarios = pgTable('scenarios', {
 export const journalRules = pgTable('journal_rules', {
   id: serial('id').primaryKey(),
   scenarioId: integer('scenario_id').references(() => scenarios.id, { onDelete: 'cascade' }).notNull(),
-  eventName: varchar('event_name', { length: 100 }).notNull(),
+  messageId: integer('message_id').references(() => conversationMessages.id, { onDelete: 'set null' }), // 添加message_id字段
+  ruleKey: varchar('rule_key', { length: 50 }).notNull(), // AI返回的event名字
+  eventName: varchar('event_name', { length: 100 }).notNull(), // 使用AI返回的event.name
   eventDescription: text('event_description'),
   debitAccountId: integer('debit_account_id').references(() => accounts.id, { onDelete: 'set null' }),
   creditAccountId: integer('credit_account_id').references(() => accounts.id, { onDelete: 'set null' }),
@@ -102,7 +104,10 @@ export const journalRules = pgTable('journal_rules', {
   createdAt: timestamp('created_at').defaultNow().notNull(),
   updatedAt: timestamp('updated_at').defaultNow().notNull(),
 }, (table) => [
+  unique('unique_journal_rule').on(table.scenarioId, table.messageId, table.ruleKey), // 唯一索引：scenario + message + ruleKey
   index('idx_journal_rules_scenario_id').on(table.scenarioId),
+  index('idx_journal_rules_message_id').on(table.messageId), // 添加message_id索引
+  index('idx_journal_rules_rule_key').on(table.ruleKey), // 添加rule_key索引
   index('idx_journal_rules_status').on(table.status),
 ])
 
@@ -170,7 +175,7 @@ export const analysisSubjects = pgTable('analysis_subjects', {
   createdAt: timestamp('created_at').defaultNow().notNull(),
   updatedAt: timestamp('updated_at').defaultNow().notNull(),
 }, (table) => [
-  unique('unique_scenario_subject_code').on(table.scenarioId, table.code),
+  unique('unique_scenario_subject_message_code').on(table.scenarioId, table.sourceMessageId, table.code),
   index('idx_analysis_subjects_scenario_id').on(table.scenarioId),
   index('idx_analysis_subjects_source_message_id').on(table.sourceMessageId),
   index('idx_analysis_subjects_code').on(table.code),
@@ -192,7 +197,7 @@ export const analysisEntries = pgTable('analysis_entries', {
   createdAt: timestamp('created_at').defaultNow().notNull(),
   updatedAt: timestamp('updated_at').defaultNow().notNull(),
 }, (table) => [
-  unique('unique_scenario_entry_id').on(table.scenarioId, table.entryId),
+  unique('unique_scenario_entry_message_id').on(table.scenarioId, table.sourceMessageId, table.entryId),
   index('idx_analysis_entries_scenario_id').on(table.scenarioId),
   index('idx_analysis_entries_source_message_id').on(table.sourceMessageId),
   index('idx_analysis_entries_entry_id').on(table.entryId),
