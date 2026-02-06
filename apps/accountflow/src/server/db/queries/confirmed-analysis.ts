@@ -1,10 +1,19 @@
+// ============================================================================
+// This file provides backward compatibility with the old confirmed_analysis API
+// It delegates to the new normalized storage in analysis.ts
+// ============================================================================
+
 import { eq } from 'drizzle-orm'
 import { db } from '../index'
-import { confirmedAnalysis, scenarios } from '../schema'
+import { scenarios } from '../schema'
 import type { AccountingSubject, AccountingRule } from '../../../types'
+import {
+  getConfirmedAnalysis as getConfirmedAnalysisNew,
+  saveAndConfirmAnalysis,
+  clearConfirmedAnalysis,
+} from './analysis'
 
 export interface ConfirmedAnalysisData {
-  id: number
   scenarioId: number
   subjects: AccountingSubject[]
   rules: AccountingRule[]
@@ -24,106 +33,63 @@ export interface UpsertConfirmedAnalysisInput {
 
 /**
  * Get confirmed analysis for a scenario
+ * Delegates to new normalized storage
  */
 export async function getConfirmedAnalysis(scenarioId: number): Promise<ConfirmedAnalysisData | null> {
-  const result = await db
-    .select()
-    .from(confirmedAnalysis)
-    .where(eq(confirmedAnalysis.scenarioId, scenarioId))
-    .limit(1)
+  const result = await getConfirmedAnalysisNew(scenarioId)
 
-  if (result.length === 0) {
+  if (!result || result.subjects.length === 0) {
     return null
   }
 
-  const row = result[0]
   return {
-    id: row.id,
-    scenarioId: row.scenarioId,
-    subjects: (row.subjects as AccountingSubject[]) || [],
-    rules: (row.rules as AccountingRule[]) || [],
-    diagramMermaid: row.diagramMermaid,
-    sourceMessageId: row.sourceMessageId,
-    confirmedAt: row.confirmedAt,
-    updatedAt: row.updatedAt,
+    scenarioId: result.scenarioId || scenarioId,
+    subjects: result.subjects,
+    rules: result.rules,
+    diagramMermaid: result.diagramMermaid,
+    sourceMessageId: result.sourceMessageId,
+    confirmedAt: result.confirmedAt,
+    updatedAt: result.updatedAt,
   }
 }
 
 /**
  * Create or update confirmed analysis (upsert)
+ * Delegates to new normalized storage
  */
 export async function upsertConfirmedAnalysis(
   input: UpsertConfirmedAnalysisInput
 ): Promise<ConfirmedAnalysisData> {
-  const now = new Date()
+  const result = await saveAndConfirmAnalysis(
+    input.scenarioId,
+    input.subjects,
+    input.rules,
+    input.diagramMermaid,
+    input.sourceMessageId
+  )
 
-  // Check if exists
-  const existing = await getConfirmedAnalysis(input.scenarioId)
-
-  if (existing) {
-    // Update existing record
-    const result = await db
-      .update(confirmedAnalysis)
-      .set({
-        subjects: input.subjects,
-        rules: input.rules,
-        diagramMermaid: input.diagramMermaid ?? null,
-        sourceMessageId: input.sourceMessageId ?? null,
-        updatedAt: now,
-      })
-      .where(eq(confirmedAnalysis.scenarioId, input.scenarioId))
-      .returning()
-
-    const row = result[0]
-    return {
-      id: row.id,
-      scenarioId: row.scenarioId,
-      subjects: (row.subjects as AccountingSubject[]) || [],
-      rules: (row.rules as AccountingRule[]) || [],
-      diagramMermaid: row.diagramMermaid,
-      sourceMessageId: row.sourceMessageId,
-      confirmedAt: row.confirmedAt,
-      updatedAt: row.updatedAt,
-    }
-  } else {
-    // Insert new record
-    const result = await db
-      .insert(confirmedAnalysis)
-      .values({
-        scenarioId: input.scenarioId,
-        subjects: input.subjects,
-        rules: input.rules,
-        diagramMermaid: input.diagramMermaid ?? null,
-        sourceMessageId: input.sourceMessageId ?? null,
-        confirmedAt: now,
-        updatedAt: now,
-      })
-      .returning()
-
-    const row = result[0]
-    return {
-      id: row.id,
-      scenarioId: row.scenarioId,
-      subjects: (row.subjects as AccountingSubject[]) || [],
-      rules: (row.rules as AccountingRule[]) || [],
-      diagramMermaid: row.diagramMermaid,
-      sourceMessageId: row.sourceMessageId,
-      confirmedAt: row.confirmedAt,
-      updatedAt: row.updatedAt,
-    }
+  return {
+    scenarioId: result.scenarioId || input.scenarioId,
+    subjects: result.subjects,
+    rules: result.rules,
+    diagramMermaid: result.diagramMermaid,
+    sourceMessageId: result.sourceMessageId,
+    confirmedAt: result.confirmedAt,
+    updatedAt: result.updatedAt,
   }
 }
 
 /**
  * Delete confirmed analysis for a scenario
+ * Delegates to new normalized storage
  */
 export async function deleteConfirmedAnalysis(scenarioId: number): Promise<boolean> {
-  const result = await db
-    .delete(confirmedAnalysis)
-    .where(eq(confirmedAnalysis.scenarioId, scenarioId))
-    .returning({ id: confirmedAnalysis.id })
-
-  return result.length > 0
+  try {
+    await clearConfirmedAnalysis(scenarioId)
+    return true
+  } catch (error) {
+    return false
+  }
 }
 
 /**
