@@ -65,22 +65,42 @@
             </svg>
             会计科目 ({{ data.subjects.length }})
           </h3>
-          <AccountingSubjectList :subjects="subjectsWithStatus" />
+          <AccountingSubjectList 
+            :subjects="subjectsWithStatus" 
+            @save-subject="handleSaveSubject"
+          />
         </div>
 
         <!-- Accounting Rules -->
         <div v-if="data.rules && data.rules.length > 0">
-          <h3 class="text-sm font-semibold text-gray-700 mb-3 flex items-center">
-            <svg class="w-4 h-4 mr-2 text-purple-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
-            </svg>
-            会计规则 ({{ data.rules.length }})
-          </h3>
+          <div class="flex items-center justify-between mb-3">
+            <h3 class="text-sm font-semibold text-gray-700 flex items-center">
+              <svg class="w-4 h-4 mr-2 text-purple-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
+              </svg>
+              会计规则 ({{ data.rules.length }})
+            </h3>
+            <button
+              v-if="hasNewRules"
+              @click="handleSaveAllRules"
+              :disabled="savingAll"
+              class="inline-flex items-center px-3 py-1.5 text-xs font-medium text-blue-600 hover:text-blue-700 hover:bg-blue-50 border border-blue-200 rounded transition-colors disabled:opacity-50"
+            >
+              <svg v-if="!savingAll" class="w-3 h-3 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7H5a2 2 0 00-2 2v9a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-3m-1 4l-3 3m0 0l-3-3m3 3V2"></path>
+              </svg>
+              <svg v-else class="w-3 h-3 mr-1 animate-spin" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path>
+              </svg>
+              保存所有规则
+            </button>
+          </div>
           <div class="space-y-3">
             <AccountingRuleCard
-              v-for="rule in data.rules"
+              v-for="rule in rulesWithStatus"
               :key="rule.id"
               :rule="rule"
+              @save-rule="handleSaveRule"
             />
           </div>
         </div>
@@ -125,6 +145,7 @@ const emit = defineEmits<{
 const clearing = ref(false)
 const existingAccounts = ref<Account[]>([])
 const loadingAccounts = ref(false)
+const savingAll = ref(false)
 
 const hasContent = computed(() => {
   return (
@@ -132,6 +153,10 @@ const hasContent = computed(() => {
     (props.data.rules && props.data.rules.length > 0) ||
     (props.data.diagramMermaid && props.data.diagramMermaid.trim().length > 0)
   )
+})
+
+const hasNewRules = computed(() => {
+  return props.data.rules && props.data.rules.length > 0
 })
 
 // Compute which subjects are new vs existing
@@ -148,6 +173,16 @@ const subjectsWithStatus = computed(() => {
       existingAccount: existing
     }
   })
+})
+
+// Compute which rules are new vs existing
+const rulesWithStatus = computed(() => {
+  if (!props.data.rules) return []
+
+  return props.data.rules.map(rule => ({
+    ...rule,
+    isExisting: false // All rules from AI analysis are new suggestions
+  }))
 })
 
 // Load existing accounts from API
@@ -179,6 +214,82 @@ async function handleClear() {
     setTimeout(() => {
       clearing.value = false
     }, 500)
+  }
+}
+
+// Handle saving subject
+async function handleSaveSubject(subject: any) {
+  try {
+    // Convert AccountingSubject to Account format
+    const accountData = {
+      code: subject.code,
+      name: subject.name,
+      type: subject.type || 'asset',
+      direction: getAccountDirection(subject.type || 'asset'),
+      description: subject.description || '',
+      isActive: true
+    }
+
+    const response = await $fetch<{ success: boolean; data: Account }>('/api/accounts', {
+      method: 'POST',
+      body: accountData
+    })
+
+    if (response.success) {
+      // Refresh existing accounts to update status
+      await loadExistingAccounts()
+      // Show success message
+      console.log('Subject saved successfully:', response.data)
+    }
+  } catch (error) {
+    console.error('Failed to save subject:', error)
+  }
+}
+
+// Handle saving rule
+async function handleSaveRule(rule: any) {
+  try {
+    // This would need a proper API endpoint for saving rules
+    console.log('Save rule:', rule)
+    // TODO: Implement rule saving API call
+  } catch (error) {
+    console.error('Failed to save rule:', error)
+  }
+}
+
+// Handle saving all rules
+async function handleSaveAllRules() {
+  if (!props.data.rules) return
+  
+  savingAll.value = true
+  try {
+    const newRules = rulesWithStatus.value.filter(rule => !rule.isExisting)
+    console.log('Save all rules:', newRules)
+    // TODO: Implement batch rule saving API call
+  } catch (error) {
+    console.error('Failed to save all rules:', error)
+  } finally {
+    setTimeout(() => {
+      savingAll.value = false
+    }, 2000)
+  }
+}
+
+// Helper function to determine account direction from type
+function getAccountDirection(type: string): 'debit' | 'credit' | 'both' {
+  switch (type) {
+    case 'asset':
+      return 'debit'
+    case 'liability':
+      return 'credit'
+    case 'equity':
+      return 'credit'
+    case 'revenue':
+      return 'credit'
+    case 'expense':
+      return 'debit'
+    default:
+      return 'both'
   }
 }
 
