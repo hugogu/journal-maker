@@ -309,7 +309,7 @@
         <button
           v-else
           @click="
-            searchQuery = ''
+            searchQuery = '';
             filterType = ''
           "
           class="text-blue-600 hover:text-blue-700 text-sm font-medium"
