@@ -1,0 +1,16 @@
+{
+  "mcpServers": {
+    "accounting-analysis": {
+      "command": "node",
+      "args": [
+        "/path/to/journal-maker/apps/accountflow/src/skills/accounting-analysis/mcp-server.js"
+      ],
+      "env": {
+        "AI_PROVIDER_TYPE": "openai",
+        "AI_API_ENDPOINT": "https://api.openai.com/v1",
+        "AI_API_KEY": "your-openai-api-key",
+        "AI_MODEL": "gpt-4"
+      }
+    }
+  }
+}

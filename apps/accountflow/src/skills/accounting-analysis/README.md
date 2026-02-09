@@ -12,6 +12,7 @@ An AI-powered, reusable skill for analyzing business scenarios and generating ac
 - 🌍 **Multi-Standard**: Supports CN, US GAAP, IFRS accounting standards
 - 🧪 **Testable**: Includes mock providers for testing
 - 📦 **Framework-Agnostic**: Can be used in any TypeScript/Node.js project
+- 🔗 **MCP Compatible**: Exposes as Anthropic Skill via Model Context Protocol
 
 ## Installation
 
@@ -105,6 +106,84 @@ const result = await skill.analyze(
   { save: true, context: { scenarioId: 1 } }
 )
 ```
+
+## Using as Anthropic Skill (MCP Server)
+
+This skill can be exposed as an **Anthropic Skill** via the Model Context Protocol (MCP), allowing Claude Desktop, Claude Agent SDK, and other MCP-compatible tools to discover and invoke it automatically.
+
+### Quick Setup for Claude Desktop
+
+1. **Start the MCP server**:
+   ```bash
+   npm run mcp:server
+   ```
+
+2. **Configure Claude Desktop**:
+
+   Add to your Claude Desktop config file:
+   - macOS: `~/Library/Application Support/Claude/claude_desktop_config.json`
+   - Windows: `%APPDATA%\Claude\claude_desktop_config.json`
+
+   ```json
+   {
+     "mcpServers": {
+       "accounting-analysis": {
+         "command": "node",
+         "args": ["/absolute/path/to/mcp-server.js"],
+         "env": {
+           "AI_PROVIDER_TYPE": "openai",
+           "OPENAI_API_KEY": "your-api-key",
+           "AI_MODEL": "gpt-4"
+         }
+       }
+     }
+   }
+   ```
+
+3. **Restart Claude Desktop**
+
+4. **Use in Claude**:
+   ```
+   Please analyze this accounting scenario:
+   "公司销售商品收到现金10000元"
+   ```
+
+   Claude will automatically use the accounting analysis skill!
+
+### Available MCP Tools
+
+When running as an MCP server, the skill exposes three tools:
+
+1. **`analyze_accounting_scenario`** - Analyze business scenarios
+2. **`validate_journal_entry`** - Validate journal entries
+3. **`generate_sample_transaction`** - Generate sample transactions from rules
+
+### Configuration Options
+
+Set via environment variables:
+
+- `AI_PROVIDER_TYPE` - Provider type (`openai`, `ollama`, `azure`)
+- `AI_API_ENDPOINT` - API endpoint URL
+- `AI_API_KEY` or `OPENAI_API_KEY` - API key
+- `AI_MODEL` - Model name (default: `gpt-4`)
+
+### Using with Local Models (Ollama)
+
+For privacy-focused deployments:
+
+```bash
+# Start Ollama
+ollama serve
+
+# Configure MCP server for Ollama
+export AI_PROVIDER_TYPE=ollama
+export AI_API_ENDPOINT=http://localhost:11434
+export AI_MODEL=llama2
+
+npm run mcp:server
+```
+
+See [MCP_GUIDE.md](./MCP_GUIDE.md) for complete MCP server documentation.
 
 ## API Reference
 
@@ -389,12 +468,17 @@ skill.ts (Main API)
 │   ├── analyzer.ts    - Business logic
 │   ├── validator.ts   - Validation rules
 │   └── types.ts       - Type definitions
-└── adapters/
-    ├── ai-provider.ts - AI service integration
-    └── storage/
-        ├── base.ts    - Storage interface
-        ├── memory.ts  - In-memory impl
-        └── database.ts - DB impl
+├── adapters/
+│   ├── ai-provider.ts - AI service integration
+│   └── storage/
+│       ├── base.ts    - Storage interface
+│       ├── memory.ts  - In-memory impl
+│       └── database.ts - DB impl
+├── mcp-server.ts      - MCP/Anthropic Skill server
+├── skill.json         - Skill manifest
+└── config/
+    ├── claude-desktop.json - Claude Desktop config
+    └── ollama.json    - Ollama config example
 ```
 
 ## Testing
@@ -424,6 +508,8 @@ describe('AccountingAnalysisSkill', () => {
 
 ## Future Enhancements
 
+- [x] ✅ **MCP (Model Context Protocol) server implementation** - Complete! See [MCP_GUIDE.md](./MCP_GUIDE.md)
+- [x] ✅ **Anthropic Skill manifest** - See [skill.json](./skill.json)
 - [ ] Support for more accounting standards (Japan, EU, etc.)
 - [ ] Multi-currency support
 - [ ] Batch analysis for multiple scenarios
@@ -431,7 +517,7 @@ describe('AccountingAnalysisSkill', () => {
 - [ ] Integration with tax calculation services
 - [ ] Audit trail and change history
 - [ ] Rule template library
-- [ ] MCP (Model Context Protocol) server implementation
+- [ ] Package as standalone npm module
 
 ## License
 

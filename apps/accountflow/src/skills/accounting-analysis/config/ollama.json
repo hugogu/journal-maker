@@ -1,0 +1,15 @@
+{
+  "mcpServers": {
+    "accounting-analysis": {
+      "command": "node",
+      "args": [
+        "/path/to/journal-maker/apps/accountflow/src/skills/accounting-analysis/mcp-server.js"
+      ],
+      "env": {
+        "AI_PROVIDER_TYPE": "ollama",
+        "AI_API_ENDPOINT": "http://localhost:11434",
+        "AI_MODEL": "llama2"
+      }
+    }
+  }
+}

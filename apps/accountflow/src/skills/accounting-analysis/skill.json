@@ -1,0 +1,459 @@
+{
+  "name": "accounting-analysis",
+  "version": "1.0.0",
+  "description": "AI-powered accounting analysis skill for analyzing business scenarios and generating accounting artifacts (subjects, journal rules, flow diagrams)",
+  "author": "journal-maker",
+  "license": "MIT",
+  "repository": "https://github.com/hugogu/journal-maker",
+  "capabilities": {
+    "accountingStandards": ["CN", "US_GAAP", "IFRS"],
+    "outputFormats": ["json", "mermaid"],
+    "validation": true,
+    "multiLanguage": true
+  },
+  "tools": [
+    {
+      "name": "analyze_accounting_scenario",
+      "description": "Analyze a business scenario and generate accounting subjects, journal rules, and optional flow diagrams. Supports Chinese, US GAAP, and IFRS accounting standards. Validates output for correctness (balanced entries, proper account codes).",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "businessScenario": {
+            "type": "string",
+            "description": "Description of the business scenario to analyze (e.g., '公司销售商品收到现金10000元' or 'Company sold goods and received $10,000 cash')"
+          },
+          "accountingStandard": {
+            "type": "string",
+            "enum": ["CN", "US_GAAP", "IFRS"],
+            "description": "Accounting standard to use for the analysis",
+            "default": "CN"
+          },
+          "companyContext": {
+            "type": "object",
+            "description": "Optional company context for more accurate analysis",
+            "properties": {
+              "name": {
+                "type": "string",
+                "description": "Company name"
+              },
+              "industry": {
+                "type": "string",
+                "description": "Industry sector"
+              },
+              "vatRate": {
+                "type": "number",
+                "description": "VAT/tax rate (e.g., 0.13 for 13%)",
+                "minimum": 0,
+                "maximum": 1
+              }
+            }
+          },
+          "existingAccounts": {
+            "type": "array",
+            "description": "Existing chart of accounts to reference (optional but recommended for linking)",
+            "items": {
+              "type": "object",
+              "properties": {
+                "id": {
+                  "type": "number",
+                  "description": "Account ID"
+                },
+                "code": {
+                  "type": "string",
+                  "description": "Account code (e.g., '1001')"
+                },
+                "name": {
+                  "type": "string",
+                  "description": "Account name"
+                },
+                "type": {
+                  "type": "string",
+                  "enum": ["asset", "liability", "equity", "revenue", "expense"],
+                  "description": "Account type"
+                },
+                "direction": {
+                  "type": "string",
+                  "enum": ["debit", "credit", "both"],
+                  "description": "Normal balance direction"
+                }
+              },
+              "required": ["id", "code", "name", "type", "direction"]
+            }
+          },
+          "includeFlowDiagram": {
+            "type": "boolean",
+            "description": "Whether to generate a Mermaid flow diagram",
+            "default": true
+          }
+        },
+        "required": ["businessScenario"]
+      },
+      "outputSchema": {
+        "type": "object",
+        "properties": {
+          "subjects": {
+            "type": "array",
+            "description": "Accounting subjects (accounts) involved in the scenario",
+            "items": {
+              "type": "object",
+              "properties": {
+                "code": {
+                  "type": "string",
+                  "description": "Account code"
+                },
+                "name": {
+                  "type": "string",
+                  "description": "Account name"
+                },
+                "direction": {
+                  "type": "string",
+                  "enum": ["debit", "credit", "both"],
+                  "description": "Normal balance direction"
+                },
+                "type": {
+                  "type": "string",
+                  "enum": ["asset", "liability", "equity", "revenue", "expense"],
+                  "description": "Account type"
+                },
+                "description": {
+                  "type": "string",
+                  "description": "Account description"
+                },
+                "accountId": {
+                  "type": "number",
+                  "description": "Linked account ID (if matched with existing accounts)"
+                }
+              },
+              "required": ["code", "name", "direction"]
+            }
+          },
+          "journalRules": {
+            "type": "array",
+            "description": "Journal entry rules for the business scenario",
+            "items": {
+              "type": "object",
+              "properties": {
+                "eventName": {
+                  "type": "string",
+                  "description": "Business event name"
+                },
+                "eventDescription": {
+                  "type": "string",
+                  "description": "Detailed description of the event"
+                },
+                "debitSide": {
+                  "type": "object",
+                  "description": "Debit side entries",
+                  "properties": {
+                    "entries": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "accountCode": {
+                            "type": "string"
+                          },
+                          "accountName": {
+                            "type": "string"
+                          },
+                          "amountFormula": {
+                            "type": "string",
+                            "description": "Amount or formula (e.g., '{{amount}}' or '{{amount}} * 0.13')"
+                          }
+                        }
+                      }
+                    }
+                  }
+                },
+                "creditSide": {
+                  "type": "object",
+                  "description": "Credit side entries",
+                  "properties": {
+                    "entries": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "accountCode": {
+                            "type": "string"
+                          },
+                          "accountName": {
+                            "type": "string"
+                          },
+                          "amountFormula": {
+                            "type": "string"
+                          }
+                        }
+                      }
+                    }
+                  }
+                },
+                "variables": {
+                  "type": "array",
+                  "items": {
+                    "type": "string"
+                  },
+                  "description": "Variables used in formulas"
+                }
+              }
+            }
+          },
+          "flowDiagram": {
+            "type": "string",
+            "description": "Mermaid syntax flow diagram (if requested)"
+          },
+          "reasoning": {
+            "type": "string",
+            "description": "AI's reasoning for the analysis"
+          },
+          "confidence": {
+            "type": "number",
+            "description": "Confidence score (0-1)",
+            "minimum": 0,
+            "maximum": 1
+          },
+          "warnings": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "description": "Validation warnings (non-blocking)"
+          }
+        },
+        "required": ["subjects", "journalRules"]
+      }
+    },
+    {
+      "name": "validate_journal_entry",
+      "description": "Validate a journal entry for correctness. Checks for balanced debits and credits, valid account codes, proper formatting, and accounting principle compliance.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "entry": {
+            "type": "object",
+            "description": "Journal entry to validate",
+            "properties": {
+              "description": {
+                "type": "string",
+                "description": "Entry description"
+              },
+              "debitSide": {
+                "type": "object",
+                "properties": {
+                  "entries": {
+                    "type": "array",
+                    "items": {
+                      "type": "object",
+                      "properties": {
+                        "accountCode": {
+                          "type": "string"
+                        },
+                        "amount": {
+                          "type": "number",
+                          "minimum": 0
+                        }
+                      },
+                      "required": ["accountCode"]
+                    }
+                  }
+                },
+                "required": ["entries"]
+              },
+              "creditSide": {
+                "type": "object",
+                "properties": {
+                  "entries": {
+                    "type": "array",
+                    "items": {
+                      "type": "object",
+                      "properties": {
+                        "accountCode": {
+                          "type": "string"
+                        },
+                        "amount": {
+                          "type": "number",
+                          "minimum": 0
+                        }
+                      },
+                      "required": ["accountCode"]
+                    }
+                  }
+                },
+                "required": ["entries"]
+              }
+            },
+            "required": ["debitSide", "creditSide"]
+          }
+        },
+        "required": ["entry"]
+      },
+      "outputSchema": {
+        "type": "object",
+        "properties": {
+          "isValid": {
+            "type": "boolean",
+            "description": "Whether the entry is valid"
+          },
+          "errors": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "type": {
+                  "type": "string",
+                  "enum": ["UNBALANCED", "INVALID_ACCOUNT", "INVALID_AMOUNT", "MISSING_FIELD", "OTHER"]
+                },
+                "message": {
+                  "type": "string"
+                },
+                "field": {
+                  "type": "string"
+                }
+              }
+            }
+          },
+          "warnings": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "type": {
+                  "type": "string"
+                },
+                "message": {
+                  "type": "string"
+                },
+                "suggestion": {
+                  "type": "string"
+                }
+              }
+            }
+          }
+        },
+        "required": ["isValid", "errors", "warnings"]
+      }
+    },
+    {
+      "name": "generate_sample_transaction",
+      "description": "Generate a sample transaction from a journal rule template by providing variable values.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "rule": {
+            "type": "object",
+            "description": "Journal rule template",
+            "properties": {
+              "eventName": {
+                "type": "string"
+              },
+              "debitSide": {
+                "type": "object"
+              },
+              "creditSide": {
+                "type": "object"
+              }
+            },
+            "required": ["eventName", "debitSide", "creditSide"]
+          },
+          "variables": {
+            "type": "object",
+            "description": "Variable values (e.g., {'amount': 1000, 'vatRate': 0.13})",
+            "additionalProperties": {
+              "type": "number"
+            }
+          }
+        },
+        "required": ["rule", "variables"]
+      },
+      "outputSchema": {
+        "type": "object",
+        "properties": {
+          "description": {
+            "type": "string"
+          },
+          "entries": {
+            "type": "array",
+            "description": "Generated journal entries with calculated amounts"
+          },
+          "variables": {
+            "type": "object",
+            "description": "Variables used"
+          }
+        }
+      }
+    }
+  ],
+  "configuration": {
+    "aiProvider": {
+      "type": "object",
+      "description": "AI provider configuration",
+      "properties": {
+        "type": {
+          "type": "string",
+          "enum": ["openai", "ollama", "azure"],
+          "default": "openai"
+        },
+        "apiEndpoint": {
+          "type": "string",
+          "description": "API endpoint URL"
+        },
+        "apiKey": {
+          "type": "string",
+          "description": "API key (optional for local models)"
+        },
+        "model": {
+          "type": "string",
+          "description": "Model name to use",
+          "default": "gpt-4"
+        }
+      },
+      "required": ["type", "apiEndpoint", "model"]
+    }
+  },
+  "examples": [
+    {
+      "tool": "analyze_accounting_scenario",
+      "input": {
+        "businessScenario": "公司销售商品收到现金10000元",
+        "accountingStandard": "CN"
+      },
+      "description": "Simple cash sales transaction in Chinese accounting standard"
+    },
+    {
+      "tool": "analyze_accounting_scenario",
+      "input": {
+        "businessScenario": "Company purchased raw materials for $5,000, with $650 VAT. Paid via bank transfer.",
+        "accountingStandard": "US_GAAP",
+        "companyContext": {
+          "industry": "Manufacturing"
+        }
+      },
+      "description": "Material purchase with VAT under US GAAP"
+    },
+    {
+      "tool": "validate_journal_entry",
+      "input": {
+        "entry": {
+          "description": "Sales revenue",
+          "debitSide": {
+            "entries": [
+              {
+                "accountCode": "1001",
+                "amount": 1000
+              }
+            ]
+          },
+          "creditSide": {
+            "entries": [
+              {
+                "accountCode": "6001",
+                "amount": 1000
+              }
+            ]
+          }
+        }
+      },
+      "description": "Validate a simple journal entry"
+    }
+  ]
+}

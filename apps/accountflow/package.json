@@ -18,9 +18,11 @@
     "db:studio": "drizzle-kit studio",
     "db:seed": "tsx src/server/db/seed.ts",
     "test": "vitest",
-    "test:e2e": "playwright test"
+    "test:e2e": "playwright test",
+    "mcp:server": "tsx src/skills/accounting-analysis/mcp-server.ts"
   },
   "dependencies": {
+    "@modelcontextprotocol/sdk": "^1.0.4",
     "@tanstack/vue-table": "^8.21.3",
     "@types/markdown-it": "^14.1.2",
     "drizzle-orm": "^0.45.1",
