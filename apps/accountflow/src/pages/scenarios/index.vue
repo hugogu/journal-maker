@@ -10,21 +10,51 @@
       </NuxtLink>
     </div>
 
+    <!-- Bulk export action bar -->
+    <div
+      v-if="selectedIds.size > 0"
+      class="sticky top-0 z-40 mb-4 p-3 bg-purple-50 border border-purple-200 rounded-lg flex items-center justify-between gap-3"
+    >
+      <span class="text-sm text-purple-800 font-medium">
+        已选择 {{ selectedIds.size }} 个场景
+      </span>
+      <div class="flex items-center gap-2">
+        <FormatSelector @select="handleBulkExport" :disabled="exporting" />
+        <button
+          class="text-sm text-gray-500 hover:text-gray-700 px-2 py-1"
+          @click="selectedIds.clear()"
+        >
+          取消选择
+        </button>
+      </div>
+    </div>
+
     <div class="grid gap-3">
       <div
         v-for="scenario in scenarios"
         :key="scenario.id"
-        class="group bg-white rounded-lg border border-gray-200 hover:border-blue-300 hover:shadow-md transition-all duration-200"
+        class="group bg-white rounded-lg border transition-all duration-200"
+        :class="selectedIds.has(scenario.id)
+          ? 'border-purple-300 shadow-sm'
+          : 'border-gray-200 hover:border-blue-300 hover:shadow-md'"
       >
         <div class="p-5">
           <!-- Header with title and meta info -->
           <div class="flex items-start justify-between gap-4 mb-3">
-            <NuxtLink
-              :to="`/scenarios/${scenario.id}`"
-              class="text-lg font-semibold text-gray-900 hover:text-blue-600 transition-colors flex-1"
-            >
-              <h3>{{ scenario.name }}</h3>
-            </NuxtLink>
+            <div class="flex items-center gap-3 flex-1 min-w-0">
+              <input
+                type="checkbox"
+                :checked="selectedIds.has(scenario.id)"
+                class="w-4 h-4 rounded border-gray-300 text-purple-600 focus:ring-purple-500 cursor-pointer flex-shrink-0"
+                @change="toggleSelection(scenario.id)"
+              />
+              <NuxtLink
+                :to="`/scenarios/${scenario.id}`"
+                class="text-lg font-semibold text-gray-900 hover:text-blue-600 transition-colors flex-1 truncate"
+              >
+                <h3>{{ scenario.name }}</h3>
+              </NuxtLink>
+            </div>
 
             <!-- Status and date on the right -->
             <div class="flex items-center gap-2 flex-shrink-0">
@@ -84,10 +114,14 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted } from 'vue'
+import { ref, reactive, onMounted } from 'vue'
 import type { Scenario } from '~/types'
+import FormatSelector from '~/components/export/FormatSelector.vue'
+import { useExport } from '~/composables/useExport'
 
 const scenarios = ref<Scenario[]>([])
+const selectedIds = reactive(new Set<number>())
+const { exportScenarios, exporting } = useExport()
 
 onMounted(async () => {
   const response = await $fetch('/api/scenarios')
@@ -95,6 +129,18 @@ onMounted(async () => {
     scenarios.value = response.data
   }
 })
+
+function toggleSelection(id: number) {
+  if (selectedIds.has(id)) {
+    selectedIds.delete(id)
+  } else {
+    selectedIds.add(id)
+  }
+}
+
+function handleBulkExport(format: 'xlsx' | 'csv') {
+  exportScenarios(Array.from(selectedIds), format)
+}
 
 function statusText(status: string) {
   const map: Record<string, string> = {

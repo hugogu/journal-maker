@@ -33,10 +33,10 @@
           <p class="font-medium text-green-900">示例交易</p>
           <p class="text-sm text-green-700 mt-1">查看示例记账数据</p>
         </NuxtLink>
-        <button class="p-4 bg-purple-50 rounded-lg text-center hover:bg-purple-100 transition-colors" @click="exportData('json')">
-          <p class="font-medium text-purple-900">导出数据</p>
+        <div class="p-4 bg-purple-50 rounded-lg text-center">
+          <FormatSelector @select="handleExport" />
           <p class="text-sm text-purple-700 mt-1">下载分析结果</p>
-        </button>
+        </div>
         <button 
           v-if="scenario.status === 'draft'" 
           class="p-4 bg-orange-50 rounded-lg text-center hover:bg-orange-100 transition-colors"
@@ -203,6 +203,8 @@ import { useAccountingEvents } from '../../../composables/useAccountingEvents'
 import AccountingSubjectList from '../../../components/analysis/AccountingSubjectList.vue'
 import AccountingRuleCard from '../../../components/analysis/AccountingRuleCard.vue'
 import FlowDiagramViewer from '../../../components/analysis/FlowDiagramViewer.vue'
+import FormatSelector from '../../../components/export/FormatSelector.vue'
+import { useExport } from '../../../composables/useExport'
 import type { Account } from '../../../types'
 
 interface Scenario {
@@ -223,6 +225,9 @@ const scenarioId = parseInt(route.params.id as string, 10)
 const confirmedAnalysis = useConfirmedAnalysis(scenarioId)
 const accountingEvents = useAccountingEvents(scenarioId)
 const existingAccounts = ref<Account[]>([])
+
+// Export
+const { exportScenario } = useExport()
 
 // Event editing state
 const editingEventId = ref<number | null>(null)
@@ -339,8 +344,7 @@ async function confirmScenario() {
   }
 }
 
-function exportData(format: string) {
-  const url = `/api/scenarios/${route.params.id}/export?format=${format}`
-  window.open(url, '_blank')
+function handleExport(format: 'xlsx' | 'csv') {
+  exportScenario(scenarioId, format)
 }
 </script>

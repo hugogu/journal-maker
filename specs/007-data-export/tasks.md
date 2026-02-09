@@ -28,10 +28,10 @@ All paths relative to `apps/accountflow/`:
 
 **Purpose**: Install dependencies and create foundational types/utilities that all user stories share
 
-- [ ] T001 Install `exceljs` and `archiver` dependencies, plus `@types/archiver` as devDependency in `apps/accountflow/package.json`
-- [ ] T002 Create export TypeScript types (`ExportRuleRow`, `ExportAccountRow`, `ExportScenarioData`) in `src/server/utils/export/types.ts`
-- [ ] T003 Update Zod export schema to add `csv` format option in `src/server/utils/schemas.ts` — change `exportScenarioSchema.format` from `z.enum(['json', 'excel'])` to `z.enum(['json', 'xlsx', 'csv'])`
-- [ ] T004 Add bulk export Zod schema (`bulkExportSchema`) with `scenarioIds` array and `format` enum in `src/server/utils/schemas.ts`
+- [x] T001 Install `exceljs` and `archiver` dependencies, plus `@types/archiver` as devDependency in `apps/accountflow/package.json`
+- [x] T002 Create export TypeScript types (`ExportRuleRow`, `ExportAccountRow`, `ExportScenarioData`) in `src/server/utils/export/types.ts`
+- [x] T003 Update Zod export schema to add `csv` format option in `src/server/utils/schemas.ts` — change `exportScenarioSchema.format` from `z.enum(['json', 'excel'])` to `z.enum(['json', 'xlsx', 'csv'])`
+- [x] T004 Add bulk export Zod schema (`bulkExportSchema`) with `scenarioIds` array and `format` enum in `src/server/utils/schemas.ts`
 
 ---
 
@@ -41,10 +41,10 @@ All paths relative to `apps/accountflow/`:
 
 **CRITICAL**: No user story work can begin until this phase is complete
 
-- [ ] T005 Implement data transformer utility in `src/server/utils/export/data-transformer.ts` — functions: `flattenRuleToRows(rule, scenarioName)` that handles both legacy single-entry and normalized multi-entry JSONB formats for `debitSide`/`creditSide`, returning `ExportRuleRow[]`; `mapAccountToRow(account)` returning `ExportAccountRow`; `extractAccountCodes(rules)` extracting unique account codes from all rule sides
-- [ ] T006 Implement Excel builder utility in `src/server/utils/export/excel-builder.ts` — function: `buildExcelWorkbook(scenarios: ExportScenarioData[])` that creates an `exceljs` Workbook with an "Accounts" worksheet and one rules worksheet per scenario (worksheet names truncated to 31 chars), returns the workbook buffer
-- [ ] T007 Implement CSV builder utility in `src/server/utils/export/csv-builder.ts` — functions: `buildCsvString(headers, rows)` with RFC 4180 escaping and UTF-8 BOM prefix; `buildCsvZipBuffer(files: {name, content}[])` using `archiver` to create a ZIP buffer from multiple CSV strings
-- [ ] T008 Implement filename sanitizer utility in `src/server/utils/export/data-transformer.ts` — function: `sanitizeFilename(name)` using pattern `/[<>:"/\\|?*\x00-\x1f]/g` to preserve Chinese characters while removing filesystem-unsafe characters
+- [x] T005 Implement data transformer utility in `src/server/utils/export/data-transformer.ts` — functions: `flattenRuleToRows(rule, scenarioName)` that handles both legacy single-entry and normalized multi-entry JSONB formats for `debitSide`/`creditSide`, returning `ExportRuleRow[]`; `mapAccountToRow(account)` returning `ExportAccountRow`; `extractAccountCodes(rules)` extracting unique account codes from all rule sides
+- [x] T006 Implement Excel builder utility in `src/server/utils/export/excel-builder.ts` — function: `buildExcelWorkbook(scenarios: ExportScenarioData[])` that creates an `exceljs` Workbook with an "Accounts" worksheet and one rules worksheet per scenario (worksheet names truncated to 31 chars), returns the workbook buffer
+- [x] T007 Implement CSV builder utility in `src/server/utils/export/csv-builder.ts` — functions: `buildCsvString(headers, rows)` with RFC 4180 escaping and UTF-8 BOM prefix; `buildCsvZipBuffer(files: {name, content}[])` using `archiver` to create a ZIP buffer from multiple CSV strings
+- [x] T008 Implement filename sanitizer utility in `src/server/utils/export/data-transformer.ts` — function: `sanitizeFilename(name)` using pattern `/[<>:"/\\|?*\x00-\x1f]/g` to preserve Chinese characters while removing filesystem-unsafe characters
 
 **Checkpoint**: Export utilities ready — endpoint and UI work can now begin
 
@@ -60,9 +60,9 @@ All paths relative to `apps/accountflow/`:
 
 ### Implementation for User Story 1 & 2
 
-- [ ] T009 [US1] Implement export data query function in `src/server/db/queries/export.ts` — function: `getExportDataForScenarios(scenarioIds, companyId)` that queries `journal_rules` with `status = 'confirmed'` and `scenarioId IN (...)`, joins to `scenarios` for name, then queries `accounts` by extracted account codes from flattened rule sides. Returns `{ scenarios: [{name, rules}], accounts }`.
-- [ ] T010 [US1] Enhance existing export endpoint in `src/server/api/scenarios/[id]/export.get.ts` — add `xlsx` and `csv` format handling: parse format from query using updated Zod schema, call `getExportDataForScenarios`, transform via `data-transformer`, build via `excel-builder` or `csv-builder`, set correct `Content-Type` and `Content-Disposition` headers, return binary buffer. Keep existing `json` format path unchanged. Return JSON error message `{ success: false, message }` when no confirmed rules exist.
-- [ ] T011 [US1] Update filename generation in `src/server/api/scenarios/[id]/export.get.ts` — replace current regex `/[^a-zA-Z0-9\-_]/g` with `sanitizeFilename()` to preserve Chinese characters in filenames. Generate `{scenario-name}-export.xlsx` or `{scenario-name}-export.zip` filenames.
+- [x] T009 [US1] Implement export data query function in `src/server/db/queries/export.ts` — function: `getExportDataForScenarios(scenarioIds, companyId)` that queries `journal_rules` with `status = 'confirmed'` and `scenarioId IN (...)`, joins to `scenarios` for name, then queries `accounts` by extracted account codes from flattened rule sides. Returns `{ scenarios: [{name, rules}], accounts }`.
+- [x] T010 [US1] Enhance existing export endpoint in `src/server/api/scenarios/[id]/export.get.ts` — add `xlsx` and `csv` format handling: parse format from query using updated Zod schema, call `getExportDataForScenarios`, transform via `data-transformer`, build via `excel-builder` or `csv-builder`, set correct `Content-Type` and `Content-Disposition` headers, return binary buffer. Keep existing `json` format path unchanged. Return JSON error message `{ success: false, message }` when no confirmed rules exist.
+- [x] T011 [US1] Update filename generation in `src/server/api/scenarios/[id]/export.get.ts` — replace current regex `/[^a-zA-Z0-9\-_]/g` with `sanitizeFilename()` to preserve Chinese characters in filenames. Generate `{scenario-name}-export.xlsx` or `{scenario-name}-export.zip` filenames.
 
 **Checkpoint**: Single-scenario export works via direct API call (`/api/scenarios/:id/export?format=xlsx|csv`). Both accounts and rules are included. MVP backend is complete.
 
@@ -78,9 +78,9 @@ All paths relative to `apps/accountflow/`:
 
 ### Implementation for User Story 4
 
-- [ ] T012 [P] [US4] Create `FormatSelector.vue` component in `src/components/export/FormatSelector.vue` — a dropdown or small dialog that emits selected format (`xlsx` or `csv`). Props: `disabled: boolean`. Emit: `select(format: 'xlsx' | 'csv')`. Style with Tailwind CSS consistent with existing buttons.
-- [ ] T013 [P] [US4] Create `useExport` composable in `src/composables/useExport.ts` — provides `exportScenario(scenarioId, format)` that opens `/api/scenarios/{id}/export?format={format}` in a new tab, and `exportScenarios(scenarioIds, format)` that POSTs to `/api/scenarios/export` and triggers download from the response blob. Handles the "no confirmed rules" JSON error response by showing a user-friendly alert/toast.
-- [ ] T014 [US4] Update scenario detail page in `src/pages/scenarios/[id]/index.vue` — replace current hardcoded `exportData('json')` button with `FormatSelector` component + `useExport` composable. On format select, call `exportScenario(id, format)`. Keep the same button position and styling (purple theme).
+- [x] T012 [P] [US4] Create `FormatSelector.vue` component in `src/components/export/FormatSelector.vue` — a dropdown or small dialog that emits selected format (`xlsx` or `csv`). Props: `disabled: boolean`. Emit: `select(format: 'xlsx' | 'csv')`. Style with Tailwind CSS consistent with existing buttons.
+- [x] T013 [P] [US4] Create `useExport` composable in `src/composables/useExport.ts` — provides `exportScenario(scenarioId, format)` that opens `/api/scenarios/{id}/export?format={format}` in a new tab, and `exportScenarios(scenarioIds, format)` that POSTs to `/api/scenarios/export` and triggers download from the response blob. Handles the "no confirmed rules" JSON error response by showing a user-friendly alert/toast.
+- [x] T014 [US4] Update scenario detail page in `src/pages/scenarios/[id]/index.vue` — replace current hardcoded `exportData('json')` button with `FormatSelector` component + `useExport` composable. On format select, call `exportScenario(id, format)`. Keep the same button position and styling (purple theme).
 
 **Checkpoint**: Single-scenario export has full UI with format selection. Users can choose xlsx or csv from the scenario detail page.
 
@@ -94,9 +94,9 @@ All paths relative to `apps/accountflow/`:
 
 ### Implementation for User Story 3
 
-- [ ] T015 [US3] Create bulk export API endpoint in `src/server/api/scenarios/export.post.ts` — validate request body with `bulkExportSchema`, verify all scenario IDs belong to the requesting user's company, call `getExportDataForScenarios(scenarioIds, companyId)`, deduplicate accounts by code, build Excel (one rules worksheet per scenario + shared Accounts worksheet) or CSV ZIP (one `{name}-rules.csv` per scenario + `accounts.csv`), return binary response with `Content-Disposition: attachment; filename="scenarios-export-{YYYY-MM-DD}.{ext}"`.
-- [ ] T016 [US3] Add scenario selection checkboxes to scenario list page in `src/pages/scenarios/index.vue` — add a `ref<Set<number>>` for selected scenario IDs, render a checkbox on each scenario card, show selection count.
-- [ ] T017 [US3] Add "Export Selected" action bar to scenario list page in `src/pages/scenarios/index.vue` — show a floating/sticky action bar when 1+ scenarios are selected, containing a `FormatSelector` component and an "Export Selected" button. Wire to `useExport.exportScenarios(selectedIds, format)`. Disable the action bar when no scenarios are selected.
+- [x] T015 [US3] Create bulk export API endpoint in `src/server/api/scenarios/export.post.ts` — validate request body with `bulkExportSchema`, verify all scenario IDs belong to the requesting user's company, call `getExportDataForScenarios(scenarioIds, companyId)`, deduplicate accounts by code, build Excel (one rules worksheet per scenario + shared Accounts worksheet) or CSV ZIP (one `{name}-rules.csv` per scenario + `accounts.csv`), return binary response with `Content-Disposition: attachment; filename="scenarios-export-{YYYY-MM-DD}.{ext}"`.
+- [x] T016 [US3] Add scenario selection checkboxes to scenario list page in `src/pages/scenarios/index.vue` — add a `ref<Set<number>>` for selected scenario IDs, render a checkbox on each scenario card, show selection count.
+- [x] T017 [US3] Add "Export Selected" action bar to scenario list page in `src/pages/scenarios/index.vue` — show a floating/sticky action bar when 1+ scenarios are selected, containing a `FormatSelector` component and an "Export Selected" button. Wire to `useExport.exportScenarios(selectedIds, format)`. Disable the action bar when no scenarios are selected.
 
 **Checkpoint**: Bulk export from scenario list page works end-to-end. Users can select multiple scenarios and download combined exports.
 
@@ -106,10 +106,10 @@ All paths relative to `apps/accountflow/`:
 
 **Purpose**: Edge cases, cleanup, and validation across all stories
 
-- [ ] T018 Handle edge case: worksheet name deduplication in `src/server/utils/export/excel-builder.ts` — when multiple scenarios have the same name (after truncation to 31 chars), append numeric suffix (e.g., "Purchase Order", "Purchase Order (2)")
-- [ ] T019 Handle edge case: empty export for bulk endpoint in `src/server/api/scenarios/export.post.ts` — if none of the selected scenarios have confirmed rules, return `{ success: false, message: "No confirmed rules found in any selected scenario" }` with status 400
-- [ ] T020 Verify Unicode handling end-to-end — ensure Chinese characters in scenario names, account names, and descriptions survive round-trip through filename sanitization, Excel worksheet content, and CSV encoding (BOM + UTF-8)
-- [ ] T021 Run quickstart.md validation — follow all steps in `specs/007-data-export/quickstart.md` to verify the feature works as documented
+- [x] T018 Handle edge case: worksheet name deduplication in `src/server/utils/export/excel-builder.ts` — when multiple scenarios have the same name (after truncation to 31 chars), append numeric suffix (e.g., "Purchase Order", "Purchase Order (2)")
+- [x] T019 Handle edge case: empty export for bulk endpoint in `src/server/api/scenarios/export.post.ts` — if none of the selected scenarios have confirmed rules, return `{ success: false, message: "No confirmed rules found in any selected scenario" }` with status 400
+- [x] T020 Verify Unicode handling end-to-end — ensure Chinese characters in scenario names, account names, and descriptions survive round-trip through filename sanitization, Excel worksheet content, and CSV encoding (BOM + UTF-8)
+- [x] T021 Run quickstart.md validation — follow all steps in `specs/007-data-export/quickstart.md` to verify the feature works as documented
 
 ---
 
