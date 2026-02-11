@@ -4,7 +4,13 @@
       "Bash(git fetch:*)",
       "Bash(powershell -Command \"git fetch --all --prune\")",
       "Bash(powershell.exe -Command \"New-Item -ItemType Directory -Path ''E:\\\\OpenSource\\\\journal-maker\\\\apps\\\\accountflow\\\\src\\\\utils'' -Force\")",
-      "Bash(powershell.exe -ExecutionPolicy Bypass -Command \"cd ''E:\\\\OpenSource\\\\journal-maker\\\\apps\\\\accountflow''; pnpm typecheck 2>&1 | Select-Object -First 80\")"
+      "Bash(powershell.exe -ExecutionPolicy Bypass -Command \"cd ''E:\\\\OpenSource\\\\journal-maker\\\\apps\\\\accountflow''; pnpm typecheck 2>&1 | Select-Object -First 80\")",
+      "Bash(openspec new change:*)",
+      "Bash(pwsh:*)",
+      "Bash(6)",
+      "Bash(node -e:*)",
+      "Bash(powershell:*)",
+      "Bash(git add:*)"
     ]
   }
 }
