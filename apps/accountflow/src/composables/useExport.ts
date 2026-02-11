@@ -16,29 +16,26 @@ export function useExport() {
     error.value = null
 
     try {
-      const response = await $fetch<Blob | { success: boolean; message?: string }>(
-        `/api/scenarios/${scenarioId}/export?format=${format}`,
-        { responseType: 'blob' }
+      const response = await fetch(
+        `/api/scenarios/${scenarioId}/export?format=${format}`
       )
+      if (!response.ok) {
+        throw new Error(`Export failed: ${response.statusText}`)
+      }
 
-      // Check if response is a JSON error (no confirmed rules)
-      if (response instanceof Blob && response.type === 'application/json') {
-        const text = await response.text()
-        try {
-          const json = JSON.parse(text)
-          if (json.success === false) {
-            error.value = json.message || '没有可导出的已确认规则'
-            alert(error.value)
-            return
-          }
-        } catch {
-          // Not JSON, treat as file download
+      const contentType = response.headers.get('Content-Type')
+      if (contentType?.includes('application/json')) {
+        const json = await response.json()
+        if (json.success === false) {
+          error.value = json.message || '没有可导出的已确认规则'
+          alert(error.value)
+          return
         }
       }
 
-      if (response instanceof Blob) {
-        downloadBlob(response, format, scenarioId)
-      }
+      const blob = await response.blob()
+
+      downloadBlob(blob, format, scenarioId)
     } catch (e) {
       error.value = '导出失败'
       console.error('Export failed:', e)
@@ -58,36 +55,31 @@ export function useExport() {
     error.value = null
 
     try {
-      const response = await $fetch<Blob | { success: boolean; message?: string }>(
-        '/api/scenarios/export',
-        {
-          method: 'POST',
-          body: { scenarioIds, format },
-          responseType: 'blob',
-        }
-      )
+      const response = await fetch('/api/scenarios/export', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ scenarioIds, format }),
+      })
 
-      // Check if response is a JSON error
-      if (response instanceof Blob && response.type === 'application/json') {
-        const text = await response.text()
-        try {
-          const json = JSON.parse(text)
-          if (json.success === false) {
-            error.value = json.message || '所选场景中没有可导出的已确认规则'
-            alert(error.value)
-            return
-          }
-        } catch {
-          // Not JSON, treat as file download
+      if (!response.ok) {
+        throw new Error(`Bulk export failed: ${response.statusText}`)
+      }
+
+      const contentType = response.headers.get('Content-Type')
+      if (contentType?.includes('application/json')) {
+        const json = await response.json()
+        if (json.success === false) {
+          error.value = json.message || '所选场景中没有可导出的已确认规则'
+          alert(error.value)
+          return
         }
       }
 
-      if (response instanceof Blob) {
-        const date = new Date().toISOString().slice(0, 10)
-        const ext = format === 'xlsx' ? 'xlsx' : 'zip'
-        const filename = `scenarios-export-${date}.${ext}`
-        triggerDownload(response, filename)
-      }
+      const blob = await response.blob()
+      const date = new Date().toISOString().slice(0, 10)
+      const ext = format === 'xlsx' ? 'xlsx' : 'zip'
+      const filename = `scenarios-export-${date}.${ext}`
+      triggerDownload(blob, filename)
     } catch (e) {
       error.value = '批量导出失败'
       console.error('Bulk export failed:', e)

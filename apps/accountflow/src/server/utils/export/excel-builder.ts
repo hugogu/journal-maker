@@ -1,4 +1,4 @@
-import * as ExcelJS from 'exceljs'
+import ExcelJS from 'exceljs'
 import type { ExportPayload } from './types'
 
 const ACCOUNT_HEADERS = [

@@ -17,13 +17,14 @@ interface RawJournalRule {
 
 /**
  * Represents a raw account row from the database.
+ * Uses broad string types to accept both Drizzle enum types and plain strings.
  */
-interface RawAccount {
+export interface RawAccount {
   code: string
   name: string
   type: string
   direction: string
-  description: string | null
+  description: string | null | undefined
   isActive: boolean
 }
 
@@ -107,12 +108,13 @@ export function flattenRuleToRows(rule: RawJournalRule, scenarioName: string): E
 /**
  * Map a raw account to an export account row.
  */
-export function mapAccountToRow(account: RawAccount): ExportAccountRow {
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+export function mapAccountToRow(account: any): ExportAccountRow {
   return {
     accountCode: account.code,
     accountName: account.name,
-    accountType: account.type,
-    normalDirection: account.direction,
+    accountType: String(account.type),
+    normalDirection: String(account.direction),
     description: account.description ?? '',
     active: account.isActive ? 'Yes' : 'No',
   }
