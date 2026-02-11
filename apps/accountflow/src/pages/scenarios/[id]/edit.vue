@@ -73,6 +73,9 @@
 <script setup lang="ts">
 import { ref, onMounted } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
+import { useToast } from '~/composables/useToast'
+
+const toast = useToast()
 
 interface Scenario {
   id: number
@@ -108,9 +111,9 @@ onMounted(async () => {
         isTemplate: scenario.isTemplate || false
       }
     }
-  } catch (e) {
+  } catch (e: any) {
     console.error('Failed to load scenario:', e)
-    alert('加载失败')
+    toast.error(e?.data?.message || '加载失败，请重试')
   } finally {
     loading.value = false
   }
@@ -128,9 +131,11 @@ async function saveScenario() {
         isTemplate: form.value.isTemplate
       }
     })
+    toast.success('场景更新成功')
     router.back()
-  } catch (e) {
+  } catch (e: any) {
     console.error('Failed to update scenario:', e)
+    toast.error(e?.data?.message || '更新失败，请重试')
   } finally {
     saving.value = false
   }

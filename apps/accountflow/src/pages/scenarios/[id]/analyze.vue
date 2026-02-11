@@ -72,7 +72,10 @@ import RequestLogViewer from '../../../components/conversation/RequestLogViewer.
 import ResponseStatsViewer from '../../../components/conversation/ResponseStatsViewer.vue'
 import ShareManager from '../../../components/conversation/ShareManager.vue'
 import { useConfirmedAnalysis } from '../../../composables/useConfirmedAnalysis'
+import { useToast } from '../../../composables/useToast'
 import type { ParsedAnalysis } from '../../../types'
+
+const toast = useToast()
 
 const route = useRoute()
 const scenarioId = route.params.id as string
@@ -138,7 +141,9 @@ async function handleConfirm(data: { parsed: ParsedAnalysis; messageId?: number 
   })
 
   if (!success) {
-    alert('保存分析结果失败，请重试')
+    toast.error('保存分析结果失败，请重试')
+  } else {
+    toast.success('分析结果已保存')
   }
 }
 
@@ -146,7 +151,9 @@ async function handleClear() {
   const success = await confirmedAnalysis.clear()
 
   if (!success) {
-    alert('清空分析结果失败，请重试')
+    toast.error('清空分析结果失败，请重试')
+  } else {
+    toast.success('分析结果已清空')
   }
 }
 </script>

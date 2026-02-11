@@ -114,7 +114,12 @@ export const createSampleTransactionSchema = z.object({
 
 // Export schemas
 export const exportScenarioSchema = z.object({
-  format: z.enum(['json', 'excel']),
+  format: z.enum(['json', 'xlsx', 'csv']).default('json'),
+})
+
+export const bulkExportSchema = z.object({
+  scenarioIds: z.array(z.number().int().positive()).min(1).max(50),
+  format: z.enum(['xlsx', 'csv']),
 })
 
 // Confirmed Analysis schemas

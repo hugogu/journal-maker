@@ -55,8 +55,10 @@
 <script setup lang="ts">
 import { ref } from 'vue'
 import { useRouter } from 'vue-router'
+import { useToast } from '~/composables/useToast'
 
 const router = useRouter()
+const toast = useToast()
 
 const form = ref({
   name: '',
@@ -73,12 +75,14 @@ async function createScenario() {
       method: 'POST',
       body: form.value,
     })
-    
+
     if (response.success) {
+      toast.success('场景创建成功')
       router.push(`/scenarios/${response.data.id}/analyze`)
     }
-  } catch (e) {
-    alert('创建失败')
+  } catch (e: any) {
+    console.error('Failed to create scenario:', e)
+    toast.error(e?.data?.message || '创建失败，请重试')
   } finally {
     saving.value = false
   }

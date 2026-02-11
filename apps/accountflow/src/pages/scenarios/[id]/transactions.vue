@@ -75,8 +75,10 @@
 <script setup lang="ts">
 import { ref, onMounted } from 'vue'
 import { useRoute } from 'vue-router'
+import { useToast } from '~/composables/useToast'
 
 const route = useRoute()
+const toast = useToast()
 const transactions = ref([])
 const generating = ref(false)
 
@@ -101,8 +103,9 @@ async function generateSample() {
     if (response.success) {
       await loadTransactions()
     }
-  } catch (e) {
-    alert('生成失败')
+  } catch (e: any) {
+    console.error('Failed to generate transactions:', e)
+    toast.error(e?.data?.message || '生成失败，请重试')
   } finally {
     generating.value = false
   }

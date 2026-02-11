@@ -33,10 +33,10 @@
           <p class="font-medium text-green-900">示例交易</p>
           <p class="text-sm text-green-700 mt-1">查看示例记账数据</p>
         </NuxtLink>
-        <button class="p-4 bg-purple-50 rounded-lg text-center hover:bg-purple-100 transition-colors" @click="exportData('json')">
-          <p class="font-medium text-purple-900">导出数据</p>
+        <div class="p-4 bg-purple-50 rounded-lg text-center">
+          <FormatSelector @select="handleExport" />
           <p class="text-sm text-purple-700 mt-1">下载分析结果</p>
-        </button>
+        </div>
         <button 
           v-if="scenario.status === 'draft'" 
           class="p-4 bg-orange-50 rounded-lg text-center hover:bg-orange-100 transition-colors"
@@ -200,10 +200,15 @@ import { ref, onMounted, computed } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { useConfirmedAnalysis } from '../../../composables/useConfirmedAnalysis'
 import { useAccountingEvents } from '../../../composables/useAccountingEvents'
+import { useToast } from '../../../composables/useToast'
 import AccountingSubjectList from '../../../components/analysis/AccountingSubjectList.vue'
 import AccountingRuleCard from '../../../components/analysis/AccountingRuleCard.vue'
 import FlowDiagramViewer from '../../../components/analysis/FlowDiagramViewer.vue'
+import FormatSelector from '../../../components/export/FormatSelector.vue'
+import { useExport } from '../../../composables/useExport'
 import type { Account } from '../../../types'
+
+const toast = useToast()
 
 interface Scenario {
   id: number
@@ -223,6 +228,9 @@ const scenarioId = parseInt(route.params.id as string, 10)
 const confirmedAnalysis = useConfirmedAnalysis(scenarioId)
 const accountingEvents = useAccountingEvents(scenarioId)
 const existingAccounts = ref<Account[]>([])
+
+// Export
+const { exportScenario } = useExport()
 
 // Event editing state
 const editingEventId = ref<number | null>(null)
@@ -326,21 +334,20 @@ function formatDate(date: string | Date) {
 
 async function confirmScenario() {
   if (!scenario.value) return
-  
+
   try {
     await $fetch(`/api/scenarios/${route.params.id}/confirm`, {
       method: 'POST'
     })
     scenario.value.status = 'confirmed'
-    alert('场景已确认')
-  } catch (e) {
+    toast.success('场景已确认')
+  } catch (e: any) {
     console.error('Failed to confirm scenario:', e)
-    alert('操作失败')
+    toast.error(e?.data?.message || '操作失败，请重试')
   }
 }
 
-function exportData(format: string) {
-  const url = `/api/scenarios/${route.params.id}/export?format=${format}`
-  window.open(url, '_blank')
+function handleExport(format: 'xlsx' | 'csv') {
+  exportScenario(scenarioId, format)
 }
 </script>
