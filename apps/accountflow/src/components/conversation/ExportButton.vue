@@ -17,6 +17,7 @@
 
 <script setup lang="ts">
 import { ref } from 'vue'
+import { useToast } from '~/composables/useToast'
 
 const props = defineProps<{
   scenarioId: number
@@ -25,10 +26,11 @@ const props = defineProps<{
 }>()
 
 const exporting = ref(false)
+const toast = useToast()
 
 function exportConversation() {
   exporting.value = true
-  
+
   try {
     const markdown = generateMarkdown()
     const blob = new Blob([markdown], { type: 'text/markdown' })
@@ -40,9 +42,10 @@ function exportConversation() {
     a.click()
     document.body.removeChild(a)
     URL.revokeObjectURL(url)
+    toast.success('对话导出成功')
   } catch (e) {
     console.error('Export failed:', e)
-    alert('导出失败，请重试')
+    toast.error('导出失败，请重试')
   } finally {
     exporting.value = false
   }

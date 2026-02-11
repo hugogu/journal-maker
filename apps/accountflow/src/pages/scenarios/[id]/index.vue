@@ -200,12 +200,15 @@ import { ref, onMounted, computed } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { useConfirmedAnalysis } from '../../../composables/useConfirmedAnalysis'
 import { useAccountingEvents } from '../../../composables/useAccountingEvents'
+import { useToast } from '../../../composables/useToast'
 import AccountingSubjectList from '../../../components/analysis/AccountingSubjectList.vue'
 import AccountingRuleCard from '../../../components/analysis/AccountingRuleCard.vue'
 import FlowDiagramViewer from '../../../components/analysis/FlowDiagramViewer.vue'
 import FormatSelector from '../../../components/export/FormatSelector.vue'
 import { useExport } from '../../../composables/useExport'
 import type { Account } from '../../../types'
+
+const toast = useToast()
 
 interface Scenario {
   id: number
@@ -331,16 +334,16 @@ function formatDate(date: string | Date) {
 
 async function confirmScenario() {
   if (!scenario.value) return
-  
+
   try {
     await $fetch(`/api/scenarios/${route.params.id}/confirm`, {
       method: 'POST'
     })
     scenario.value.status = 'confirmed'
-    alert('场景已确认')
-  } catch (e) {
+    toast.success('场景已确认')
+  } catch (e: any) {
     console.error('Failed to confirm scenario:', e)
-    alert('操作失败')
+    toast.error(e?.data?.message || '操作失败，请重试')
   }
 }
 

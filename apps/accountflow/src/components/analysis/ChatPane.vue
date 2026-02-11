@@ -191,10 +191,13 @@
 import { ref, watch, nextTick, onMounted, computed } from 'vue'
 import MarkdownIt from 'markdown-it'
 import { useConversation } from '../../composables/useConversation'
+import { useToast } from '../../composables/useToast'
 import ProviderModelSelector from '../ai-config/ProviderModelSelector.vue'
 import ExportButton from '../conversation/ExportButton.vue'
 import ConfirmAnalysisButton from './ConfirmAnalysisButton.vue'
 import type { ParsedAnalysis } from '../../types'
+
+const toast = useToast()
 
 const props = defineProps<{
   scenarioId: string | number
@@ -470,10 +473,10 @@ async function sendMessage() {
 
 function copyMessage(content: string) {
   navigator.clipboard.writeText(content).then(() => {
-    alert('内容已复制到剪贴板')
+    toast.success('内容已复制到剪贴板')
   }).catch(err => {
     console.error('Failed to copy:', err)
-    alert('复制失败，请手动复制')
+    toast.error('复制失败，请手动复制')
   })
 }
 

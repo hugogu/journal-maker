@@ -1,4 +1,5 @@
 import { ref } from 'vue'
+import { useToast } from './useToast'
 
 /**
  * Composable for triggering data exports from the client.
@@ -6,6 +7,7 @@ import { ref } from 'vue'
 export function useExport() {
   const exporting = ref(false)
   const error = ref<string | null>(null)
+  const toast = useToast()
 
   /**
    * Export a single scenario. Opens the export URL in a new tab.
@@ -28,7 +30,7 @@ export function useExport() {
         const json = await response.json()
         if (json.success === false) {
           error.value = json.message || '没有可导出的已确认规则'
-          alert(error.value)
+          toast.warning(error.value)
           return
         }
       }
@@ -36,10 +38,11 @@ export function useExport() {
       const blob = await response.blob()
 
       downloadBlob(blob, format, scenarioId)
+      toast.success('导出成功')
     } catch (e) {
       error.value = '导出失败'
       console.error('Export failed:', e)
-      alert('导出失败，请稍后重试')
+      toast.error('导出失败，请稍后重试')
     } finally {
       exporting.value = false
     }
@@ -70,7 +73,7 @@ export function useExport() {
         const json = await response.json()
         if (json.success === false) {
           error.value = json.message || '所选场景中没有可导出的已确认规则'
-          alert(error.value)
+          toast.warning(error.value)
           return
         }
       }
@@ -80,10 +83,11 @@ export function useExport() {
       const ext = format === 'xlsx' ? 'xlsx' : 'zip'
       const filename = `scenarios-export-${date}.${ext}`
       triggerDownload(blob, filename)
+      toast.success(`成功导出 ${scenarioIds.length} 个场景`)
     } catch (e) {
       error.value = '批量导出失败'
       console.error('Bulk export failed:', e)
-      alert('批量导出失败，请稍后重试')
+      toast.error('批量导出失败，请稍后重试')
     } finally {
       exporting.value = false
     }

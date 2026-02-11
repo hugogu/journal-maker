@@ -118,15 +118,22 @@ import { ref, reactive, onMounted } from 'vue'
 import type { Scenario } from '~/types'
 import FormatSelector from '~/components/export/FormatSelector.vue'
 import { useExport } from '~/composables/useExport'
+import { useToast } from '~/composables/useToast'
 
 const scenarios = ref<Scenario[]>([])
 const selectedIds = reactive(new Set<number>())
 const { exportScenarios, exporting } = useExport()
+const toast = useToast()
 
 onMounted(async () => {
-  const response = await $fetch('/api/scenarios')
-  if (response.success) {
-    scenarios.value = response.data
+  try {
+    const response = await $fetch('/api/scenarios')
+    if (response.success) {
+      scenarios.value = response.data
+    }
+  } catch (error: any) {
+    console.error('Failed to load scenarios:', error)
+    toast.error(error?.data?.message || error?.message || '加载场景列表失败，请检查数据库连接')
   }
 })
 
