@@ -1,17 +1,18 @@
 <template>
   <div class="flow-diagram-viewer">
-    <!-- Error State -->
-    <div v-if="error" class="bg-red-50 border border-red-200 rounded-lg p-4">
-      <p class="text-sm text-red-600">流程图渲染失败</p>
-    </div>
-
     <!-- Container (always rendered to keep ref alive) -->
     <div
-      v-else
       ref="diagramContainer"
       class="mermaid-container overflow-auto bg-white rounded-lg border border-gray-200 p-4 relative"
       style="min-height: 300px;"
     >
+      <div ref="diagramContent"></div>
+
+      <!-- Error overlay -->
+      <div v-if="error && !loading" class="absolute inset-0 p-4 bg-red-50/95 border border-red-200 rounded-lg">
+        <p class="text-sm text-red-600">流程图渲染失败</p>
+      </div>
+
       <!-- Loading Overlay -->
       <div v-if="loading" class="absolute inset-0 flex items-center justify-center bg-white/80">
         <div class="animate-spin rounded-full h-6 w-6 border-b-2 border-green-600"></div>
@@ -45,8 +46,8 @@
           </button>
         </div>
         <div class="p-6 overflow-auto" style="max-height: calc(90vh - 80px);">
-          <div ref="expandedContainer" class="bg-white rounded-lg border border-gray-200 p-4">
-            <!-- Expanded diagram will be rendered here -->
+          <div class="bg-white rounded-lg border border-gray-200 p-4">
+            <div ref="expandedContainer"></div>
           </div>
         </div>
       </div>
@@ -62,6 +63,7 @@ const props = defineProps<{
 }>()
 
 const diagramContainer = ref<HTMLElement | null>(null)
+const diagramContent = ref<HTMLElement | null>(null)
 const expandedContainer = ref<HTMLElement | null>(null)
 const loading = ref(false)
 const error = ref(false)
@@ -69,6 +71,13 @@ const showExpanded = ref(false)
 
 let mermaidInitialized = false
 let mermaid: any = null
+let renderRun = 0
+
+function normalizeMermaidContent(content: string): string {
+  return content
+    .replace(/[“”]/g, '"')
+    .replace(/[‘’]/g, "'")
+}
 
 async function initMermaid() {
   if (mermaidInitialized || typeof window === 'undefined') return
@@ -91,10 +100,12 @@ async function initMermaid() {
 }
 
 async function renderDiagram() {
-  if (!props.mermaidCode || !diagramContainer.value || typeof window === 'undefined') {
+  if (!props.mermaidCode || !diagramContainer.value || !diagramContent.value || typeof window === 'undefined') {
     loading.value = false
     return
   }
+
+  const runId = ++renderRun
 
   loading.value = true
   error.value = false
@@ -109,16 +120,20 @@ async function renderDiagram() {
     }
 
     // Clear previous content
-    diagramContainer.value.innerHTML = ''
+    diagramContent.value.innerHTML = ''
 
     // Generate unique ID for this render
     const id = `mermaid-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`
 
     // Render the diagram
-    const result = await mermaid.render(id, props.mermaidCode)
+    const result = await mermaid.render(id, normalizeMermaidContent(props.mermaidCode))
 
-    if (diagramContainer.value && result.svg) {
-      diagramContainer.value.innerHTML = result.svg
+    if (runId !== renderRun || !diagramContent.value?.isConnected) {
+      return
+    }
+
+    if (diagramContent.value && result.svg) {
+      diagramContent.value.innerHTML = result.svg
     } else {
       error.value = true
     }
@@ -146,7 +161,7 @@ async function renderExpandedDiagram() {
     const id = `mermaid-expanded-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`
 
     // Render the diagram
-    const result = await mermaid.render(id, props.mermaidCode)
+    const result = await mermaid.render(id, normalizeMermaidContent(props.mermaidCode))
 
     if (expandedContainer.value && result.svg) {
       expandedContainer.value.innerHTML = result.svg

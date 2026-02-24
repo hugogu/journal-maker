@@ -26,7 +26,7 @@
 
     <!-- Messages -->
     <div class="flex-1 overflow-y-auto" ref="messagesContainer">
-      <div v-for="(message, index) in messages" :key="index" class="mb-3">
+      <div v-for="(message, index) in messages" :key="message.id ?? `temp-${index}`" class="mb-3">
         <div :class="[
           message.role === 'user' ? 'user-message' : 'assistant-message',
           message.role === 'assistant' && isConfirmed(message.id) ? 'confirmed-message' : ''
@@ -230,6 +230,20 @@ const md = new MarkdownIt({
   typographer: true
 })
 
+function createStableMermaidId(content: string, idx: number): string {
+  let hash = 0
+  for (let i = 0; i < content.length; i++) {
+    hash = ((hash << 5) - hash + content.charCodeAt(i)) | 0
+  }
+  return `mermaid-${idx}-${Math.abs(hash)}`
+}
+
+function normalizeMermaidContent(content: string): string {
+  return content
+    .replace(/[“”]/g, '"')
+    .replace(/[‘’]/g, "'")
+}
+
 // Custom renderer for mermaid diagrams
 const defaultRender = md.renderer.rules.fence || function(tokens, idx, options, env, renderer) {
   return renderer.renderToken(tokens, idx, options)
@@ -241,8 +255,8 @@ md.renderer.rules.fence = function(tokens, idx, options, env, renderer) {
 
   if (info === 'mermaid') {
     try {
-      const diagramId = `mermaid-${Date.now()}-${idx}`
-      const encodedContent = encodeURIComponent(token.content)
+      const diagramId = createStableMermaidId(token.content, idx)
+      const encodedContent = encodeURIComponent(normalizeMermaidContent(token.content))
       return `<div class="mermaid-container" id="${diagramId}" data-content="${encodedContent}"></div>`
     } catch (error) {
       console.error('Mermaid rendering error:', error)
@@ -259,6 +273,19 @@ const streamingContent = ref('')
 const streamingKey = ref(0) // Key for streaming content updates
 const messagesContainer = ref<HTMLElement>()
 const expandedMessages = ref<Set<number>>(new Set())
+let mermaidRenderRun = 0
+let mermaidRenderTimer: ReturnType<typeof setTimeout> | null = null
+
+function scheduleMermaidRender(delay = 50) {
+  if (mermaidRenderTimer) {
+    clearTimeout(mermaidRenderTimer)
+  }
+
+  mermaidRenderTimer = setTimeout(() => {
+    void renderMermaidDiagrams()
+    mermaidRenderTimer = null
+  }, delay)
+}
 
 // AI Provider selection
 const aiProviders = ref<any[]>([])
@@ -307,11 +334,9 @@ async function deleteMessage(index: number, messageId?: number) {
 watch(() => messages.value.length, async (newLength, oldLength) => {
   if (newLength > 0 && newLength !== oldLength) {
     await nextTick()
-    setTimeout(() => {
-      renderMermaidDiagrams()
-    }, 50)
+    scheduleMermaidRender(50)
   }
-}, { immediate: true })
+}, { immediate: false })
 
 onMounted(async () => {
   await loadProviders()
@@ -319,7 +344,7 @@ onMounted(async () => {
 
   if (messages.value.length > 0) {
     await nextTick()
-    renderMermaidDiagrams()
+    scheduleMermaidRender(0)
   }
 })
 
@@ -341,9 +366,7 @@ async function toggleExpand(index: number) {
   
   // Re-render Mermaid diagrams after expansion state changes
   await nextTick()
-  setTimeout(() => {
-    renderMermaidDiagrams()
-  }, 50)
+  scheduleMermaidRender(50)
 }
 
 function isExpanded(index: number): boolean {
@@ -400,7 +423,7 @@ async function sendMessage() {
         streamingKey.value++ // Increment key to force re-render when streaming ends
         scrollToBottom()
         await nextTick()
-        renderMermaidDiagrams()
+        scheduleMermaidRender(0)
         break
       }
 
@@ -436,7 +459,7 @@ async function sendMessage() {
               await loadMessages()
               scrollToBottom()
               await nextTick()
-              setTimeout(() => renderMermaidDiagrams(), 100)
+              scheduleMermaidRender(100)
               return
             } else if (data.type === 'error') {
               let errorContent = '抱歉，处理请求时出错：' + data.message
@@ -483,6 +506,8 @@ function copyMessage(content: string) {
 async function renderMermaidDiagrams() {
   if (typeof window === 'undefined') return
 
+  const runId = ++mermaidRenderRun
+
   // Dynamic import for client-side only
   const mermaidModule = await import('mermaid')
   const mermaid = mermaidModule.default
@@ -496,23 +521,29 @@ async function renderMermaidDiagrams() {
     suppressErrorRendering: true
   })
 
-  const containers = document.querySelectorAll('.mermaid-container')
+  const containers = Array.from(document.querySelectorAll('.mermaid-container'))
 
-  containers.forEach(async (container, index) => {
+  for (const [index, container] of containers.entries()) {
     try {
       const encodedContent = container.getAttribute('data-content')
-      if (!encodedContent) return
+      if (!encodedContent) continue
 
-      let content = decodeURIComponent(encodedContent)
-      if (!content.trim()) return
+      const content = normalizeMermaidContent(decodeURIComponent(encodedContent))
+      if (!content.trim()) continue
 
       const diagramId = `mermaid-${Date.now()}-${index}`
       const { svg } = await mermaid.render(diagramId, content.trim())
+
+      // Skip stale or detached nodes to avoid Vue patch races
+      if (runId !== mermaidRenderRun || !container.isConnected) {
+        continue
+      }
+
       container.innerHTML = svg
     } catch (error) {
       console.error(`Mermaid rendering error for container ${index}:`, error)
       const encodedContent = container.getAttribute('data-content')
-      if (encodedContent) {
+      if (encodedContent && container.isConnected && runId === mermaidRenderRun) {
         // Show user-friendly error message in the container
         const errorDiv = document.createElement('div')
         errorDiv.className = 'text-red-500 text-sm p-3 bg-red-50 rounded border border-red-200'
@@ -532,7 +563,7 @@ async function renderMermaidDiagrams() {
         container.appendChild(errorDiv)
       }
     }
-  })
+  }
 }
 
 function scrollToBottom(force = false) {
