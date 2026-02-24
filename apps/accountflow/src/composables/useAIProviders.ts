@@ -13,9 +13,9 @@ export const useAIProviders = () => {
     loading.value = true
     error.value = null
     try {
-      const { data } = await useFetch('/api/admin/ai-providers')
-      if (data.value) {
-        providers.value = data.value.data
+      const response = await $fetch('/api/admin/ai-providers')
+      if (response.data) {
+        providers.value = response.data
       }
     } catch (e) {
       error.value = 'Failed to fetch providers'
