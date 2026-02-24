@@ -36,4 +36,4 @@ services:
     depends_on:
       postgres:
         condition: service_healthy
-    command: node .output/server/index.mjs
+    command: sh -c "npm run db:migrate && node .output/server/index.mjs"

@@ -120,6 +120,8 @@ cp .env.example .env
 docker compose up -d
 ```
 
+首次启动时会在应用容器内自动执行数据库迁移，无需手工运行 `npm run db:migrate`。
+
 默认访问地址：`http://localhost:3000`
 
 ## 📁 项目结构

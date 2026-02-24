@@ -107,6 +107,8 @@ docker compose up -d
 # 应用将运行在 http://localhost:3000
 ```
 
+首次 `docker compose up -d` 会自动执行数据库迁移，无需再手工运行 `npm run db:migrate`。
+
 可通过根目录 `.env` 控制端口映射和挂载路径（示例见根目录 `.env.example`）：
 
 ```env
