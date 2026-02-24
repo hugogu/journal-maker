@@ -18,12 +18,16 @@
 ```bash
 # 1. Clone repository
 git clone <repository-url>
-cd journal-maker/apps/accountflow
+cd journal-maker
 
-# 2. Start with Docker Compose
-docker-compose up
+# 2. Prepare root env config
+cp .env.example .env
+# Edit .env if you need custom ports/mounts (APP_PORT/DB_PORT/DB_DATA_HOST_PATH...)
 
-# 3. Open browser
+# 3. Start with Docker Compose
+docker compose up
+
+# 4. Open browser
 open http://localhost:3000
 ```
 
@@ -44,7 +48,7 @@ npm install
 ### 2. Environment Setup
 
 ```bash
-cp .env.example .env
+cp ../../.env.example ../../.env
 ```
 
 Edit `.env`:
@@ -66,7 +70,7 @@ MOCK_AI=false
 
 ```bash
 # Start PostgreSQL
-docker-compose up -d db
+docker compose up -d postgres
 
 # Run migrations
 npm run db:migrate

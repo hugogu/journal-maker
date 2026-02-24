@@ -1,0 +1,39 @@
+services:
+  postgres:
+    image: postgres:15-alpine
+    container_name: ${DB_CONTAINER_NAME:-accountflow-db}
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-postgres}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-postgres}
+      POSTGRES_DB: ${POSTGRES_DB:-accountflow}
+    ports:
+      - "${DB_PORT:-5432}:5432"
+    volumes:
+      - ${DB_DATA_HOST_PATH:-./postgres-data}:${DB_DATA_CONTAINER_PATH:-/var/lib/postgresql/data}
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-postgres}"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  app:
+    build:
+      context: ./apps/accountflow
+      dockerfile: Dockerfile
+    container_name: ${APP_CONTAINER_NAME:-accountflow-app}
+    environment:
+      NODE_ENV: ${NODE_ENV:-production}
+      DATABASE_URL: postgresql://${POSTGRES_USER:-postgres}:${POSTGRES_PASSWORD:-postgres}@postgres:5432/${POSTGRES_DB:-accountflow}
+      OPENAI_API_KEY: ${OPENAI_API_KEY:-}
+      OPENAI_API_ENDPOINT: ${OPENAI_API_ENDPOINT:-https://api.openai.com/v1}
+      OPENAI_MODEL: ${OPENAI_MODEL:-gpt-4}
+      MOCK_AI: ${MOCK_AI:-false}
+      AI_KEY_ENCRYPTION_SECRET: ${AI_KEY_ENCRYPTION_SECRET:-}
+    ports:
+      - "${APP_PORT:-3000}:3000"
+    volumes:
+      - ${APP_DATA_HOST_PATH:-./apps/accountflow/.data}:${APP_DATA_CONTAINER_PATH:-/app/accountflow/.data}
+    depends_on:
+      postgres:
+        condition: service_healthy
+    command: node .output/server/index.mjs

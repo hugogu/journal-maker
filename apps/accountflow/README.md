@@ -28,18 +28,16 @@ AI-assisted accounting rule analysis tool for business scenarios.
 ### 安装
 
 ```bash
-# 进入项目目录
-cd apps/accountflow
-
-# 安装依赖
-npm install
-
-# 配置环境变量
+# 在仓库根目录配置 Docker Compose 环境变量
 cp .env.example .env
-# 编辑 .env 文件，设置数据库连接和AI配置
+# 编辑 .env，按需调整端口映射与文件挂载
 
-# 启动数据库
-docker-compose up -d postgres
+# 启动数据库（在仓库根目录执行）
+docker compose up -d postgres
+
+# 进入应用目录并安装依赖
+cd apps/accountflow
+npm install
 
 # 运行数据库迁移
 npm run db:migrate
@@ -82,16 +80,13 @@ npm run dev
 
 **Docker 模式配置**：
 ```bash
-# 方式1: 在 docker-compose.yml 中设置
-# 编辑 docker-compose.yml，在 app 服务的 environment 中添加：
-#   - AI_KEY_ENCRYPTION_SECRET=your-32-character-secret-key-here
-
-# 方式2: 使用 .env 文件
-# 创建 .env 文件，添加 AI_KEY_ENCRYPTION_SECRET=your-32-character-secret-key-here
-# docker-compose 会自动读取
+# 推荐方式: 在仓库根目录 .env 中设置
+# cp .env.example .env
+# 编辑 .env，添加：
+# AI_KEY_ENCRYPTION_SECRET=your-32-character-secret-key-here
 
 # 启动
-docker-compose up -d
+docker compose up -d
 ```
 
 **安全提示**：
@@ -103,10 +98,27 @@ docker-compose up -d
 ### Docker部署
 
 ```bash
+# 在仓库根目录准备配置
+cp .env.example .env
+
 # 构建并启动所有服务
-docker-compose up -d
+docker compose up -d
 
 # 应用将运行在 http://localhost:3000
+```
+
+可通过根目录 `.env` 控制端口映射和挂载路径（示例见根目录 `.env.example`）：
+
+```env
+# 端口映射
+APP_PORT=3000
+DB_PORT=5432
+
+# 文件挂载
+DB_DATA_HOST_PATH=./postgres-data
+DB_DATA_CONTAINER_PATH=/var/lib/postgresql/data
+APP_DATA_HOST_PATH=./apps/accountflow/.data
+APP_DATA_CONTAINER_PATH=/app/accountflow/.data
 ```
 
 ## 项目结构
@@ -123,7 +135,6 @@ apps/accountflow/
 │   │   └── utils/      # 服务端工具
 │   ├── types/          # TypeScript类型
 │   └── assets/         # 静态资源
-├── docker-compose.yml
 ├── nuxt.config.ts
 └── package.json
 ```

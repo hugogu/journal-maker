@@ -107,12 +107,20 @@ http://localhost:3000
 ### Docker 部署
 
 ```bash
-# 构建镜像
-docker build -t accountflow .
+# 复制配置模板
+cp .env.example .env
 
-# 运行容器
-docker run -p 3000:3000 --env-file .env accountflow
+# 按需编辑 .env：端口映射与文件挂载
+# APP_PORT=3000
+# DB_PORT=5432
+# DB_DATA_HOST_PATH=./postgres-data
+# APP_DATA_HOST_PATH=./apps/accountflow/.data
+
+# 启动服务
+docker compose up -d
 ```
+
+默认访问地址：`http://localhost:3000`
 
 ## 📁 项目结构
 
