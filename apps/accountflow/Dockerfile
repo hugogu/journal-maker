@@ -31,6 +31,10 @@ COPY --from=builder /app/accountflow/node_modules ./node_modules
 # Copy package.json for reference
 COPY --from=builder /app/accountflow/package*.json ./
 
+# Copy migration runtime files for `npm run db:migrate`
+COPY --from=builder /app/accountflow/drizzle.config.ts ./drizzle.config.ts
+COPY --from=builder /app/accountflow/src/server/db/migrations ./src/server/db/migrations
+
 # Expose the port Nuxt runs on
 EXPOSE 3000
 

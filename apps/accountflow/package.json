@@ -14,7 +14,7 @@
     "lint:fix": "eslint . --ext .vue,.ts,.js --fix",
     "format": "prettier --write .",
     "db:generate": "drizzle-kit generate",
-    "db:migrate": "drizzle-kit migrate",
+    "db:migrate": "drizzle-kit migrate --config=drizzle.config.ts",
     "db:studio": "drizzle-kit studio",
     "db:seed": "tsx src/server/db/seed.ts",
     "test": "vitest",
