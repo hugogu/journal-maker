@@ -67,7 +67,19 @@ export async function confirmMessage(messageId: number, scenarioId: number) {
   // Save and confirm analysis data from this message
   if (message.structuredData) {
     const structuredData = message.structuredData as any
-    const { subjects, rules, diagrams } = structuredData
+    // Handle both 'subjects' and 'accounts' field names (AI returns 'accounts')
+    let subjects = structuredData.subjects
+    if (!subjects && structuredData.accounts) {
+      // Map accounts to subjects format
+      subjects = structuredData.accounts.map((a: any) => ({
+        code: a.code,
+        name: a.name,
+        direction: a.type === 'asset' ? 'debit' : a.type === 'liability' ? 'credit' : 'debit',
+        description: a.reason,
+      }))
+    }
+ 
+    const { rules, diagrams } = structuredData
     if (subjects || rules || diagrams) {
       // Import the analysis functions
       const { saveAndConfirmAnalysis } = await import('./analysis')

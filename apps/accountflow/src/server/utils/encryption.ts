@@ -3,10 +3,12 @@ import crypto from 'crypto'
 // Default encryption key for development (32 characters)
 const DEFAULT_KEY = 'accountflow-dev-key-for-32-chars'
 
-const ENCRYPTION_KEY = process.env.AI_KEY_ENCRYPTION_SECRET || DEFAULT_KEY
+// Check if AI_KEY_ENCRYPTION_SECRET is configured and not empty
+const envKey = process.env.AI_KEY_ENCRYPTION_SECRET
+const ENCRYPTION_KEY = envKey?.trim() || DEFAULT_KEY
 
-if (!process.env.AI_KEY_ENCRYPTION_SECRET) {
-  console.warn('AI_KEY_ENCRYPTION_SECRET not set, using default development key. Please set a custom key in production!')
+if (!envKey || !envKey.trim()) {
+  console.warn('AI_KEY_ENCRYPTION_SECRET not set or empty, using default development key. Please set a custom key in production!')
 }
 
 const ALGORITHM = 'aes-256-gcm'

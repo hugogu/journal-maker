@@ -289,6 +289,7 @@ export const ParsedAnalysis = z.object({
   subjects: z.array(AccountingSubject),
   rules: z.array(AccountingRule),
   diagrams: z.array(z.string()), // Mermaid code strings
+  entries: z.array(AnalysisEntry).optional(),
   rawContent: z.string(),
 })
 export type ParsedAnalysis = z.infer<typeof ParsedAnalysis>

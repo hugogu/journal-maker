@@ -26,10 +26,13 @@ export default defineEventHandler(async (event) => {
   const parsed = confirmAnalysisRequestSchema.safeParse(body)
 
   if (!parsed.success) {
-    throw createError({
-      statusCode: 400,
-      message: parsed.error.errors[0]?.message || 'Invalid request body',
-    })
+      // Zod v3 uses .errors, v4 uses .issues
+      const issues = (parsed.error as any).issues || parsed.error.errors || []
+      console.error(`[Confirmed Analysis API] Validation failed:`, JSON.stringify(issues, null, 2))
+      throw createError({
+        statusCode: 400,
+        message: issues[0]?.message || parsed.error.message || 'Invalid request body',
+      })
   }
 
   const { subjects, rules, diagramMermaid, sourceMessageId } = parsed.data

@@ -141,9 +141,9 @@ flowchart LR
     ],
     "rules": [
       {
-        "event": "事件描述",
-        "debit": "借方科目代码",
-        "credit": "贷方科目代码",
+        "event": "事件名称",
+        "debit": "借方科目代码（不要有金额，只能有一个）",
+        "credit": "贷方科目代码（不要有金额，只能有一个）",
         "description": "分录说明"
       }
     ]

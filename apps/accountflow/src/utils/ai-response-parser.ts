@@ -69,6 +69,30 @@ export function extractSubjects(content: string): AccountingSubject[] {
 }
 
 /**
+ * Clean account code by removing amount information
+ * Converts formats like "2202-07:1015" or "2202-07:1000;6601-01:10" to just "2202-07"
+ * Returns null if format is invalid
+ */
+function cleanAccountCode(account: string | undefined): string | undefined {
+  if (!account) return undefined
+  
+  // Handle multiple accounts (semicolon separated) - take only the first one
+  const firstAccount = account.split(';')[0].trim()
+  
+  // Remove amount suffix (colon followed by number)
+  // Match pattern like "2202-07:1015" -> extract "2202-07"
+  const cleanCode = firstAccount.replace(/:\d+$/, '').trim()
+  
+  // Validate the cleaned code (should be alphanumeric with optional hyphens)
+  if (!/^\w[\w\-]*$/.test(cleanCode)) {
+    console.warn(`[cleanAccountCode] Invalid account code after cleaning: "${cleanCode}" (original: "${account}")`)
+    return undefined
+  }
+  
+  return cleanCode
+}
+
+/**
  * Extract accounting rules from AI response
  */
 export function extractRules(content: string): AccountingRule[] {
@@ -78,14 +102,31 @@ export function extractRules(content: string): AccountingRule[] {
     const rules = structuredData.rules.map((r: any, index: number) => {
       // Extract event name from various possible formats
       const eventName = r.event?.name || r.event || r.eventName || undefined
+      
+      // Clean account codes (remove amount information)
+      const rawDebit = r.debit || r.debitAccount
+      const rawCredit = r.credit || r.creditAccount
+      const debitAccount = cleanAccountCode(rawDebit)
+      const creditAccount = cleanAccountCode(rawCredit)
+
+      // Log if we had to clean the data
+      if ((rawDebit && rawDebit !== debitAccount) || (rawCredit && rawCredit !== creditAccount)) {
+        console.log(`[extractRules] Rule ${index + 1} cleaned account codes:`, {
+          id: r.id,
+          rawDebit: rawDebit,
+          cleanedDebit: debitAccount,
+          rawCredit: rawCredit,
+          cleanedCredit: creditAccount
+        })
+      }
 
       return {
         id: r.id || `RULE-${String(index + 1).padStart(3, '0')}`,
-        event: eventName, // Properly extract event name
+        event: eventName,
         description: r.description || r.event?.description || '',
         condition: r.condition || r.event?.condition,
-        debitAccount: r.debit || r.debitAccount,
-        creditAccount: r.credit || r.creditAccount,
+        debitAccount,
+        creditAccount,
       }
     }).filter(isValidRule)
     if (rules.length > 0) return rules
@@ -138,7 +179,7 @@ export function hasExtractableContent(parsed: ParsedAnalysis): boolean {
     parsed.subjects.length > 0 ||
     parsed.rules.length > 0 ||
     parsed.diagrams.length > 0 ||
-    parsed.entries.length > 0
+    !!(parsed.entries && parsed.entries.length > 0)
   )
 }
 

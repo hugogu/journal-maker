@@ -132,7 +132,7 @@
               <div v-if="!isGroupCollapsed(group.eventName)" class="p-3 space-y-3">
                 <AccountingRuleCard
                   v-for="rule in group.rules"
-                  :key="rule.id"
+                  :key="rule._uniqueId"
                   :rule="rule"
                   @save-rule="handleSaveRule"
                 />
@@ -144,7 +144,7 @@
           <div v-else class="space-y-3">
             <AccountingRuleCard
               v-for="rule in rulesWithStatus"
-              :key="rule.id"
+              :key="rule._uniqueId"
               :rule="rule"
               @save-rule="handleSaveRule"
             />
