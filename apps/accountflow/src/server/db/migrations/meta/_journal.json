@@ -50,6 +50,13 @@
       "when": 1770389135437,
       "tag": "0006_luxuriant_magus",
       "breakpoints": true
+    },
+    {
+      "idx": 7,
+      "version": "7",
+      "when": 1772187000000,
+      "tag": "0007_initial_accounts",
+      "breakpoints": true
     }
   ],
   "folders": [
