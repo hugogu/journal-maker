@@ -94,7 +94,7 @@ flowchart TD
     Decision1 -->|否| End[结束]
     Event2 --> End
 ```
-IMPORTANT: When creating mermaid flowchart nodes, avoid using square brackets [], parentheses (), or other special characters in node labels. Use simple descriptive text instead.
+IMPORTANT: When creating mermaid flowchart nodes, avoid using square brackets [], parentheses (), or other special characters in node labels. Use simple descriptive text instead. 同时引号要使用英文引号，不要使用中文引号。
 
 ## 5. 资金/信息流图 (Mermaid)
 绘制一次典型交易中，各账户间的资金流（实线）和信息流（虚线）：
