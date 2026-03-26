@@ -1,0 +1,300 @@
+openapi: 3.0.0
+info:
+  title: Cross-System Comparison API
+  description: API for comparing analyses across different accounting systems
+  version: 1.0.0
+
+paths:
+  /api/scenarios/{scenarioId}/compare:
+    parameters:
+      - name: scenarioId
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+    
+    get:
+      summary: Compare analyses across systems
+      description: Returns side-by-side comparison of analyses for this scenario across specified systems
+      parameters:
+        - name: systemIds
+          in: query
+          required: true
+          schema:
+            type: array
+            items:
+              type: string
+              format: uuid
+          description: Array of system IDs to compare (2-4 systems)
+        - name: view
+          in: query
+          schema:
+            type: string
+            enum: [entries, rules, flowcharts, all]
+            default: all
+          description: Type of comparison to return
+      responses:
+        '200':
+          description: Comparison results
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ComparisonResult'
+        '400':
+          description: Invalid system IDs or too many systems requested
+        '404':
+          description: Scenario or systems not found
+
+  /api/analyses/compare:
+    post:
+      summary: Compare specific analyses
+      description: Compares two or more specific analysis results
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - analysisIds
+              properties:
+                analysisIds:
+                  type: array
+                  minItems: 2
+                  maxItems: 4
+                  items:
+                    type: string
+                    format: uuid
+                  description: Analysis IDs to compare
+                view:
+                  type: string
+                  enum: [entries, rules, flowcharts, all]
+                  default: all
+      responses:
+        '200':
+          description: Comparison results
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ComparisonResult'
+
+  /api/scenarios/{scenarioId}/systems:
+    parameters:
+      - name: scenarioId
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+    
+    get:
+      summary: Get systems with analyses for scenario
+      description: Returns all systems that have analyzed this scenario
+      responses:
+        '200':
+          description: Systems with analysis status
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  systems:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        system:
+                          $ref: '#/components/schemas/SystemInfo'
+                        analysis:
+                          type: object
+                          nullable: true
+                          properties:
+                            id:
+                              type: string
+                              format: uuid
+                            status:
+                              type: string
+                              enum: [pending, processing, completed, failed]
+                            createdAt:
+                              type: string
+                              format: date-time
+                        hasDifferences:
+                          type: boolean
+                          description: Whether this system differs from others
+
+components:
+  schemas:
+    ComparisonResult:
+      type: object
+      properties:
+        scenarioId:
+          type: string
+          format: uuid
+        comparisonId:
+          type: string
+          format: uuid
+        systems:
+          type: array
+          items:
+            $ref: '#/components/schemas/ComparedSystem'
+        differences:
+          type: array
+          items:
+            $ref: '#/components/schemas/Difference'
+        summary:
+          type: object
+          properties:
+            totalDifferences:
+              type: integer
+            accountDifferences:
+              type: integer
+            amountDifferences:
+              type: integer
+            timingDifferences:
+              type: integer
+            ruleDifferences:
+              type: integer
+
+    ComparedSystem:
+      type: object
+      properties:
+        systemId:
+          type: string
+          format: uuid
+        systemName:
+          type: string
+        analysisId:
+          type: string
+          format: uuid
+        journalEntries:
+          type: array
+          items:
+            $ref: '#/components/schemas/ComparedEntry'
+        appliedRules:
+          type: array
+          items:
+            $ref: '#/components/schemas/ComparedRule'
+        flowchart:
+          type: string
+          description: Mermaid.js flowchart
+
+    ComparedEntry:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        date:
+          type: string
+          format: date
+        description:
+          type: string
+        debits:
+          type: array
+          items:
+            $ref: '#/components/schemas/ComparedLineItem'
+        credits:
+          type: array
+          items:
+            $ref: '#/components/schemas/ComparedLineItem'
+        diffStatus:
+          type: string
+          enum: [identical, modified, added, removed]
+          description: Diff status relative to other systems
+
+    ComparedLineItem:
+      type: object
+      properties:
+        accountId:
+          type: string
+          format: uuid
+        accountCode:
+          type: string
+        accountName:
+          type: string
+        amount:
+          type: number
+        description:
+          type: string
+        diffStatus:
+          type: string
+          enum: [identical, modified, added, removed]
+        diffDetails:
+          type: object
+          nullable: true
+          properties:
+            field:
+              type: string
+              description: Field that differs (amount, account, etc.)
+            otherValues:
+              type: object
+              description: Values in other systems
+
+    ComparedRule:
+      type: object
+      properties:
+        ruleId:
+          type: string
+          format: uuid
+        ruleName:
+          type: string
+        description:
+          type: string
+        diffStatus:
+          type: string
+          enum: [identical, modified, added, removed]
+
+    Difference:
+      type: object
+      properties:
+        type:
+          type: string
+          enum: [account, amount, timing, rule, entry]
+        severity:
+          type: string
+          enum: [high, medium, low]
+        description:
+          type: string
+        systems:
+          type: array
+          items:
+            type: string
+            format: uuid
+          description: System IDs involved in this difference
+        relatedEntries:
+          type: array
+          items:
+            type: string
+            format: uuid
+          description: Entry IDs related to this difference
+        explanation:
+          type: object
+          description: Why this difference exists
+          properties:
+            cause:
+              type: string
+              enum: [different_accounts, different_rules, different_preferences, system_specific]
+            details:
+              type: string
+            relatedRuleId:
+              type: string
+              format: uuid
+              nullable: true
+            relatedPreferenceKey:
+              type: string
+              nullable: true
+
+    SystemInfo:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        name:
+          type: string
+        type:
+          type: string
+          enum: [builtin, custom]
+        description:
+          type: string

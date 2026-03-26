@@ -1,0 +1,314 @@
+openapi: 3.0.0
+info:
+  title: Accounting Systems API
+  description: API for managing accounting systems (体系)
+  version: 1.0.0
+
+paths:
+  /api/systems:
+    get:
+      summary: List all accounting systems
+      description: Returns list of accounting systems with optional filtering
+      parameters:
+        - name: type
+          in: query
+          schema:
+            type: string
+            enum: [builtin, custom]
+          description: Filter by system type
+        - name: status
+          in: query
+          schema:
+            type: string
+            enum: [active, archived]
+          description: Filter by system status
+      responses:
+        '200':
+          description: List of accounting systems
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  systems:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/AccountingSystem'
+    post:
+      summary: Create new accounting system
+      description: Creates a custom accounting system
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - name
+                - description
+              properties:
+                name:
+                  type: string
+                  maxLength: 255
+                  description: System name (must be unique)
+                description:
+                  type: string
+                  description: System description
+      responses:
+        '201':
+          description: System created successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AccountingSystem'
+        '409':
+          description: System name already exists
+
+  /api/systems/{systemId}:
+    parameters:
+      - name: systemId
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+    
+    get:
+      summary: Get system details
+      description: Returns detailed information about an accounting system
+      responses:
+        '200':
+          description: System details
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AccountingSystemWithStats'
+        '404':
+          description: System not found
+
+    patch:
+      summary: Update accounting system
+      description: Updates system metadata (name, description, status)
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                name:
+                  type: string
+                  maxLength: 255
+                description:
+                  type: string
+                status:
+                  type: string
+                  enum: [active, archived]
+      responses:
+        '200':
+          description: System updated successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AccountingSystem'
+        '403':
+          description: Cannot modify built-in system
+        '404':
+          description: System not found
+
+    delete:
+      summary: Delete accounting system
+      description: Deletes a custom system (only if no associated analyses)
+      responses:
+        '204':
+          description: System deleted successfully
+        '403':
+          description: Cannot delete built-in system or system with analyses
+        '404':
+          description: System not found
+
+  /api/systems/{systemId}/accounts:
+    parameters:
+      - name: systemId
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+    
+    get:
+      summary: List accounts for system
+      description: Returns all accounts associated with this system
+      responses:
+        '200':
+          description: List of accounts
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  accounts:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/Account'
+
+    post:
+      summary: Assign accounts to system
+      description: Associates existing accounts with this system
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - accountIds
+              properties:
+                accountIds:
+                  type: array
+                  items:
+                    type: string
+                    format: uuid
+      responses:
+        '200':
+          description: Accounts assigned successfully
+
+  /api/systems/{systemId}/rules:
+    parameters:
+      - name: systemId
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+    
+    get:
+      summary: List rules for system
+      description: Returns all journal rules associated with this system
+      responses:
+        '200':
+          description: List of rules
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  rules:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/JournalRule'
+
+  /api/systems/{systemId}/preferences:
+    parameters:
+      - name: systemId
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+    
+    get:
+      summary: Get system preferences
+      description: Returns all preferences for this system
+      responses:
+        '200':
+          description: System preferences
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  preferences:
+                    type: object
+                    additionalProperties:
+                      type: object
+
+    put:
+      summary: Update system preferences
+      description: Updates system-specific preferences
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                preferences:
+                  type: object
+                  description: Key-value pairs of preferences
+      responses:
+        '200':
+          description: Preferences updated successfully
+
+components:
+  schemas:
+    AccountingSystem:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        name:
+          type: string
+        description:
+          type: string
+        type:
+          type: string
+          enum: [builtin, custom]
+        status:
+          type: string
+          enum: [active, archived]
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+
+    AccountingSystemWithStats:
+      allOf:
+        - $ref: '#/components/schemas/AccountingSystem'
+        - type: object
+          properties:
+            accountCount:
+              type: integer
+              description: Number of accounts in this system
+            ruleCount:
+              type: integer
+              description: Number of rules in this system
+            analysisCount:
+              type: integer
+              description: Number of analyses using this system
+
+    Account:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        code:
+          type: string
+        name:
+          type: string
+        type:
+          type: string
+          enum: [asset, liability, equity, revenue, expense]
+
+    JournalRule:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        name:
+          type: string
+        description:
+          type: string
+        conditions:
+          type: object
+        debitAccountId:
+          type: string
+          format: uuid
+        creditAccountId:
+          type: string
+          format: uuid
