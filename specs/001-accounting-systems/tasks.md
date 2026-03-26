@@ -18,13 +18,13 @@ MVP Scope: User Stories 1 & 2 (Foundation + System-Aware Analysis)
 
 **Independent Test**: Run migrations successfully, verify tables created with proper constraints
 
-- [ ] T001 Create accounting_systems table migration in apps/accountflow/src/server/db/migrations/0009_create_accounting_systems.sql
-- [ ] T002 Create system_accounts junction table migration in apps/accountflow/src/server/db/migrations/0010_create_system_accounts.sql
-- [ ] T003 Create system_rules junction table migration in apps/accountflow/src/server/db/migrations/0011_create_system_rules.sql
-- [ ] T004 Create system_preferences table migration in apps/accountflow/src/server/db/migrations/0012_create_system_preferences.sql
-- [ ] T005 Add system_id column to analysis_entries in apps/accountflow/src/server/db/migrations/0013_add_system_id_to_analysis.sql
-- [ ] T006 Seed built-in systems (Financial Reporting, Management Reporting) in apps/accountflow/src/server/db/seed/systems.ts
-- [ ] T007 Update Drizzle schema definitions in apps/accountflow/src/server/db/schema.ts
+- [X] T001 Create accounting_systems table migration in apps/accountflow/src/server/db/migrations/0008_create_accounting_systems.sql
+- [X] T002 Create system_accounts junction table migration in apps/accountflow/src/server/db/migrations/0009_create_system_accounts.sql
+- [X] T003 Create system_rules junction table migration in apps/accountflow/src/server/db/migrations/0010_create_system_rules.sql
+- [X] T004 Create system_preferences table migration in apps/accountflow/src/server/db/migrations/0011_create_system_preferences.sql
+- [X] T005 Add system_id column to analysis_entries in apps/accountflow/src/server/db/migrations/0012_add_system_id_to_analysis.sql
+- [X] T006 Seed built-in systems (Financial Reporting, Management Reporting) in apps/accountflow/src/server/db/seed/systems.sql
+- [X] T007 Update Drizzle schema definitions in apps/accountflow/src/server/db/schema.ts
 
 ---
 
