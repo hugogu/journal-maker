@@ -44,7 +44,7 @@
             maxlength="1000"
             class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
             placeholder="描述该体系的用途和特点..."
-          /></textarea>
+          ></textarea>
         </div>
 
         <!-- Error message -->
