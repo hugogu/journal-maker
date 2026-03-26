@@ -69,14 +69,14 @@ MVP Scope: User Stories 1 & 2 (Foundation + System-Aware Analysis)
 
 **Independent Test**: API returns system-specific accounts and rules; analysis stores system reference
 
-- [ ] T025 [P] [US2] Create GET /api/systems/[id]/context endpoint in apps/accountflow/src/server/api/systems/[id]/context.get.ts
-- [ ] T026 [US2] Create GET /api/systems/[id]/accounts endpoint in apps/accountflow/src/server/api/systems/[id]/accounts.get.ts
-- [ ] T027 [US2] Create POST /api/systems/[id]/accounts endpoint in apps/accountflow/src/server/api/systems/[id]/accounts.post.ts
-- [ ] T028 [US2] Update analysis service to filter by system in apps/accountflow/src/server/services/analysis.ts
+- [X] T025 [P] [US2] Create GET /api/systems/[id]/context endpoint in apps/accountflow/src/server/api/systems/[id]/context.get.ts
+- [X] T026 [US2] Create GET /api/systems/[id]/accounts endpoint in apps/accountflow/src/server/api/systems/[id]/accounts.ts
+- [X] T027 [US2] Create POST /api/systems/[id]/accounts endpoint in apps/accountflow/src/server/api/systems/[id]/accounts.ts
+- [X] T028 [US2] Update analysis service to include system_id in apps/accountflow/src/server/db/queries/analysis.ts
 - [ ] T029 [US2] Update AI adapter to include system context in apps/accountflow/src/server/utils/ai-adapters/base.ts
 - [ ] T030 [US2] Modify prompt templates to include system info in apps/accountflow/src/server/utils/prompts/analysis.ts
-- [ ] T031 [P] [US2] Create system-aware account queries in apps/accountflow/src/server/db/queries/accounts.ts
-- [ ] T032 [P] [US2] Create system-aware rule queries in apps/accountflow/src/server/db/queries/rules.ts
+- [X] T031 [P] [US2] Create system-aware account queries in apps/accountflow/src/server/db/queries/accounts.ts
+- [X] T032 [P] [US2] Create system-aware rule queries in apps/accountflow/src/server/db/queries/rules.ts
 
 ---
 
