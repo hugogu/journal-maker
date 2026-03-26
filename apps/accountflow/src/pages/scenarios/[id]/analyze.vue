@@ -7,12 +7,35 @@
       </div>
     </div>
 
+    <!-- System Selector Header -->
+    <div v-else class="mb-4 flex items-center justify-between bg-white rounded-lg shadow p-4">
+      <div class="flex items-center gap-4">
+        <h2 class="text-lg font-semibold text-gray-900">{{ scenario?.name }}</h2>
+        <SystemIndicator
+          v-if="selectedSystem"
+          :system-name="selectedSystem.name"
+          show-change-button
+          @change="showSystemSwitcher = true"
+        />
+      </div>
+      <div class="flex items-center gap-2">
+        <span class="text-sm text-gray-500">会计体系:</span>
+        <SystemSelector
+          v-model="selectedSystem"
+          :systems="systems"
+          :loading="systemsLoading"
+          class="w-64"
+        />
+      </div>
+    </div>
+
     <!-- Dual-pane layout with better proportions -->
-    <div v-else class="grid grid-cols-1 lg:grid-cols-3 gap-4 h-full">
+    <div v-else class="grid grid-cols-1 lg:grid-cols-3 gap-4 h-full" style="height: calc(100% - 80px);">
       <!-- Left Pane: Chat (2/3 width) -->
       <ChatPane
         :scenario="scenario"
         :scenario-id="scenarioId"
+        :system-id="selectedSystem?.id"
         @confirm="handleConfirm"
         @show-share="showShareModal = true"
         @show-log="showLog"
@@ -46,6 +69,19 @@
       </div>
     </div>
 
+    <!-- System Switcher Modal -->
+    <div v-if="showSystemSwitcher" class="fixed inset-0 bg-black/50 flex items-center justify-center p-4 z-50">
+      <div class="bg-white rounded-lg max-w-lg w-full">
+        <SystemSwitcher
+          :systems="systems"
+          :current-system-id="selectedSystem?.id"
+          :loading="systemsLoading"
+          @close="showSystemSwitcher = false"
+          @switch="handleSystemSwitch"
+        />
+      </div>
+    </div>
+
     <!-- Share Modal -->
     <div v-if="showShareModal" class="fixed inset-0 bg-black/50 flex items-center justify-center p-4 z-50">
       <div class="bg-white rounded-lg max-w-lg w-full p-6">
@@ -68,12 +104,16 @@ import { ref, onMounted } from 'vue'
 import { useRoute } from 'vue-router'
 import ChatPane from '../../../components/analysis/ChatPane.vue'
 import StatePane from '../../../components/analysis/StatePane.vue'
+import SystemIndicator from '../../../components/analysis/SystemIndicator.vue'
+import SystemSelector from '../../../components/accounting/SystemSelector.vue'
+import SystemSwitcher from '../../../components/analysis/SystemSwitcher.vue'
 import RequestLogViewer from '../../../components/conversation/RequestLogViewer.vue'
 import ResponseStatsViewer from '../../../components/conversation/ResponseStatsViewer.vue'
 import ShareManager from '../../../components/conversation/ShareManager.vue'
 import { useConfirmedAnalysis } from '../../../composables/useConfirmedAnalysis'
+import { useSystems } from '../../../composables/useSystems'
 import { useToast } from '../../../composables/useToast'
-import type { ParsedAnalysis } from '../../../types'
+import type { ParsedAnalysis, AccountingSystem } from '../../../types'
 
 const toast = useToast()
 
@@ -83,6 +123,11 @@ const scenarioIdNum = parseInt(scenarioId, 10)
 
 const loading = ref(true)
 const scenario = ref<any>(null)
+
+// System state
+const { systems, loading: systemsLoading, fetchSystems } = useSystems()
+const selectedSystem = ref<AccountingSystem | null>(null)
+const showSystemSwitcher = ref(false)
 
 // Modal state
 const showLogModal = ref(false)
@@ -100,11 +145,23 @@ onMounted(async () => {
     scenario.value = response.data
   }
 
+  // Load systems and select first active one
+  await fetchSystems({ status: 'active' })
+  if (systems.value.length > 0) {
+    selectedSystem.value = systems.value[0]
+  }
+
   // Load existing confirmed analysis
   await confirmedAnalysis.load()
 
   loading.value = false
 })
+
+function handleSystemSwitch(system: AccountingSystem) {
+  selectedSystem.value = system
+  showSystemSwitcher.value = false
+  toast.success(`已切换到 ${system.name}`)
+}
 
 function showLog(messageId: number) {
   selectedMessageId.value = messageId
@@ -138,6 +195,7 @@ async function handleConfirm(data: { parsed: ParsedAnalysis; messageId?: number 
     rules: data.parsed.rules,
     diagramMermaid: selectedDiagram,
     sourceMessageId: data.messageId ?? null,
+    systemId: selectedSystem.value?.id
   })
 
   if (!success) {

@@ -86,14 +86,14 @@ MVP Scope: User Stories 1 & 2 (Foundation + System-Aware Analysis)
 
 **Independent Test**: Can select system, analyze scenario, see results tagged with system
 
-- [ ] T033 [P] [US2] Add SystemSelector to analysis page header in apps/accountflow/src/components/analysis/AnalysisHeader.vue
-- [ ] T034 [US2] Update scenario analysis flow to include system_id in apps/accountflow/src/composables/useAnalysis.ts
-- [ ] T035 [US2] Create SystemIndicator component in apps/accountflow/src/components/analysis/SystemIndicator.vue
-- [ ] T036 [US2] Display system name in analysis results in apps/accountflow/src/components/analysis/AnalysisResults.vue
-- [ ] T037 [US2] Add system switcher during analysis in apps/accountflow/src/components/analysis/SystemSwitcher.vue
-- [ ] T038 [P] [US2] Persist selected system in Pinia store in apps/accountflow/src/stores/analysis.ts
-- [ ] T039 [US2] Update analysis history to show system in apps/accountflow/src/components/analysis/AnalysisHistory.vue
-- [ ] T040 [P] [US2] Add system context to conversation thread in apps/accountflow/src/composables/useConversation.ts
+- [X] T033 [P] [US2] Add SystemSelector to analysis page header in apps/accountflow/src/pages/scenarios/[id]/analyze.vue
+- [X] T034 [US2] Update scenario analysis flow to include system_id in apps/accountflow/src/composables/useConfirmedAnalysis.ts
+- [X] T035 [US2] Create SystemIndicator component in apps/accountflow/src/components/analysis/SystemIndicator.vue
+- [X] T036 [US2] Display system name in analysis results in apps/accountflow/src/pages/scenarios/[id]/analyze.vue
+- [X] T037 [US2] Add system switcher during analysis in apps/accountflow/src/components/analysis/SystemSwitcher.vue
+- [X] T038 [P] [US2] Persist selected system in component state in apps/accountflow/src/pages/scenarios/[id]/analyze.vue
+- [X] T039 [US2] Update analysis save to include system_id in apps/accountflow/src/composables/useConfirmedAnalysis.ts
+- [X] T040 [P] [US2] Add system context to chat API in apps/accountflow/src/components/analysis/ChatPane.vue
 
 ---
 
