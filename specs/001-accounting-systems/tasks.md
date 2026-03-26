@@ -52,14 +52,14 @@ MVP Scope: User Stories 1 & 2 (Foundation + System-Aware Analysis)
 
 **Independent Test**: Can navigate to admin, create system, see it in list, edit, delete
 
-- [ ] T017 [P] [US1] Create SystemSelector component in apps/accountflow/src/components/accounting/SystemSelector.vue
-- [ ] T018 [P] [US1] Create SystemList page in apps/accountflow/src/pages/admin/systems/index.vue
-- [ ] T019 [US1] Create SystemCreate page in apps/accountflow/src/pages/admin/systems/new.vue
-- [ ] T020 [US1] Create SystemEdit page in apps/accountflow/src/pages/admin/systems/[id]/edit.vue
-- [ ] T021 [P] [US1] Create system store composable in apps/accountflow/src/composables/useSystems.ts
-- [ ] T022 [US1] Add system management to admin navigation in apps/accountflow/src/components/layout/AdminNav.vue
-- [ ] T023 [US1] Create SystemCard component for list view in apps/accountflow/src/components/accounting/SystemCard.vue
-- [ ] T024 [P] [US1] Add system type and status badges in apps/accountflow/src/components/ui/SystemBadge.vue
+- [X] T017 [P] [US1] Create SystemSelector component in apps/accountflow/src/components/accounting/SystemSelector.vue
+- [X] T018 [P] [US1] Create SystemList page in apps/accountflow/src/pages/admin/systems/index.vue
+- [X] T019 [US1] Create SystemCreate page in apps/accountflow/src/pages/admin/systems/new.vue
+- [X] T020 [US1] Create SystemEdit page in apps/accountflow/src/pages/admin/systems/[id]/edit.vue
+- [X] T021 [P] [US1] Create system store composable in apps/accountflow/src/composables/useSystems.ts
+- [X] T022 [US1] Add system management to admin navigation in apps/accountflow/src/pages/admin/index.vue
+- [X] T023 [US1] Create SystemCard component for list view in apps/accountflow/src/components/accounting/SystemCard.vue
+- [X] T024 [P] [US1] Add system type and status badges in apps/accountflow/src/components/accounting/SystemBadge.vue
 
 ---
 

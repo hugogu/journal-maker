@@ -19,6 +19,12 @@ export type ScenarioStatus = z.infer<typeof ScenarioStatus>
 export const JournalRuleStatus = z.enum(['proposal', 'confirmed'])
 export type JournalRuleStatus = z.infer<typeof JournalRuleStatus>
 
+export const AccountingSystemType = z.enum(['builtin', 'custom'])
+export type AccountingSystemType = z.infer<typeof AccountingSystemType>
+
+export const AccountingSystemStatus = z.enum(['active', 'archived'])
+export type AccountingSystemStatus = z.infer<typeof AccountingSystemStatus>
+
 export const MessageRole = z.enum(['user', 'assistant', 'system'])
 export type MessageRole = z.infer<typeof MessageRole>
 
@@ -64,6 +70,18 @@ export const Account = z.object({
   updatedAt: z.date(),
 })
 export type Account = z.infer<typeof Account>
+
+export const AccountingSystem = z.object({
+  id: z.number(),
+  companyId: z.number(),
+  name: z.string(),
+  description: z.string().nullable(),
+  type: AccountingSystemType,
+  status: AccountingSystemStatus,
+  createdAt: z.date(),
+  updatedAt: z.date(),
+})
+export type AccountingSystem = z.infer<typeof AccountingSystem>
 
 export const Scenario = z.object({
   id: z.number(),
