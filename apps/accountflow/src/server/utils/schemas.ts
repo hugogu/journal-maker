@@ -2,6 +2,20 @@ import { z } from 'zod'
 import { zodToJsonSchema as convertZodToJsonSchema } from 'zod-to-json-schema'
 import { AccountType, AccountDirection, UserRole, ScenarioStatus } from '../../types'
 
+// Accounting System schemas
+export const createSystemSchema = z.object({
+  name: z.string().min(1).max(255),
+  description: z.string().max(1000).optional(),
+})
+
+export const updateSystemSchema = createSystemSchema.partial().extend({
+  status: z.enum(['active', 'archived']).optional(),
+})
+
+export const assignAccountsSchema = z.object({
+  accountIds: z.array(z.number().int().positive()).min(1),
+})
+
 // Company schemas
 export const createCompanySchema = z.object({
   name: z.string().min(1).max(100),

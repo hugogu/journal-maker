@@ -34,15 +34,15 @@ MVP Scope: User Stories 1 & 2 (Foundation + System-Aware Analysis)
 
 **Independent Test**: Can create custom system via API, list systems, update metadata, delete custom system
 
-- [ ] T008 [P] [US1] Create GET /api/systems endpoint in apps/accountflow/src/server/api/systems/index.get.ts
-- [ ] T009 [US1] Create POST /api/systems endpoint in apps/accountflow/src/server/api/systems/index.post.ts
-- [ ] T010 [US1] Create GET /api/systems/[id] endpoint in apps/accountflow/src/server/api/systems/[id].get.ts
-- [ ] T011 [US1] Create PATCH /api/systems/[id] endpoint in apps/accountflow/src/server/api/systems/[id].patch.ts
-- [ ] T012 [US1] Create DELETE /api/systems/[id] endpoint in apps/accountflow/src/server/api/systems/[id].delete.ts
-- [ ] T013 [P] [US1] Create Zod schemas for system validation in apps/accountflow/src/server/utils/schemas/systems.ts
-- [ ] T014 [P] [US1] Create system queries module in apps/accountflow/src/server/db/queries/systems.ts
-- [ ] T015 [US1] Add system name uniqueness validation in apps/accountflow/src/server/utils/validators/systems.ts
-- [ ] T016 [US1] Implement built-in system protection middleware in apps/accountflow/src/server/utils/middleware/builtin-protection.ts
+- [X] T008 [P] [US1] Create GET /api/systems endpoint in apps/accountflow/src/server/api/systems/index.ts
+- [X] T009 [US1] Create POST /api/systems endpoint in apps/accountflow/src/server/api/systems/index.ts
+- [X] T010 [US1] Create GET /api/systems/[id] endpoint in apps/accountflow/src/server/api/systems/index.ts
+- [X] T011 [US1] Create PATCH /api/systems/[id] endpoint in apps/accountflow/src/server/api/systems/index.ts
+- [X] T012 [US1] Create DELETE /api/systems/[id] endpoint in apps/accountflow/src/server/api/systems/index.ts
+- [X] T013 [P] [US1] Create Zod schemas for system validation in apps/accountflow/src/server/utils/schemas.ts
+- [X] T014 [P] [US1] Create system queries module in apps/accountflow/src/server/db/queries/systems.ts
+- [X] T015 [US1] Add system name uniqueness validation in apps/accountflow/src/server/api/systems/index.ts
+- [X] T016 [US1] Implement built-in system protection middleware in apps/accountflow/src/server/api/systems/index.ts
 
 ---
 
