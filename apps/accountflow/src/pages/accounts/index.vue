@@ -36,7 +36,7 @@
           </div>
 
           <!-- Type Filter -->
-          <div class="md:col-span-3">
+          <div class="md:col-span-2">
             <select v-model="filterType" class="input w-full">
               <option value="">所有类型</option>
               <option value="asset">资产</option>
@@ -47,8 +47,18 @@
             </select>
           </div>
 
+          <!-- System Filter -->
+          <div class="md:col-span-2">
+            <select v-model="filterSystem" class="input w-full">
+              <option value="">所有体系</option>
+              <option v-for="system in systems" :key="system.id" :value="system.id">
+                {{ system.name }}
+              </option>
+            </select>
+          </div>
+
           <!-- Sort Field -->
-          <div class="md:col-span-3">
+          <div class="md:col-span-2">
             <select v-model="sortField" class="input w-full">
               <option value="code">按代码排序</option>
               <option value="name">按名称排序</option>
@@ -82,7 +92,7 @@
             </svg>
             共 {{ accounts.length }} 个科目
           </span>
-          <span v-if="searchQuery || filterType" class="flex items-center gap-1 text-blue-600">
+          <span v-if="searchQuery || filterType || filterSystem" class="flex items-center gap-1 text-blue-600">
             <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.293A1 1 0 013 6.586V4z"></path>
             </svg>
@@ -101,6 +111,7 @@
             <th class="px-6 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">名称</th>
             <th class="px-6 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">类型</th>
             <th class="px-6 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">方向</th>
+            <th class="px-6 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">所属体系</th>
             <th class="px-6 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">说明</th>
             <th class="px-6 py-3 text-right text-xs font-semibold text-gray-600 uppercase tracking-wider">操作</th>
           </tr>
@@ -147,6 +158,29 @@
                 <option value="debit">借方</option>
                 <option value="credit">贷方</option>
               </select>
+            </td>
+            <td class="px-6 py-4 text-sm">
+              <div v-if="editingId !== account.id" class="flex flex-wrap gap-1">
+                <span 
+                  v-for="system in getAccountSystems(account.id)" 
+                  :key="system.id"
+                  class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-blue-100 text-blue-800"
+                >
+                  {{ system.name }}
+                </span>
+                <span v-if="getAccountSystems(account.id).length === 0" class="text-gray-400 text-xs">-</span>
+              </div>
+              <div v-else class="space-y-1">
+                <label v-for="system in systems" :key="system.id" class="flex items-center gap-2 text-xs">
+                  <input 
+                    type="checkbox" 
+                    :value="system.id" 
+                    v-model="editForm.systemIds"
+                    class="rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+                  >
+                  <span>{{ system.name }}</span>
+                </label>
+              </div>
             </td>
             <td class="px-6 py-4 text-sm text-gray-500">
               <span v-if="editingId !== account.id">{{ account.description || '-' }}</span>
@@ -203,7 +237,7 @@
         <button v-if="!searchQuery && !filterType" @click="showAddModal = true" class="text-blue-600 hover:text-blue-700 text-sm font-medium">
           点击添加第一个科目 →
         </button>
-        <button v-else @click="searchQuery = ''; filterType = ''" class="text-blue-600 hover:text-blue-700 text-sm font-medium">
+        <button v-else @click="searchQuery = ''; filterType = ''; filterSystem = ''" class="text-blue-600 hover:text-blue-700 text-sm font-medium">
           清除筛选条件
         </button>
       </div>
@@ -244,6 +278,21 @@
             <label class="label">说明</label>
             <textarea v-model="newAccount.description" class="input" rows="2" />
           </div>
+          <div>
+            <label class="label">所属体系</label>
+            <div class="space-y-2 max-h-32 overflow-y-auto border border-gray-200 rounded-lg p-3">
+              <label v-for="system in systems" :key="system.id" class="flex items-center gap-2">
+                <input 
+                  type="checkbox" 
+                  :value="system.id" 
+                  v-model="newAccount.systemIds"
+                  class="rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+                >
+                <span class="text-sm">{{ system.name }}</span>
+              </label>
+              <p v-if="systems.length === 0" class="text-sm text-gray-500">暂无可用体系</p>
+            </div>
+          </div>
           <div class="flex gap-3">
             <button type="button" class="btn-secondary flex-1" @click="showAddModal = false">取消</button>
             <button type="submit" class="btn-primary flex-1" :disabled="adding">{{ adding ? '添加中...' : '添加' }}</button>
@@ -256,6 +305,7 @@
 
 <script setup lang="ts">
 import { ref, onMounted, computed } from 'vue'
+import { useSystems } from '../../composables/useSystems'
 
 const accounts = ref([])
 const showAddModal = ref(false)
@@ -266,13 +316,19 @@ const newAccount = ref({
   type: 'asset',
   direction: 'debit',
   description: '',
+  systemIds: [],
 })
 
 // Filtering and sorting
 const searchQuery = ref('')
 const filterType = ref('')
+const filterSystem = ref('')
 const sortField = ref('code')
 const sortOrder = ref<'asc' | 'desc'>('asc')
+
+// Systems
+const { systems, fetchSystems } = useSystems()
+const accountSystems = ref<Record<number, any[]>>({})
 
 // Inline editing
 const editingId = ref<number | null>(null)
@@ -282,6 +338,7 @@ const editForm = ref({
   type: 'asset',
   direction: 'debit',
   description: '',
+  systemIds: [] as number[],
 })
 
 const filteredAndSortedAccounts = computed(() => {
@@ -299,6 +356,15 @@ const filteredAndSortedAccounts = computed(() => {
   // Apply type filter
   if (filterType.value) {
     filtered = filtered.filter((account: any) => account.type === filterType.value)
+  }
+
+  // Apply system filter
+  if (filterSystem.value) {
+    const systemId = Number(filterSystem.value)
+    filtered = filtered.filter((account: any) => {
+      const systems = accountSystems.value[account.id] || []
+      return systems.some((s: any) => s.systemId === systemId)
+    })
   }
 
   // Apply sorting
@@ -322,11 +388,31 @@ const filteredAndSortedAccounts = computed(() => {
 })
 
 onMounted(async () => {
+  // Load accounts
   const response = await $fetch('/api/accounts')
   if (response.success) {
     accounts.value = response.data
   }
+  
+  // Load systems
+  await fetchSystems()
+  
+  // Load account system assignments
+  for (const account of accounts.value) {
+    const systemsRes = await $fetch(`/api/accounts/${account.id}/systems`)
+    if (systemsRes.success) {
+      accountSystems.value[account.id] = systemsRes.data
+    }
+  }
 })
+
+function getAccountSystems(accountId: number) {
+  const systemAssignments = accountSystems.value[accountId] || []
+  return systemAssignments.map((assignment: any) => {
+    const system = systems.value.find((s: any) => s.id === assignment.systemId)
+    return system || { id: assignment.systemId, name: 'Unknown' }
+  }).filter(Boolean)
+}
 
 function typeText(type: string) {
   const map: Record<string, string> = { asset: '资产', liability: '负债', equity: '权益', revenue: '收入', expense: '费用' }
@@ -351,7 +437,8 @@ function directionText(dir: string) {
 
 function startEdit(account: any) {
   editingId.value = account.id
-  editForm.value = { ...account }
+  const accountSystemIds = (accountSystems.value[account.id] || []).map((s: any) => s.systemId)
+  editForm.value = { ...account, systemIds: accountSystemIds }
 }
 
 function cancelEdit() {
@@ -368,7 +455,7 @@ function cancelEdit() {
 async function saveEdit(account: any) {
   try {
     const response = await $fetch(`/api/accounts/${account.id}`, {
-      method: 'PUT',
+      method: 'PATCH',
       body: editForm.value,
     })
     if (response.success) {
@@ -376,6 +463,11 @@ async function saveEdit(account: any) {
       const index = accounts.value.findIndex((a: any) => a.id === account.id)
       if (index !== -1) {
         accounts.value[index] = { ...account, ...editForm.value }
+      }
+      // Update system assignments
+      const systemsRes = await $fetch(`/api/accounts/${account.id}/systems`)
+      if (systemsRes.success) {
+        accountSystems.value[account.id] = systemsRes.data
       }
       editingId.value = null
     }
