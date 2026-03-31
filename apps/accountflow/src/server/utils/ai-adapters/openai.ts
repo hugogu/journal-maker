@@ -57,7 +57,12 @@ export class OpenAIAdapter extends BaseAIAdapter {
       model: params.model,
       messages: params.messages,
       temperature: params.temperature ?? 0.7,
-      max_tokens: params.maxTokens,
+    }
+
+    // Use max_completion_tokens for better compatibility
+    // New providers like anyfast.ai require this parameter instead of max_tokens
+    if (params.maxTokens) {
+      requestBody.max_completion_tokens = params.maxTokens
     }
 
     // Add tools/functions if provided
@@ -129,9 +134,14 @@ export class OpenAIAdapter extends BaseAIAdapter {
       model: params.model,
       messages: params.messages,
       temperature: params.temperature ?? 0.7,
-      max_tokens: params.maxTokens,
       stream: true,
       stream_options: { include_usage: true }, // Ensure usage is included in streaming
+    }
+
+    // Use max_completion_tokens for better compatibility
+    // New providers like anyfast.ai require this parameter instead of max_tokens
+    if (params.maxTokens) {
+      requestBody.max_completion_tokens = params.maxTokens
     }
 
     // Add tools/functions if provided

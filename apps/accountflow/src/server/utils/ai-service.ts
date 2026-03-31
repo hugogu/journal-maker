@@ -476,7 +476,7 @@ export class AIService {
     apiEndpoint: string,
     apiKey: string,
     model: string
-  ): Promise<boolean> {
+  ): Promise<{ success: boolean; error?: string }> {
     try {
       const adapter = createAIAdapter({
         providerId: 'test',
@@ -489,12 +489,38 @@ export class AIService {
       await adapter.chatCompletion({
         model,
         messages: [{ role: 'user', content: 'Hi' }],
-        maxTokens: 5,
+        maxTokens: 50,
       })
 
-      return true
-    } catch (error) {
-      return false
+      return { success: true }
+    } catch (error: any) {
+      console.error('[testConnection] Error:', error)
+      const errorMessage = error?.message || 'Unknown error'
+      
+      // Provide user-friendly error messages
+      if (errorMessage.includes('upstream_error') || errorMessage.includes('负载已饱和')) {
+        return { 
+          success: false, 
+          error: `模型 "${model}" 当前负载过高，请尝试其他模型（如 gpt-4o、qwen3-235b-a22b）` 
+        }
+      }
+      if (errorMessage.includes('model_not_found')) {
+        return { 
+          success: false, 
+          error: `模型 "${model}" 不存在或不可用，请检查模型名称` 
+        }
+      }
+      if (errorMessage.includes('authentication') || errorMessage.includes('Unauthorized')) {
+        return { 
+          success: false, 
+          error: 'API Key 无效或已过期，请检查密钥' 
+        }
+      }
+      
+      return { 
+        success: false, 
+        error: `连接失败: ${errorMessage}` 
+      }
     }
   }
 }

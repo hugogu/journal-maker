@@ -1,5 +1,5 @@
 import { db } from '../../../db'
-import { accountingSystems, systemAccounts, accounts } from '../../../schema'
+import { accountingSystems, systemAccounts, accounts } from '../../../db/schema'
 import { assignAccountsSchema } from '../../../utils/schemas'
 import { AppError, handleError, successResponse } from '../../../utils/error'
 import { eq, and, inArray } from 'drizzle-orm'

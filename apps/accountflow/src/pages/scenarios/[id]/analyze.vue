@@ -7,50 +7,53 @@
       </div>
     </div>
 
-    <!-- System Selector Header -->
-    <div v-else class="mb-4 flex items-center justify-between bg-white rounded-lg shadow p-4">
-      <div class="flex items-center gap-4">
-        <h2 class="text-lg font-semibold text-gray-900">{{ scenario?.name }}</h2>
-        <SystemIndicator
-          v-if="selectedSystem"
-          :system-name="selectedSystem.name"
-          show-change-button
-          @change="showSystemSwitcher = true"
+    <!-- Content when not loading -->
+    <div v-else class="flex flex-col h-full">
+      <!-- System Selector Header -->
+      <div class="mb-4 flex items-center justify-between bg-white rounded-lg shadow p-4">
+        <div class="flex items-center gap-4">
+          <h2 class="text-lg font-semibold text-gray-900">{{ scenario?.name }}</h2>
+          <SystemIndicator
+            v-if="selectedSystem"
+            :system-name="selectedSystem.name"
+            show-change-button
+            @change="showSystemSwitcher = true"
+          />
+        </div>
+        <div class="flex items-center gap-2">
+          <span class="text-sm text-gray-500">会计体系:</span>
+          <SystemSelector
+            v-model="selectedSystem"
+            :systems="systems"
+            :loading="systemsLoading"
+            class="w-64"
+          />
+        </div>
+      </div>
+
+      <!-- Dual-pane layout with better proportions -->
+      <div class="grid grid-cols-1 lg:grid-cols-3 gap-4 flex-1" style="height: calc(100% - 80px);">
+        <!-- Left Pane: Chat (2/3 width) -->
+        <ChatPane
+          :scenario="scenario"
+          :scenario-id="scenarioId"
+          :system-id="selectedSystem?.id"
+          @confirm="handleConfirm"
+          @show-share="showShareModal = true"
+          @show-log="showLog"
+          @show-stats="showStats"
+          class="lg:col-span-2"
+        />
+
+        <!-- Right Pane: Confirmed Analysis State (1/3 width) -->
+        <StatePane
+          :data="confirmedAnalysis.data.value"
+          :loading="confirmedAnalysis.loading.value"
+          :scenario-id="scenarioIdNum"
+          :source-message-id="confirmedAnalysis.data.value?.sourceMessageId"
+          @clear="handleClear"
         />
       </div>
-      <div class="flex items-center gap-2">
-        <span class="text-sm text-gray-500">会计体系:</span>
-        <SystemSelector
-          v-model="selectedSystem"
-          :systems="systems"
-          :loading="systemsLoading"
-          class="w-64"
-        />
-      </div>
-    </div>
-
-    <!-- Dual-pane layout with better proportions -->
-    <div v-else class="grid grid-cols-1 lg:grid-cols-3 gap-4 h-full" style="height: calc(100% - 80px);">
-      <!-- Left Pane: Chat (2/3 width) -->
-      <ChatPane
-        :scenario="scenario"
-        :scenario-id="scenarioId"
-        :system-id="selectedSystem?.id"
-        @confirm="handleConfirm"
-        @show-share="showShareModal = true"
-        @show-log="showLog"
-        @show-stats="showStats"
-        class="lg:col-span-2"
-      />
-
-      <!-- Right Pane: Confirmed Analysis State (1/3 width) -->
-      <StatePane
-        :data="confirmedAnalysis.data.value"
-        :loading="confirmedAnalysis.loading.value"
-        :scenario-id="scenarioIdNum"
-        :source-message-id="confirmedAnalysis.data.value?.sourceMessageId"
-        @clear="handleClear"
-      />
     </div>
 
     <!-- Log/Stats Modal -->

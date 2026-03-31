@@ -1,5 +1,5 @@
 import { db } from '../../../db'
-import { accountingSystems, systemAccounts, systemRules, systemPreferences, accounts, journalRules } from '../../../schema'
+import { accountingSystems, systemAccounts, systemRules, systemPreferences, accounts, journalRules } from '../../../db/schema'
 import { AppError, handleError, successResponse } from '../../../utils/error'
 import { eq, and } from 'drizzle-orm'
 import { defineEventHandler, getRouterParam } from 'h3'
