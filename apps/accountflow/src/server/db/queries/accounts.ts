@@ -2,7 +2,11 @@ import { db } from '../db'
 import { accounts, systemAccounts } from '../schema'
 import { eq, and, inArray } from 'drizzle-orm'
 
-export async function getAccountsByCompany(companyId: number) {
+export async function getAccountsByCompany(companyId: number, systemId?: number) {
+  if (systemId) {
+    return getAccountsBySystem(systemId, companyId)
+  }
+  
   return db.query.accounts.findMany({
     where: eq(accounts.companyId, companyId),
     orderBy: accounts.code,

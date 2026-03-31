@@ -1,9 +1,9 @@
 import { db } from '../../db'
-import { accounts, scenarios, sampleTransactions, journalRules } from '../../db/schema'
+import { accounts, scenarios, sampleTransactions, journalRules, systemAccounts } from '../../db/schema'
 import { createAccountSchema, updateAccountSchema } from '../../utils/schemas'
 import { AppError, handleError, successResponse } from '../../utils/error'
 import { eq, and, like, inArray } from 'drizzle-orm'
-import { defineEventHandler, getMethod, readBody, setResponseStatus, getRouterParam } from 'h3'
+import { defineEventHandler, getMethod, readBody, setResponseStatus, getRouterParam, getQuery } from 'h3'
 
 export default defineEventHandler(async (event) => {
   try {
@@ -11,22 +11,40 @@ export default defineEventHandler(async (event) => {
     const companyId = 1 // TODO: Get from session
 
     if (method === 'GET') {
-      const allAccounts = await db.query.accounts.findMany({
-        where: eq(accounts.companyId, companyId),
-        orderBy: accounts.code,
-      })
-      return successResponse(allAccounts)
+      const query = getQuery(event)
+      const systemId = query.systemId ? Number(query.systemId) : undefined
+      
+      let accountsList
+      if (systemId) {
+        // Get accounts for specific system
+        const systemAccountsData = await db.query.systemAccounts.findMany({
+          where: eq(systemAccounts.systemId, systemId),
+          with: {
+            account: true,
+          },
+        })
+        accountsList = systemAccountsData.map(sa => sa.account)
+      } else {
+        // Get all accounts for company
+        accountsList = await db.query.accounts.findMany({
+          where: eq(accounts.companyId, companyId),
+          orderBy: accounts.code,
+        })
+      }
+      
+      return successResponse(accountsList)
     }
 
     if (method === 'POST') {
       const body = await readBody(event)
       const data = createAccountSchema.parse(body)
+      const { systemIds, ...accountData } = data as any
       
       // Check for duplicate code
       const existing = await db.query.accounts.findFirst({
         where: and(
           eq(accounts.companyId, companyId),
-          eq(accounts.code, data.code)
+          eq(accounts.code, accountData.code)
         )
       })
       
@@ -35,9 +53,18 @@ export default defineEventHandler(async (event) => {
       }
       
       const [account] = await db.insert(accounts).values({
-        ...data,
+        ...accountData,
         companyId,
       }).returning()
+      
+      // Assign to systems if provided
+      if (systemIds && systemIds.length > 0) {
+        const assignments = systemIds.map((systemId: number) => ({
+          systemId,
+          accountId: account.id,
+        }))
+        await db.insert(systemAccounts).values(assignments).onConflictDoNothing()
+      }
       
       return successResponse(account)
     }

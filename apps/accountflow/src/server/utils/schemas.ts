@@ -61,6 +61,7 @@ export const createAccountSchema = z.object({
   direction: AccountDirection,
   description: z.string().max(500).optional(),
   parentId: z.number().int().positive().optional(),
+  systemIds: z.array(z.number().int().positive()).optional(),
 })
 
 export const updateAccountSchema = createAccountSchema.partial()
