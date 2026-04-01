@@ -1,13 +1,13 @@
 import { defineEventHandler, readBody } from 'h3'
 import { db } from '../../db'
-import { journalRules, accounts } from '../../db/schema'
+import { journalRules, accounts, systemRules } from '../../db/schema'
 import { eq, like } from 'drizzle-orm'
 import { findOrCreateEvent } from '../../db/queries/analysis'
 
 export default defineEventHandler(async (event) => {
   try {
     const body = await readBody(event)
-    const { scenarioId, messageId, rules } = body
+    const { scenarioId, messageId, rules, systemIds } = body
 
     if (!scenarioId || !messageId || !Array.isArray(rules) || rules.length === 0) {
       return {
@@ -77,9 +77,29 @@ export default defineEventHandler(async (event) => {
       .values(processedRules)
       .returning()
 
+    // If systemIds provided, assign rules to systems
+    if (systemIds && Array.isArray(systemIds) && systemIds.length > 0) {
+      const systemRuleAssignments = []
+      for (const rule of createdRules) {
+        for (const systemId of systemIds) {
+          systemRuleAssignments.push({
+            systemId: Number(systemId),
+            ruleId: rule.id,
+          })
+        }
+      }
+
+      if (systemRuleAssignments.length > 0) {
+        await db.insert(systemRules)
+          .values(systemRuleAssignments)
+          .onConflictDoNothing()
+      }
+    }
+
     console.log('=== DEBUG: Batch Save Rules ===')
     console.log('Processed rules:', processedRules)
     console.log('Created rules:', createdRules)
+    console.log('System assignments:', systemIds)
 
     return {
       success: true,

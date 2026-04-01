@@ -1,6 +1,6 @@
-import { db } from '../../db'
-import { accounts, systemAccounts } from '../../db/schema'
-import { AppError, handleError, successResponse } from '../../utils/error'
+import { db } from '../../../db'
+import { accounts, systemAccounts } from '../../../db/schema'
+import { AppError, handleError, successResponse } from '../../../utils/error'
 import { eq, and } from 'drizzle-orm'
 import { defineEventHandler, getRouterParam } from 'h3'
 

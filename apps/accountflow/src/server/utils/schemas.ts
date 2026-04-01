@@ -102,6 +102,7 @@ export const createJournalRuleSchema = z.object({
   creditAccountId: z.number().int().positive().optional(),
   conditions: z.record(z.string(), z.unknown()).optional(),
   amountFormula: z.string().optional(),
+  systemIds: z.array(z.number().int().positive()).optional(),
 })
 
 export const updateJournalRuleSchema = createJournalRuleSchema.partial()

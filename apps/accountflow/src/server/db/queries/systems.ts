@@ -1,4 +1,4 @@
-import { db } from '../db'
+import { db } from '..'
 import { accountingSystems, systemAccounts, systemRules, systemPreferences, accounts, journalRules } from '../schema'
 import { eq, and, inArray, sql } from 'drizzle-orm'
 

@@ -131,10 +131,10 @@ MVP Scope: User Stories 1 & 2 (Foundation + System-Aware Analysis)
 
 **Independent Test**: Can create rule for specific system, analysis uses only that system's rules
 
-- [ ] T051 [P] [US4] Update rule creation with system assignment in apps/accountflow/src/server/api/rules/index.post.ts
-- [ ] T052 [US4] Update rule queries to filter by system in apps/accountflow/src/server/db/queries/rules.ts
-- [ ] T053 [P] [US4] Create GET /api/systems/[id]/rules endpoint in apps/accountflow/src/server/api/systems/[id]/rules.get.ts
-- [ ] T054 [US4] Update rule Zod schema for system_ids in apps/accountflow/src/server/utils/schemas/rules.ts
+- [X] T051 [P] [US4] Update rule creation with system assignment in apps/accountflow/src/server/api/rules/index.post.ts
+- [X] T052 [US4] Update rule queries to filter by system in apps/accountflow/src/server/db/queries/rules.ts
+- [X] T053 [P] [US4] Create GET /api/systems/[id]/rules endpoint in apps/accountflow/src/server/api/systems/[id]/rules.get.ts
+- [X] T054 [US4] Update rule Zod schema for system_ids in apps/accountflow/src/server/utils/schemas.ts
 
 ---
 
