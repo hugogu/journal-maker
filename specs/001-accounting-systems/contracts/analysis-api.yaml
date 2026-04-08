@@ -1,0 +1,382 @@
+openapi: 3.0.0
+info:
+  title: System-Aware Analysis API
+  description: API for analyzing scenarios with specific accounting systems
+  version: 1.0.0
+
+paths:
+  /api/scenarios/{scenarioId}/analyze:
+    parameters:
+      - name: scenarioId
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+    
+    post:
+      summary: Analyze scenario with system context
+      description: Analyzes a business scenario using the specified accounting system
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - systemId
+              properties:
+                systemId:
+                  type: string
+                  format: uuid
+                  description: Accounting system to use for analysis
+                context:
+                  type: object
+                  description: Additional context for AI
+                  properties:
+                    focusAreas:
+                      type: array
+                      items:
+                        type: string
+                    constraints:
+                      type: array
+                      items:
+                        type: string
+      responses:
+        '200':
+          description: Analysis initiated/completed
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  analysisId:
+                    type: string
+                    format: uuid
+                  systemId:
+                    type: string
+                    format: uuid
+                  systemName:
+                    type: string
+                  status:
+                    type: string
+                    enum: [pending, processing, completed, failed]
+                  journalEntries:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/JournalEntry'
+                  appliedRules:
+                    type: array
+                    items:
+                      type: string
+                      format: uuid
+                  flowchart:
+                    type: string
+                    description: Mermaid.js flowchart definition
+        '400':
+          description: Invalid system ID or scenario not found
+        '404':
+          description: System or scenario not found
+
+  /api/scenarios/{scenarioId}/analyses:
+    parameters:
+      - name: scenarioId
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+    
+    get:
+      summary: List analyses for scenario
+      description: Returns all analysis results for this scenario across all systems
+      parameters:
+        - name: systemId
+          in: query
+          schema:
+            type: string
+            format: uuid
+          description: Filter by specific system
+      responses:
+        '200':
+          description: List of analyses
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  analyses:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/AnalysisSummary'
+
+  /api/analyses/{analysisId}:
+    parameters:
+      - name: analysisId
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+    
+    get:
+      summary: Get analysis details
+      description: Returns detailed analysis results with system information
+      responses:
+        '200':
+          description: Analysis details
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AnalysisDetail'
+        '404':
+          description: Analysis not found
+
+  /api/analyses/{analysisId}/regenerate:
+    parameters:
+      - name: analysisId
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+    
+    post:
+      summary: Regenerate analysis with different system
+      description: Re-analyzes the same scenario with a different accounting system
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - systemId
+              properties:
+                systemId:
+                  type: string
+                  format: uuid
+                  description: New accounting system to use
+      responses:
+        '200':
+          description: New analysis created
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  analysisId:
+                    type: string
+                    format: uuid
+                  previousAnalysisId:
+                    type: string
+                    format: uuid
+
+  /api/systems/{systemId}/context:
+    parameters:
+      - name: systemId
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+    
+    get:
+      summary: Get AI context for system
+      description: Returns accounts and rules context for AI prompt construction
+      responses:
+        '200':
+          description: System context for AI
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  system:
+                    $ref: '#/components/schemas/AccountingSystem'
+                  accounts:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/AccountWithHierarchy'
+                  rules:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/JournalRuleSummary'
+                  preferences:
+                    type: object
+                    description: System-specific accounting preferences
+
+components:
+  schemas:
+    JournalEntry:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        date:
+          type: string
+          format: date
+        description:
+          type: string
+        debits:
+          type: array
+          items:
+            $ref: '#/components/schemas/LineItem'
+        credits:
+          type: array
+          items:
+            $ref: '#/components/schemas/LineItem'
+
+    LineItem:
+      type: object
+      properties:
+        accountId:
+          type: string
+          format: uuid
+        accountCode:
+          type: string
+        accountName:
+          type: string
+        amount:
+          type: number
+        description:
+          type: string
+
+    AnalysisSummary:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        systemId:
+          type: string
+          format: uuid
+        systemName:
+          type: string
+        createdAt:
+          type: string
+          format: date-time
+        status:
+          type: string
+          enum: [pending, processing, completed, failed]
+        entryCount:
+          type: integer
+          description: Number of journal entries generated
+
+    AnalysisDetail:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        scenarioId:
+          type: string
+          format: uuid
+        systemId:
+          type: string
+          format: uuid
+        systemName:
+          type: string
+        status:
+          type: string
+        createdAt:
+          type: string
+          format: date-time
+        journalEntries:
+          type: array
+          items:
+            $ref: '#/components/schemas/JournalEntry'
+        appliedRules:
+          type: array
+          items:
+            type: object
+            properties:
+              ruleId:
+                type: string
+                format: uuid
+              ruleName:
+                type: string
+              conditions:
+                type: object
+        flowchart:
+          type: string
+        conversation:
+          type: array
+          items:
+            type: object
+            properties:
+              role:
+                type: string
+                enum: [user, assistant]
+              content:
+                type: string
+              timestamp:
+                type: string
+                format: date-time
+
+    AccountWithHierarchy:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        code:
+          type: string
+        name:
+          type: string
+        type:
+          type: string
+        parentId:
+          type: string
+          format: uuid
+          nullable: true
+        children:
+          type: array
+          items:
+            $ref: '#/components/schemas/AccountWithHierarchy'
+
+    JournalRuleSummary:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        name:
+          type: string
+        description:
+          type: string
+        debitAccount:
+          type: object
+          properties:
+            id:
+              type: string
+              format: uuid
+            code:
+              type: string
+            name:
+              type: string
+        creditAccount:
+          type: object
+          properties:
+            id:
+              type: string
+              format: uuid
+            code:
+              type: string
+            name:
+              type: string
+
+    AccountingSystem:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        name:
+          type: string
+        description:
+          type: string
+        type:
+          type: string
+          enum: [builtin, custom]

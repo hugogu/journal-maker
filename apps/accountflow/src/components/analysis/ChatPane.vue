@@ -202,6 +202,7 @@ const toast = useToast()
 const props = defineProps<{
   scenarioId: string | number
   scenario: { name: string; description?: string } | null
+  systemId?: number
 }>()
 
 const scenarioIdNum = computed(() => typeof props.scenarioId === 'string' ? parseInt(props.scenarioId, 10) : props.scenarioId)
@@ -402,7 +403,8 @@ async function sendMessage() {
       body: JSON.stringify({
         content: userMessage,
         providerId: selectedProviderId.value ? parseInt(selectedProviderId.value, 10) : undefined,
-        model: selectedModel.value || undefined
+        model: selectedModel.value || undefined,
+        systemId: props.systemId
       }),
     })
 

@@ -83,6 +83,7 @@ export const useConfirmedAnalysis = (scenarioId: number) => {
     rules: AccountingRule[]
     diagramMermaid?: string | null
     sourceMessageId?: number | null
+    systemId?: number
   }) => {
     loading.value = true
     saving.value = true
@@ -102,6 +103,7 @@ export const useConfirmedAnalysis = (scenarioId: number) => {
             rules: validRules,
             diagramMermaid: input.diagramMermaid ?? null,
             sourceMessageId: input.sourceMessageId ?? null,
+            systemId: input.systemId,
           },
         }
       )

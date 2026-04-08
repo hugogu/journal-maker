@@ -28,15 +28,15 @@ export default defineEventHandler(async (event) => {
       throw new AppError(400, 'API Key is required')
     }
     
-    const isConnected = await aiService.testConnection(
+    const result = await aiService.testConnection(
       providerType,
       data.apiEndpoint,
       apiKey,
       data.model
     )
     
-    if (!isConnected) {
-      throw new AppError(400, 'Failed to connect to AI service')
+    if (!result.success) {
+      throw new AppError(400, result.error || 'Failed to connect to AI service')
     }
     
     return successResponse({ connected: true })

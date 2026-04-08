@@ -142,7 +142,8 @@ export async function getAnalysisEntries(scenarioId: number, confirmedOnly = fal
 export async function saveAnalysisEntries(
   scenarioId: number,
   rules: AccountingRule[],
-  sourceMessageId?: number
+  sourceMessageId?: number,
+  systemId?: number
 ) {
   const results = []
 
@@ -198,6 +199,7 @@ export async function saveAnalysisEntries(
           eventName: rule.event || existing.eventName,
           metadata: rule.condition ? { condition: rule.condition } : null,
           sourceMessageId: sourceMessageId || existing.sourceMessageId,
+          systemId: systemId ?? existing.systemId,
           updatedAt: new Date(),
         })
         .where(eq(analysisEntries.id, existing.id))
@@ -210,6 +212,7 @@ export async function saveAnalysisEntries(
         .values({
           scenarioId,
           sourceMessageId: sourceMessageId || null,
+          systemId: systemId || null,
           eventId,
           entryId,
           eventName: rule.event || null,

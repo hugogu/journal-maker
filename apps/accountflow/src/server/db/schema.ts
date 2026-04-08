@@ -1,4 +1,4 @@
-import { pgTable, serial, varchar, text, timestamp, integer, boolean, jsonb, pgEnum, index, unique, numeric } from 'drizzle-orm/pg-core'
+import { pgTable, serial, varchar, text, timestamp, integer, boolean, jsonb, pgEnum, index, unique, numeric, primaryKey } from 'drizzle-orm/pg-core'
 import { relations } from 'drizzle-orm'
 
 // ============================================================================
@@ -20,6 +20,8 @@ export const promptScenarioTypeEnum = pgEnum('prompt_scenario_type', [
 export const messageRoleEnum = pgEnum('message_role', ['user', 'assistant', 'system'])
 export const journalRuleStatusEnum = pgEnum('journal_rule_status', ['proposal', 'confirmed'])
 export const analysisDiagramTypeEnum = pgEnum('analysis_diagram_type', ['mermaid', 'chart', 'table'])
+export const accountingSystemTypeEnum = pgEnum('accounting_system_type', ['builtin', 'custom'])
+export const accountingSystemStatusEnum = pgEnum('accounting_system_status', ['active', 'archived'])
 
 // ============================================================================
 // CORE BUSINESS TABLES
@@ -208,6 +210,7 @@ export const analysisEntries = pgTable('analysis_entries', {
   scenarioId: integer('scenario_id').notNull().references(() => scenarios.id, { onDelete: 'cascade' }),
   sourceMessageId: integer('source_message_id').references(() => conversationMessages.id, { onDelete: 'set null' }),
   eventId: integer('event_id').references(() => accountingEvents.id, { onDelete: 'set null' }),
+  systemId: integer('system_id').references(() => accountingSystems.id, { onDelete: 'set null' }),
   entryId: varchar('entry_id', { length: 50 }).notNull(),
   eventName: varchar('event_name', { length: 100 }), // Retained for backward compatibility
   description: text('description'),
@@ -226,6 +229,7 @@ export const analysisEntries = pgTable('analysis_entries', {
   index('idx_analysis_entries_event_id').on(table.eventId),
   index('idx_analysis_entries_event_name').on(table.eventName),
   index('idx_analysis_entries_is_confirmed').on(table.isConfirmed),
+  index('idx_analysis_entries_system_id').on(table.systemId),
 ])
 
 export const analysisDiagrams = pgTable('analysis_diagrams', {
@@ -309,6 +313,59 @@ export const userPreferences = pgTable('user_preferences', {
   updatedAt: timestamp('updated_at').defaultNow().notNull(),
 }, (table) => [
   index('idx_user_preferences_user_id').on(table.userId),
+])
+
+// ============================================================================
+// ACCOUNTING SYSTEMS (Multi-System Support)
+// ============================================================================
+
+export const accountingSystems = pgTable('accounting_systems', {
+  id: serial('id').primaryKey(),
+  companyId: integer('company_id').notNull().references(() => companyProfile.id, { onDelete: 'cascade' }),
+  name: varchar('name', { length: 255 }).notNull(),
+  description: text('description'),
+  type: accountingSystemTypeEnum('type').notNull(),
+  status: accountingSystemStatusEnum('status').default('active').notNull(),
+  createdAt: timestamp('created_at').defaultNow().notNull(),
+  updatedAt: timestamp('updated_at').defaultNow().notNull(),
+}, (table) => [
+  unique('unique_company_system_name').on(table.companyId, table.name),
+  index('idx_accounting_systems_company_id').on(table.companyId),
+  index('idx_accounting_systems_name').on(table.name),
+  index('idx_accounting_systems_type_status').on(table.type, table.status),
+])
+
+export const systemAccounts = pgTable('system_accounts', {
+  systemId: integer('system_id').notNull().references(() => accountingSystems.id, { onDelete: 'cascade' }),
+  accountId: integer('account_id').notNull().references(() => accounts.id, { onDelete: 'cascade' }),
+  createdAt: timestamp('created_at').defaultNow().notNull(),
+}, (table) => [
+  primaryKey({ columns: [table.systemId, table.accountId] }),
+  index('idx_system_accounts_system_id').on(table.systemId),
+  index('idx_system_accounts_account_id').on(table.accountId),
+])
+
+export const systemRules = pgTable('system_rules', {
+  systemId: integer('system_id').notNull().references(() => accountingSystems.id, { onDelete: 'cascade' }),
+  ruleId: integer('rule_id').notNull().references(() => journalRules.id, { onDelete: 'cascade' }),
+  createdAt: timestamp('created_at').defaultNow().notNull(),
+}, (table) => [
+  primaryKey({ columns: [table.systemId, table.ruleId] }),
+  index('idx_system_rules_system_id').on(table.systemId),
+  index('idx_system_rules_rule_id').on(table.ruleId),
+])
+
+export const systemPreferences = pgTable('system_preferences', {
+  id: serial('id').primaryKey(),
+  systemId: integer('system_id').notNull().references(() => accountingSystems.id, { onDelete: 'cascade' }),
+  key: varchar('key', { length: 255 }).notNull(),
+  value: jsonb('value').notNull(),
+  createdAt: timestamp('created_at').defaultNow().notNull(),
+  updatedAt: timestamp('updated_at').defaultNow().notNull(),
+}, (table) => [
+  unique('unique_system_preference_key').on(table.systemId, table.key),
+  index('idx_system_preferences_system_id').on(table.systemId),
+  index('idx_system_preferences_key').on(table.key),
 ])
 
 // ============================================================================
@@ -422,5 +479,56 @@ export const analysisDiagramsRelations = relations(analysisDiagrams, ({ one }) =
   sourceMessage: one(conversationMessages, {
     fields: [analysisDiagrams.sourceMessageId],
     references: [conversationMessages.id],
+  }),
+}))
+
+// ============================================================================
+// ACCOUNTING SYSTEMS RELATIONS
+// ============================================================================
+
+export const accountingSystemsRelations = relations(accountingSystems, ({ one, many }) => ({
+  company: one(companyProfile, {
+    fields: [accountingSystems.companyId],
+    references: [companyProfile.id],
+  }),
+  accounts: many(systemAccounts),
+  rules: many(systemRules),
+  preferences: many(systemPreferences),
+  analyses: many(analysisEntries),
+}))
+
+export const systemAccountsRelations = relations(systemAccounts, ({ one }) => ({
+  system: one(accountingSystems, {
+    fields: [systemAccounts.systemId],
+    references: [accountingSystems.id],
+  }),
+  account: one(accounts, {
+    fields: [systemAccounts.accountId],
+    references: [accounts.id],
+  }),
+}))
+
+export const systemRulesRelations = relations(systemRules, ({ one }) => ({
+  system: one(accountingSystems, {
+    fields: [systemRules.systemId],
+    references: [accountingSystems.id],
+  }),
+  rule: one(journalRules, {
+    fields: [systemRules.ruleId],
+    references: [journalRules.id],
+  }),
+}))
+
+export const systemPreferencesRelations = relations(systemPreferences, ({ one }) => ({
+  system: one(accountingSystems, {
+    fields: [systemPreferences.systemId],
+    references: [accountingSystems.id],
+  }),
+}))
+
+export const analysisEntriesSystemRelations = relations(analysisEntries, ({ one }) => ({
+  system: one(accountingSystems, {
+    fields: [analysisEntries.systemId],
+    references: [accountingSystems.id],
   }),
 }))

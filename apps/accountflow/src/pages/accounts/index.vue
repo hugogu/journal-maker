@@ -6,12 +6,26 @@
         <h1 class="text-2xl font-bold text-gray-900">会计科目</h1>
         <p class="text-sm text-gray-600 mt-1">管理企业会计科目表</p>
       </div>
-      <button class="btn-primary inline-flex items-center gap-2" @click="showAddModal = true">
-        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path>
-        </svg>
-        添加科目
-      </button>
+      <div class="flex gap-2">
+        <button class="btn-secondary inline-flex items-center gap-2" @click="exportAccounts">
+          <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path>
+          </svg>
+          导出
+        </button>
+        <button class="btn-secondary inline-flex items-center gap-2" @click="showImportDialog = true">
+          <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"></path>
+          </svg>
+          导入
+        </button>
+        <button class="btn-primary inline-flex items-center gap-2" @click="showAddModal = true">
+          <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path>
+          </svg>
+          添加科目
+        </button>
+      </div>
     </div>
 
     <!-- Filters and Search Bar -->
@@ -36,7 +50,7 @@
           </div>
 
           <!-- Type Filter -->
-          <div class="md:col-span-3">
+          <div class="md:col-span-2">
             <select v-model="filterType" class="input w-full">
               <option value="">所有类型</option>
               <option value="asset">资产</option>
@@ -47,8 +61,18 @@
             </select>
           </div>
 
+          <!-- System Filter -->
+          <div class="md:col-span-2">
+            <select v-model="filterSystem" class="input w-full">
+              <option value="">所有体系</option>
+              <option v-for="system in systems" :key="system.id" :value="system.id">
+                {{ system.name }}
+              </option>
+            </select>
+          </div>
+
           <!-- Sort Field -->
-          <div class="md:col-span-3">
+          <div class="md:col-span-2">
             <select v-model="sortField" class="input w-full">
               <option value="code">按代码排序</option>
               <option value="name">按名称排序</option>
@@ -82,7 +106,7 @@
             </svg>
             共 {{ accounts.length }} 个科目
           </span>
-          <span v-if="searchQuery || filterType" class="flex items-center gap-1 text-blue-600">
+          <span v-if="searchQuery || filterType || filterSystem" class="flex items-center gap-1 text-blue-600">
             <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.293A1 1 0 013 6.586V4z"></path>
             </svg>
@@ -101,6 +125,7 @@
             <th class="px-6 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">名称</th>
             <th class="px-6 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">类型</th>
             <th class="px-6 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">方向</th>
+            <th class="px-6 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">所属体系</th>
             <th class="px-6 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">说明</th>
             <th class="px-6 py-3 text-right text-xs font-semibold text-gray-600 uppercase tracking-wider">操作</th>
           </tr>
@@ -130,7 +155,7 @@
               >
             </td>
             <td class="px-6 py-4 text-sm">
-              <span v-if="editingId !== account.id" :class="typeClass(account.type)" class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium border">
+              <span v-if="editingId !== account.id" :class="typeClass(account.type)" class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium border whitespace-nowrap">
                 {{ typeText(account.type) }}
               </span>
               <select v-else v-model="editForm.type" class="input text-xs py-1">
@@ -148,6 +173,29 @@
                 <option value="credit">贷方</option>
               </select>
             </td>
+            <td class="px-6 py-4 text-sm">
+              <div v-if="editingId !== account.id" class="flex flex-wrap gap-1">
+                <span 
+                  v-for="system in getAccountSystems(account.id)" 
+                  :key="system.id"
+                  class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-blue-100 text-blue-800"
+                >
+                  {{ system.name }}
+                </span>
+                <span v-if="getAccountSystems(account.id).length === 0" class="text-gray-400 text-xs">-</span>
+              </div>
+              <div v-else class="space-y-1">
+                <label v-for="system in systems" :key="system.id" class="flex items-center gap-2 text-xs">
+                  <input 
+                    type="checkbox" 
+                    :value="system.id" 
+                    v-model="editForm.systemIds"
+                    class="rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+                  >
+                  <span>{{ system.name }}</span>
+                </label>
+              </div>
+            </td>
             <td class="px-6 py-4 text-sm text-gray-500">
               <span v-if="editingId !== account.id">{{ account.description || '-' }}</span>
               <input
@@ -164,29 +212,41 @@
               <div v-if="editingId !== account.id" class="flex gap-1 justify-end">
                 <button
                   @click="startEdit(account)"
-                  class="inline-flex items-center px-3 py-1 text-sm text-blue-600 hover:text-blue-700 hover:bg-blue-50 rounded-md transition-colors"
+                  class="p-1.5 text-blue-600 hover:text-blue-700 hover:bg-blue-50 rounded-md transition-colors"
+                  title="编辑"
                 >
-                  编辑
+                  <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path>
+                  </svg>
                 </button>
                 <button
                   @click="deleteAccount(account)"
-                  class="inline-flex items-center px-3 py-1 text-sm text-red-600 hover:text-red-700 hover:bg-red-50 rounded-md transition-colors"
+                  class="p-1.5 text-red-600 hover:text-red-700 hover:bg-red-50 rounded-md transition-colors"
+                  title="删除"
                 >
-                  删除
+                  <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path>
+                  </svg>
                 </button>
               </div>
               <div v-else class="flex gap-1 justify-end">
                 <button
                   @click="saveEdit(account)"
-                  class="inline-flex items-center px-3 py-1 text-sm text-white bg-green-600 hover:bg-green-700 rounded-md transition-colors"
+                  class="p-1.5 text-green-600 hover:text-green-700 hover:bg-green-50 rounded-md transition-colors"
+                  title="保存"
                 >
-                  保存
+                  <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
+                  </svg>
                 </button>
                 <button
                   @click="cancelEdit"
-                  class="inline-flex items-center px-3 py-1 text-sm text-gray-600 hover:text-gray-700 hover:bg-gray-100 rounded-md transition-colors"
+                  class="p-1.5 text-gray-600 hover:text-gray-700 hover:bg-gray-100 rounded-md transition-colors"
+                  title="取消"
                 >
-                  取消
+                  <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                  </svg>
                 </button>
               </div>
             </td>
@@ -203,7 +263,7 @@
         <button v-if="!searchQuery && !filterType" @click="showAddModal = true" class="text-blue-600 hover:text-blue-700 text-sm font-medium">
           点击添加第一个科目 →
         </button>
-        <button v-else @click="searchQuery = ''; filterType = ''" class="text-blue-600 hover:text-blue-700 text-sm font-medium">
+        <button v-else @click="searchQuery = ''; filterType = ''; filterSystem = ''" class="text-blue-600 hover:text-blue-700 text-sm font-medium">
           清除筛选条件
         </button>
       </div>
@@ -244,6 +304,21 @@
             <label class="label">说明</label>
             <textarea v-model="newAccount.description" class="input" rows="2" />
           </div>
+          <div>
+            <label class="label">所属体系</label>
+            <div class="space-y-2 max-h-32 overflow-y-auto border border-gray-200 rounded-lg p-3">
+              <label v-for="system in systems" :key="system.id" class="flex items-center gap-2">
+                <input 
+                  type="checkbox" 
+                  :value="system.id" 
+                  v-model="newAccount.systemIds"
+                  class="rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+                >
+                <span class="text-sm">{{ system.name }}</span>
+              </label>
+              <p v-if="systems.length === 0" class="text-sm text-gray-500">暂无可用体系</p>
+            </div>
+          </div>
           <div class="flex gap-3">
             <button type="button" class="btn-secondary flex-1" @click="showAddModal = false">取消</button>
             <button type="submit" class="btn-primary flex-1" :disabled="adding">{{ adding ? '添加中...' : '添加' }}</button>
@@ -251,14 +326,24 @@
         </form>
       </div>
     </div>
+
+    <!-- Import Dialog -->
+    <AccountImportDialog
+      :show="showImportDialog"
+      @close="showImportDialog = false"
+      @success="handleImportSuccess"
+    />
   </div>
 </template>
 
 <script setup lang="ts">
 import { ref, onMounted, computed } from 'vue'
+import { useSystems } from '../../composables/useSystems'
+import AccountImportDialog from '../../components/accounting/AccountImportDialog.vue'
 
 const accounts = ref([])
 const showAddModal = ref(false)
+const showImportDialog = ref(false)
 const adding = ref(false)
 const newAccount = ref({
   code: '',
@@ -266,13 +351,19 @@ const newAccount = ref({
   type: 'asset',
   direction: 'debit',
   description: '',
+  systemIds: [],
 })
 
 // Filtering and sorting
 const searchQuery = ref('')
 const filterType = ref('')
+const filterSystem = ref('')
 const sortField = ref('code')
 const sortOrder = ref<'asc' | 'desc'>('asc')
+
+// Systems
+const { systems, fetchSystems } = useSystems()
+const accountSystems = ref<Record<number, any[]>>({})
 
 // Inline editing
 const editingId = ref<number | null>(null)
@@ -282,6 +373,7 @@ const editForm = ref({
   type: 'asset',
   direction: 'debit',
   description: '',
+  systemIds: [] as number[],
 })
 
 const filteredAndSortedAccounts = computed(() => {
@@ -299,6 +391,15 @@ const filteredAndSortedAccounts = computed(() => {
   // Apply type filter
   if (filterType.value) {
     filtered = filtered.filter((account: any) => account.type === filterType.value)
+  }
+
+  // Apply system filter
+  if (filterSystem.value) {
+    const systemId = Number(filterSystem.value)
+    filtered = filtered.filter((account: any) => {
+      const systems = accountSystems.value[account.id] || []
+      return systems.some((s: any) => s.systemId === systemId)
+    })
   }
 
   // Apply sorting
@@ -322,11 +423,31 @@ const filteredAndSortedAccounts = computed(() => {
 })
 
 onMounted(async () => {
+  // Load accounts
   const response = await $fetch('/api/accounts')
   if (response.success) {
     accounts.value = response.data
   }
+  
+  // Load systems
+  await fetchSystems()
+  
+  // Load account system assignments
+  for (const account of accounts.value) {
+    const systemsRes = await $fetch(`/api/accounts/${account.id}/systems`)
+    if (systemsRes.success) {
+      accountSystems.value[account.id] = systemsRes.data
+    }
+  }
 })
+
+function getAccountSystems(accountId: number) {
+  const systemAssignments = accountSystems.value[accountId] || []
+  return systemAssignments.map((assignment: any) => {
+    const system = systems.value.find((s: any) => s.id === assignment.systemId)
+    return system || { id: assignment.systemId, name: 'Unknown' }
+  }).filter(Boolean)
+}
 
 function typeText(type: string) {
   const map: Record<string, string> = { asset: '资产', liability: '负债', equity: '权益', revenue: '收入', expense: '费用' }
@@ -351,7 +472,8 @@ function directionText(dir: string) {
 
 function startEdit(account: any) {
   editingId.value = account.id
-  editForm.value = { ...account }
+  const accountSystemIds = (accountSystems.value[account.id] || []).map((s: any) => s.systemId)
+  editForm.value = { ...account, systemIds: accountSystemIds }
 }
 
 function cancelEdit() {
@@ -368,7 +490,7 @@ function cancelEdit() {
 async function saveEdit(account: any) {
   try {
     const response = await $fetch(`/api/accounts/${account.id}`, {
-      method: 'PUT',
+      method: 'PATCH',
       body: editForm.value,
     })
     if (response.success) {
@@ -376,6 +498,11 @@ async function saveEdit(account: any) {
       const index = accounts.value.findIndex((a: any) => a.id === account.id)
       if (index !== -1) {
         accounts.value[index] = { ...account, ...editForm.value }
+      }
+      // Update system assignments
+      const systemsRes = await $fetch(`/api/accounts/${account.id}/systems`)
+      if (systemsRes.success) {
+        accountSystems.value[account.id] = systemsRes.data
       }
       editingId.value = null
     }
@@ -420,6 +547,45 @@ async function addAccount() {
     alert('添加失败')
   } finally {
     adding.value = false
+  }
+}
+
+async function exportAccounts() {
+  try {
+    // Download CSV file directly
+    const response = await $fetch('/api/accounts/export', {
+      responseType: 'text',
+    })
+    
+    const blob = new Blob([response], { type: 'text/csv;charset=utf-8;' })
+    const url = URL.createObjectURL(blob)
+    const a = document.createElement('a')
+    a.href = url
+    a.download = `accounts-${new Date().toISOString().split('T')[0]}.csv`
+    document.body.appendChild(a)
+    a.click()
+    document.body.removeChild(a)
+    URL.revokeObjectURL(url)
+  } catch (error) {
+    console.error('Export error:', error)
+    alert('导出失败')
+  }
+}
+
+async function handleImportSuccess() {
+  // Reload accounts after import
+  const response = await $fetch('/api/accounts')
+  if (response.success) {
+    accounts.value = response.data
+    
+    // Reload account system assignments
+    accountSystems.value = {}
+    for (const account of accounts.value) {
+      const systemsRes = await $fetch(`/api/accounts/${account.id}/systems`)
+      if (systemsRes.success) {
+        accountSystems.value[account.id] = systemsRes.data
+      }
+    }
   }
 }
 </script>
