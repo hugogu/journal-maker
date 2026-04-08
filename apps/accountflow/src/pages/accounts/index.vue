@@ -6,12 +6,26 @@
         <h1 class="text-2xl font-bold text-gray-900">会计科目</h1>
         <p class="text-sm text-gray-600 mt-1">管理企业会计科目表</p>
       </div>
-      <button class="btn-primary inline-flex items-center gap-2" @click="showAddModal = true">
-        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path>
-        </svg>
-        添加科目
-      </button>
+      <div class="flex gap-2">
+        <button class="btn-secondary inline-flex items-center gap-2" @click="exportAccounts">
+          <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path>
+          </svg>
+          导出
+        </button>
+        <button class="btn-secondary inline-flex items-center gap-2" @click="showImportDialog = true">
+          <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"></path>
+          </svg>
+          导入
+        </button>
+        <button class="btn-primary inline-flex items-center gap-2" @click="showAddModal = true">
+          <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path>
+          </svg>
+          添加科目
+        </button>
+      </div>
     </div>
 
     <!-- Filters and Search Bar -->
@@ -141,7 +155,7 @@
               >
             </td>
             <td class="px-6 py-4 text-sm">
-              <span v-if="editingId !== account.id" :class="typeClass(account.type)" class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium border">
+              <span v-if="editingId !== account.id" :class="typeClass(account.type)" class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium border whitespace-nowrap">
                 {{ typeText(account.type) }}
               </span>
               <select v-else v-model="editForm.type" class="input text-xs py-1">
@@ -198,29 +212,41 @@
               <div v-if="editingId !== account.id" class="flex gap-1 justify-end">
                 <button
                   @click="startEdit(account)"
-                  class="inline-flex items-center px-3 py-1 text-sm text-blue-600 hover:text-blue-700 hover:bg-blue-50 rounded-md transition-colors"
+                  class="p-1.5 text-blue-600 hover:text-blue-700 hover:bg-blue-50 rounded-md transition-colors"
+                  title="编辑"
                 >
-                  编辑
+                  <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path>
+                  </svg>
                 </button>
                 <button
                   @click="deleteAccount(account)"
-                  class="inline-flex items-center px-3 py-1 text-sm text-red-600 hover:text-red-700 hover:bg-red-50 rounded-md transition-colors"
+                  class="p-1.5 text-red-600 hover:text-red-700 hover:bg-red-50 rounded-md transition-colors"
+                  title="删除"
                 >
-                  删除
+                  <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path>
+                  </svg>
                 </button>
               </div>
               <div v-else class="flex gap-1 justify-end">
                 <button
                   @click="saveEdit(account)"
-                  class="inline-flex items-center px-3 py-1 text-sm text-white bg-green-600 hover:bg-green-700 rounded-md transition-colors"
+                  class="p-1.5 text-green-600 hover:text-green-700 hover:bg-green-50 rounded-md transition-colors"
+                  title="保存"
                 >
-                  保存
+                  <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
+                  </svg>
                 </button>
                 <button
                   @click="cancelEdit"
-                  class="inline-flex items-center px-3 py-1 text-sm text-gray-600 hover:text-gray-700 hover:bg-gray-100 rounded-md transition-colors"
+                  class="p-1.5 text-gray-600 hover:text-gray-700 hover:bg-gray-100 rounded-md transition-colors"
+                  title="取消"
                 >
-                  取消
+                  <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                  </svg>
                 </button>
               </div>
             </td>
@@ -300,15 +326,24 @@
         </form>
       </div>
     </div>
+
+    <!-- Import Dialog -->
+    <AccountImportDialog
+      :show="showImportDialog"
+      @close="showImportDialog = false"
+      @success="handleImportSuccess"
+    />
   </div>
 </template>
 
 <script setup lang="ts">
 import { ref, onMounted, computed } from 'vue'
 import { useSystems } from '../../composables/useSystems'
+import AccountImportDialog from '../../components/accounting/AccountImportDialog.vue'
 
 const accounts = ref([])
 const showAddModal = ref(false)
+const showImportDialog = ref(false)
 const adding = ref(false)
 const newAccount = ref({
   code: '',
@@ -512,6 +547,45 @@ async function addAccount() {
     alert('添加失败')
   } finally {
     adding.value = false
+  }
+}
+
+async function exportAccounts() {
+  try {
+    // Download CSV file directly
+    const response = await $fetch('/api/accounts/export', {
+      responseType: 'text',
+    })
+    
+    const blob = new Blob([response], { type: 'text/csv;charset=utf-8;' })
+    const url = URL.createObjectURL(blob)
+    const a = document.createElement('a')
+    a.href = url
+    a.download = `accounts-${new Date().toISOString().split('T')[0]}.csv`
+    document.body.appendChild(a)
+    a.click()
+    document.body.removeChild(a)
+    URL.revokeObjectURL(url)
+  } catch (error) {
+    console.error('Export error:', error)
+    alert('导出失败')
+  }
+}
+
+async function handleImportSuccess() {
+  // Reload accounts after import
+  const response = await $fetch('/api/accounts')
+  if (response.success) {
+    accounts.value = response.data
+    
+    // Reload account system assignments
+    accountSystems.value = {}
+    for (const account of accounts.value) {
+      const systemsRes = await $fetch(`/api/accounts/${account.id}/systems`)
+      if (systemsRes.success) {
+        accountSystems.value[account.id] = systemsRes.data
+      }
+    }
   }
 }
 </script>
