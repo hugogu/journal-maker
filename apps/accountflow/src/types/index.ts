@@ -275,9 +275,17 @@ export const AccountingRule = z.object({
   event: z.string().max(100).optional(), // AI返回的event.name
   description: z.string().min(1).max(500),
   condition: z.string().max(200).optional(),
+  // Support both field naming conventions
+  debit: z.string().max(20).optional(),
+  credit: z.string().max(20).optional(),
   debitAccount: z.string().max(20).optional(),
   creditAccount: z.string().max(20).optional(),
-})
+}).transform((data) => ({
+  ...data,
+  // Normalize to debitAccount/creditAccount
+  debitAccount: data.debitAccount || data.debit,
+  creditAccount: data.creditAccount || data.credit,
+}))
 export type AccountingRule = z.infer<typeof AccountingRule>
 
 // ============================================================================

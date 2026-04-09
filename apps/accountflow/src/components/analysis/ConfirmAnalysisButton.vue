@@ -24,6 +24,7 @@ const props = defineProps<{
   messageContent: string
   messageId?: number
   disabled?: boolean
+  structuredData?: any  // Add structuredData prop
 }>()
 
 const emit = defineEmits<{
@@ -33,6 +34,47 @@ const emit = defineEmits<{
 const confirming = ref(false)
 
 const parsedContent = computed(() => {
+  // Prefer structuredData if available (from API response)
+  if (props.structuredData) {
+    const sd = props.structuredData
+    // Map accounts to subjects
+    let subjects = sd.subjects || []
+    if (sd.accounts) {
+      subjects = sd.accounts.map((a: any) => ({
+        code: a.code,
+        name: a.name,
+        direction: a.type === 'asset' ? 'debit' : a.type === 'liability' ? 'credit' : 'debit',
+        description: a.reason,
+      }))
+    }
+    // Map rules with debit/credit normalization
+    const rules = (sd.rules || []).map((r: any, index: number) => ({
+      id: r.id || `RULE-${String(index + 1).padStart(3, '0')}`,
+      event: r.event || r.eventName,
+      description: r.description || '',
+      condition: r.condition,
+      debitAccount: r.debitAccount || r.debit,
+      creditAccount: r.creditAccount || r.credit,
+    }))
+    
+    // Extract Mermaid diagrams from messageContent (structuredData may not have them)
+    const diagrams: string[] = []
+    const mermaidRegex = /```mermaid\s*([\s\S]*?)```/gi
+    let match
+    while ((match = mermaidRegex.exec(props.messageContent)) !== null) {
+      diagrams.push(match[1].trim())
+    }
+    
+    return {
+      subjects,
+      rules,
+      diagrams,
+      entries: [],
+      rawContent: props.messageContent,
+    }
+  }
+  
+  // Fallback: parse messageContent
   if (!props.messageContent) return null
   return parseAIResponse(props.messageContent)
 })

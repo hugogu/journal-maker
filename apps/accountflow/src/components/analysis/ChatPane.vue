@@ -96,6 +96,7 @@
                 v-if="message.role === 'assistant' && !streaming"
                 :message-content="message.content"
                 :message-id="message.id"
+                :structured-data="message.structuredData"
                 :disabled="streaming"
                 @confirm="handleConfirm"
               />

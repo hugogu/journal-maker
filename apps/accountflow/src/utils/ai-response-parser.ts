@@ -83,8 +83,9 @@ function cleanAccountCode(account: string | undefined): string | undefined {
   // Match pattern like "2202-07:1015" -> extract "2202-07"
   const cleanCode = firstAccount.replace(/:\d+$/, '').trim()
   
-  // Validate the cleaned code (should be alphanumeric with optional hyphens)
-  if (!/^\w[\w\-]*$/.test(cleanCode)) {
+  // Validate the cleaned code (should be alphanumeric with optional hyphens, dots)
+  // Supports formats like: "1001", "1012.001", "2202-07", "1002.001.02"
+  if (!/^[\w.\-]+$/.test(cleanCode)) {
     console.warn(`[cleanAccountCode] Invalid account code after cleaning: "${cleanCode}" (original: "${account}")`)
     return undefined
   }
@@ -104,8 +105,8 @@ export function extractRules(content: string): AccountingRule[] {
       const eventName = r.event?.name || r.event || r.eventName || undefined
       
       // Clean account codes (remove amount information)
-      const rawDebit = r.debit || r.debitAccount
-      const rawCredit = r.credit || r.creditAccount
+      const rawDebit = r.debit || r.debitAccount || r.debitSide?.accountCode
+      const rawCredit = r.credit || r.creditAccount || r.creditSide?.accountCode
       const debitAccount = cleanAccountCode(rawDebit)
       const creditAccount = cleanAccountCode(rawCredit)
 
@@ -133,15 +134,29 @@ export function extractRules(content: string): AccountingRule[] {
   }
 
   // Try to find JSON array for rules
-  const jsonRules = extractJSONArray<AccountingRule>(content, 'rules')
+  const jsonRules = extractJSONArray<any>(content, 'rules')
   if (jsonRules.length > 0) {
-    return jsonRules.filter(isValidRule)
+    return jsonRules.map((r: any, index: number) => ({
+      id: r.id || `RULE-${String(index + 1).padStart(3, '0')}`,
+      event: r.event || r.eventName,
+      description: r.description || '',
+      condition: r.condition,
+      debitAccount: r.debitAccount || r.debit,
+      creditAccount: r.creditAccount || r.credit,
+    })).filter(isValidRule)
   }
 
   // Try to find rules in a JSON code block
-  const jsonBlockRules = extractJSONFromCodeBlock<AccountingRule[]>(content, 'rules')
+  const jsonBlockRules = extractJSONFromCodeBlock<any[]>(content, 'rules')
   if (jsonBlockRules && Array.isArray(jsonBlockRules)) {
-    return jsonBlockRules.filter(isValidRule)
+    return jsonBlockRules.map((r: any, index: number) => ({
+      id: r.id || `RULE-${String(index + 1).padStart(3, '0')}`,
+      event: r.event || r.eventName,
+      description: r.description || '',
+      condition: r.condition,
+      debitAccount: r.debitAccount || r.debit,
+      creditAccount: r.creditAccount || r.credit,
+    })).filter(isValidRule)
   }
 
   // Fallback: try to extract from numbered list format
@@ -151,8 +166,20 @@ export function extractRules(content: string): AccountingRule[] {
 /**
  * Extract structured data from the nested JSON format
  * Looks for {"structured": {"accounts": [...], "rules": [...]}} pattern
+ * Supports both Markdown code blocks and direct JSON
  */
 function extractStructuredData(content: string): any {
+  // First, try to parse the entire content as JSON (for direct JSON format)
+  try {
+    const parsed = JSON.parse(content.trim())
+    if (parsed.structured) {
+      return parsed.structured
+    }
+  } catch {
+    // Not valid JSON or no structured field, continue to try code blocks
+  }
+
+  // Try to find structured data in Markdown JSON code blocks
   const jsonBlockRegex = /```json\s*([\s\S]*?)```/gi
 
   let match
