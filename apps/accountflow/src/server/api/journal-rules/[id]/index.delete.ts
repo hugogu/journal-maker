@@ -1,6 +1,6 @@
 import { defineEventHandler, createError, getRouterParam } from 'h3'
 import { db } from '../../../db'
-import { journalRules, systemJournalRules } from '../../../db/schema'
+import { journalRules, systemRules } from '../../../db/schema'
 import { eq } from 'drizzle-orm'
 
 export default defineEventHandler(async (event) => {
@@ -13,7 +13,7 @@ export default defineEventHandler(async (event) => {
     }
 
     // First, delete related system assignments
-    await db.delete(systemJournalRules).where(eq(systemJournalRules.ruleId, ruleId))
+    await db.delete(systemRules).where(eq(systemRules.ruleId, ruleId))
 
     // Then delete the rule
     const [deletedRule] = await db
