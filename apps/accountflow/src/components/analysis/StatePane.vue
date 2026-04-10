@@ -394,13 +394,84 @@ async function handleSaveSubject(subject: any) {
 // Handle saving rule
 async function handleSaveRule(rule: any) {
   try {
-    // This would need a proper API endpoint for saving rules
-    console.log('Save rule:', rule)
-    // For now, let's simulate saving by updating the local state
-    savedRuleIds.value = new Set([...savedRuleIds.value, rule.id]) as Set<string>
-    // TODO: Implement actual rule saving API call
+    if (!props.scenarioId) {
+      console.error('No scenarioId available')
+      return
+    }
+
+    // Prepare rule for API
+    const ruleToSave = {
+      eventName: rule.event || rule.id,
+      ruleKey: rule.event || rule.id,
+      eventDescription: rule.description,
+      debitAccountId: rule.debitAccount || null,
+      creditAccountId: rule.creditAccount || null,
+      conditions: rule.condition ? { trigger: rule.condition } : {},
+      debitSide: {},
+      creditSide: {},
+      triggerType: 'manual'
+    }
+
+    const response = await $fetch('/api/journal-rules/batch', {
+      method: 'POST',
+      body: {
+        scenarioId: props.scenarioId,
+        messageId: props.sourceMessageId,
+        rules: [ruleToSave]
+      }
+    }) as { success: boolean; data?: any; error?: string }
+
+    if (response.success && response.data) {
+      console.log('Successfully saved rule:', response.data)
+      
+      // Update local state to mark rule as existing
+      const uniqueId = `${props.scenarioId}-${props.sourceMessageId}-${rule.event || rule.id}`
+      savedRuleIds.value = new Set([...savedRuleIds.value, uniqueId]) as Set<string>
+    } else {
+      console.error('Failed to save rule:', response.error)
+      alert('保存规则失败: ' + (response.error || '未知错误'))
+    }
   } catch (error) {
     console.error('Failed to save rule:', error)
+    alert('保存规则失败')
+  }
+}
+
+    // Prepare rule for API
+    const ruleToSave = {
+      eventName: rule.event || rule.id,
+      ruleKey: rule.event || rule.id,
+      eventDescription: rule.description,
+      debitAccountId: rule.debitAccount || null,
+      creditAccountId: rule.creditAccount || null,
+      conditions: rule.condition ? { trigger: rule.condition } : {},
+      debitSide: {},
+      creditSide: {},
+      triggerType: 'manual'
+    }
+
+    const response = await $fetch('/api/journal-rules/batch', {
+      method: 'POST',
+      body: {
+        scenarioId: props.scenarioId,
+        messageId: props.sourceMessageId,
+        rules: [ruleToSave]
+      }
+    }) as { success: boolean; data?: any; error?: string }
+
+    if (response.success && response.data) {
+      console.log('Successfully saved rule:', response.data)
+      
+      // Update local state to mark rule as existing
+      const uniqueId = `${props.scenarioId}-${props.sourceMessageId}-${rule.event || rule.id}`
+      savedRuleIds.value = new Set([...savedRuleIds.value, uniqueId]) as Set<string>
+    } else {
+      console.error('Failed to save rule:', response.error)
+      alert('保存规则失败: ' + (response.error || '未知错误'))
+    }
+  } catch (error) {
+    console.error('Failed to save rule:', error)
+    alert('保存规则失败')
   }
 }
 
