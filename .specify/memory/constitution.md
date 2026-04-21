@@ -82,4 +82,26 @@ Constitution changes require: (1) Impact analysis on existing scenarios, (2) Ver
 ### Compliance Review
 Before each release: verify Docker compose works on fresh machine, verify AI prompts produce consistent structured output, verify科目 changes don't break existing scenario rules.
 
+## 交互范式：双栏工作台 (Two-Pane Workbench)
+- 系统核心界面必须采用**双栏布局**。
+- **左侧 (Chat)**：负责自然语言交互、需求澄清和指令输入。
+- **右侧 (State Dashboard)**：负责实时展示结构化的业务状态。右侧必须包含 Tabs：
+  - **流程图 (Flow)**: 实时渲染 Mermaid 资金流图。
+  - **规则预览 (Rules)**: 展示 AI 提取的结构化记账规则。
+  - **科目映射 (Accounts)**: 展示当前场景涉及的科目。
+- 禁止 AI 直接修改数据库中的确认状态。AI 的产出必须先在右侧作为"提案 (Proposal)"展示，经用户前端确认后才可持久化。
+
+## 数据处理原则：结构化优先 (Structure-First)
+- 禁止使用纯文本或 Regex 解析业务数据。
+- **必须使用 OpenAI Function Calling (Tools) 配合 Zod Schema** 进行非结构化对话到结构化数据的转换。
+- 后端 API (Nuxt Server) 必须作为 "Tools Provider"，为 AI 提供以下能力：
+  - `query_accounts`: 获取现有科目表作为上下文。
+  - `propose_journal_rule`: 提交规则草案。
+  - `simulate_transaction`: 基于当前规则进行试算。
+
+## 会计一致性约束
+- 系统必须维护全局唯一的会计科目表 (Accounts Table)。
+- AI 在分析新场景时，必须优先复用现有科目。
+- 新增科目必须通过显式的 `AccountProposal` 流程，不能静默创建。
+
 **Version**: 1.0.0 | **Ratified**: 2025-02-01 | **Last Amended**: 2025-02-01
