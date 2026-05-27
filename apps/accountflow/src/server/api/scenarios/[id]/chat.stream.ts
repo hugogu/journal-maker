@@ -5,6 +5,7 @@ import { AppError, handleError } from '../../../utils/error'
 import { aiService } from '../../../utils/ai-service'
 import { createAnalysisArtifacts } from '../../../db/queries/analysis-artifacts'
 import { parseAIResponse } from '../../../../utils/ai-response-parser'
+import { getSystemContext } from '../../../db/queries/systems'
 import { eq } from 'drizzle-orm'
 import { defineEventHandler, getRouterParam, readBody, setResponseStatus, setHeader } from 'h3'
 
@@ -26,12 +27,28 @@ export default defineEventHandler(async (event) => {
       timestamp: new Date(),
     }).returning()
     
-    const allAccounts = await db.query.accounts.findMany({
+    let allAccounts = await db.query.accounts.findMany({
       where: eq(accounts.companyId, scenario.companyId)
     }) || []
     const templateScenario = await db.query.scenarios.findFirst({
       where: eq(scenarios.isTemplate, true)
     })
+
+    // Get system context if systemId provided
+    let systemContext = undefined
+    if (data.systemId) {
+      const context = await getSystemContext(data.systemId, scenario.companyId)
+      if (context) {
+        systemContext = {
+          id: context.system.id,
+          name: context.system.name,
+          description: context.system.description || undefined,
+          preferences: context.preferences,
+        }
+        // Use system-specific accounts instead of all accounts
+        allAccounts = context.accounts || []
+      }
+    }
     setResponseStatus(event, 200)
     setHeader(event, 'Content-Type', 'text/event-stream')
     setHeader(event, 'Cache-Control', 'no-cache, no-transform')
@@ -60,7 +77,8 @@ export default defineEventHandler(async (event) => {
           currentScenario: {
             name: scenario.name,
             description: scenario.description || undefined
-          }
+          },
+          accountingSystem: systemContext
         },
         (chunk: string) => {
           fullMessage += chunk

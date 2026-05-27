@@ -1,4 +1,5 @@
 import { ZodError } from 'zod'
+import { createError } from 'h3'
 
 export class AppError extends Error {
   constructor(
@@ -11,79 +12,55 @@ export class AppError extends Error {
   }
 }
 
-export function handleError(error: unknown): { statusCode: number; body: { success: false; error: string; code?: string; details?: any } } {
-  // Log full error details with stack trace
+export function handleError(error: unknown) {
+  const actualError = error
+  
   console.error('=== SERVER ERROR ===')
   console.error('Timestamp:', new Date().toISOString())
-  console.error('Error type:', error?.constructor?.name || typeof error)
-  console.error('Error message:', error instanceof Error ? error.message : String(error))
-  
-  // Log stack trace if available
-  if (error instanceof Error && error.stack) {
+  console.error('Error type:', actualError?.constructor?.name || typeof actualError)
+  console.error('Error message:', actualError instanceof Error ? actualError.message : String(actualError))
+
+  if (actualError instanceof Error && actualError.stack) {
     console.error('Stack trace:')
-    console.error(error.stack)
+    console.error(actualError.stack)
   }
-  
-  // Log additional error properties
-  if (error && typeof error === 'object') {
-    console.error('Error properties:', Object.getOwnPropertyNames(error))
-    try {
-      console.error('Error details:', JSON.stringify(error, null, 2))
-    } catch (e) {
-      console.error('Failed to serialize error:', e)
-    }
-  }
+
   console.error('=== END ERROR ===')
 
-  if (error instanceof AppError) {
-    return {
-      statusCode: error.statusCode,
-      body: {
+  if (actualError instanceof AppError) {
+    throw createError({
+      statusCode: actualError.statusCode,
+      statusMessage: actualError.message,
+      data: {
         success: false,
-        error: error.message,
-        code: error.code,
-        details: {
-          type: 'AppError',
-          statusCode: error.statusCode,
-          stack: error.stack
-        }
+        error: actualError.message,
+        code: actualError.code,
       },
-    }
+    })
   }
 
-  if (error instanceof ZodError) {
-    return {
+  if (actualError instanceof ZodError) {
+    throw createError({
       statusCode: 400,
-      body: {
+      statusMessage: 'Validation error',
+      data: {
         success: false,
-        error: 'Validation error: ' + error.issues.map((e: any) => e.message).join(', '),
+        error: 'Validation error: ' + actualError.issues.map((e: any) => e.message).join(', '),
         code: 'VALIDATION_ERROR',
-        details: {
-          type: 'ZodError',
-          errors: error.issues,
-          stack: error.stack
-        }
+        errors: actualError.issues,
       },
-    }
+    })
   }
 
-  // For unexpected errors, include full details in development
-  const isDevelopment = process.env.NODE_ENV !== 'production'
-  
-  return {
+  throw createError({
     statusCode: 500,
-    body: {
+    statusMessage: actualError instanceof Error ? actualError.message : 'Internal server error',
+    data: {
       success: false,
-      error: error instanceof Error ? error.message : 'Internal server error',
+      error: actualError instanceof Error ? actualError.message : 'Internal server error',
       code: 'INTERNAL_ERROR',
-      details: isDevelopment ? {
-        type: error?.constructor?.name || 'Unknown',
-        message: error instanceof Error ? error.message : String(error),
-        stack: error instanceof Error ? error.stack : undefined,
-        raw: error
-      } : undefined
     },
-  }
+  })
 }
 
 export function successResponse<T>(data: T) {

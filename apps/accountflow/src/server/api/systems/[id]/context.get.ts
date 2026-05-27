@@ -98,6 +98,6 @@ export default defineEventHandler(async (event) => {
       preferences,
     })
   } catch (error) {
-    return handleError(event, error)
+    handleError(error)
   }
 })

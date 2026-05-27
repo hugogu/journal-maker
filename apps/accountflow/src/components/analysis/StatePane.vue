@@ -184,6 +184,7 @@ const props = defineProps<{
   loading: boolean
   scenarioId?: number // Add scenarioId prop
   sourceMessageId?: number // Add sourceMessageId prop
+  systemId?: number // Add systemId prop for system assignment
 }>()
 
 const emit = defineEmits<{
@@ -470,7 +471,8 @@ async function handleSaveAllRules() {
       body: {
         scenarioId: props.scenarioId,
         messageId: props.sourceMessageId, // 添加messageId
-        rules: rulesToSave
+        rules: rulesToSave,
+        systemIds: props.systemId ? [props.systemId] : undefined // 添加systemId用于体系分配
       }
     }) as { success: boolean; data?: any; error?: string }
 

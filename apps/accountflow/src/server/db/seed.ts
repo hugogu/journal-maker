@@ -1,11 +1,11 @@
 import { db } from './index'
-import { companies, users, aiProviders, accounts } from './schema'
+import { companyProfile, users, aiProviders, accounts } from './schema'
 
 async function seed() {
   console.log('Seeding database...')
 
   // Create default company
-  const [company] = await db.insert(companies).values({
+  const [company] = await db.insert(companyProfile).values({
     name: 'Default Company',
     industry: 'Technology'
   }).onConflictDoNothing().returning()

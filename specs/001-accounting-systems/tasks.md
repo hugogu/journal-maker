@@ -73,8 +73,8 @@ MVP Scope: User Stories 1 & 2 (Foundation + System-Aware Analysis)
 - [X] T026 [US2] Create GET /api/systems/[id]/accounts endpoint in apps/accountflow/src/server/api/systems/[id]/accounts.ts
 - [X] T027 [US2] Create POST /api/systems/[id]/accounts endpoint in apps/accountflow/src/server/api/systems/[id]/accounts.ts
 - [X] T028 [US2] Update analysis service to include system_id in apps/accountflow/src/server/db/queries/analysis.ts
-- [ ] T029 [US2] Update AI adapter to include system context in apps/accountflow/src/server/utils/ai-adapters/base.ts
-- [ ] T030 [US2] Modify prompt templates to include system info in apps/accountflow/src/server/utils/prompts/analysis.ts
+- [X] T029 [US2] Update AI adapter to include system context in apps/accountflow/src/server/utils/ai-adapters/base.ts
+- [X] T030 [US2] Modify prompt templates to include system info in apps/accountflow/src/server/utils/prompts/analysis.ts
 - [X] T031 [P] [US2] Create system-aware account queries in apps/accountflow/src/server/db/queries/accounts.ts
 - [X] T032 [P] [US2] Create system-aware rule queries in apps/accountflow/src/server/db/queries/rules.ts
 
@@ -103,11 +103,11 @@ MVP Scope: User Stories 1 & 2 (Foundation + System-Aware Analysis)
 
 **Independent Test**: Can create account assigned to specific system, query returns only that system's accounts
 
-- [ ] T041 [P] [US3] Update account creation to support system assignment in apps/accountflow/src/server/api/accounts/index.post.ts
-- [ ] T042 [US3] Update account update endpoint for system changes in apps/accountflow/src/server/api/accounts/[id].patch.ts
-- [ ] T043 [P] [US3] Add system filter to account list queries in apps/accountflow/src/server/db/queries/accounts.ts
-- [ ] T044 [US3] Create endpoint to get accounts by system in apps/accountflow/src/server/api/systems/[id]/accounts.get.ts
-- [ ] T045 [P] [US3] Update account Zod schema for system_ids in apps/accountflow/src/server/utils/schemas/accounts.ts
+- [X] T041 [P] [US3] Update account creation to support system assignment in apps/accountflow/src/server/api/accounts/index.post.ts
+- [X] T042 [US3] Update account update endpoint for system changes in apps/accountflow/src/server/api/accounts/[id].patch.ts
+- [X] T043 [P] [US3] Add system filter to account list queries in apps/accountflow/src/server/db/queries/accounts.ts
+- [X] T044 [US3] Create endpoint to get accounts by system in apps/accountflow/src/server/api/systems/[id]/accounts.get.ts
+- [X] T045 [P] [US3] Update account Zod schema for system_ids in apps/accountflow/src/server/utils/schemas/accounts.ts
 
 ---
 
@@ -117,11 +117,11 @@ MVP Scope: User Stories 1 & 2 (Foundation + System-Aware Analysis)
 
 **Independent Test**: Can create account, assign to Management Reporting, verify not in Financial Reporting
 
-- [ ] T046 [P] [US3] Add system selector to account creation form in apps/accountflow/src/components/accounts/AccountForm.vue
-- [ ] T047 [US3] Display system badges in account list in apps/accountflow/src/components/accounts/AccountList.vue
-- [ ] T048 [P] [US3] Filter account list by selected system in apps/accountflow/src/pages/admin/accounts/index.vue
-- [ ] T049 [US3] Show system membership in account details in apps/accountflow/src/components/accounts/AccountDetails.vue
-- [ ] T050 [US3] Add system filter to account management in apps/accountflow/src/composables/useAccounts.ts
+- [X] T046 [P] [US3] Add system selector to account creation form in apps/accountflow/src/components/accounts/AccountFormModal.vue
+- [X] T047 [US3] Display system badges in account list in apps/accountflow/src/pages/admin/accounts/index.vue
+- [X] T048 [P] [US3] Filter account list by selected system in apps/accountflow/src/pages/admin/accounts/index.vue
+- [X] T049 [US3] Show system membership in account details in apps/accountflow/src/components/accounts/AccountFormModal.vue
+- [X] T050 [US3] Add system filter to account management in apps/accountflow/src/composables/useAccounts.ts
 
 ---
 
@@ -131,9 +131,9 @@ MVP Scope: User Stories 1 & 2 (Foundation + System-Aware Analysis)
 
 **Independent Test**: Can create rule for specific system, analysis uses only that system's rules
 
-- [X] T051 [P] [US4] Update rule creation with system assignment in apps/accountflow/src/server/api/rules/index.post.ts
+- [X] T051 [P] [US4] Update rule creation with system assignment in apps/accountflow/src/server/api/journal-rules/batch.post.ts
 - [X] T052 [US4] Update rule queries to filter by system in apps/accountflow/src/server/db/queries/rules.ts
-- [X] T053 [P] [US4] Create GET /api/systems/[id]/rules endpoint in apps/accountflow/src/server/api/systems/[id]/rules.get.ts
+- [X] T053 [P] [US4] Create GET /api/systems/[id]/rules endpoint in apps/accountflow/src/server/api/systems/[id]/rules.ts
 - [X] T054 [US4] Update rule Zod schema for system_ids in apps/accountflow/src/server/utils/schemas.ts
 
 ---
@@ -144,10 +144,10 @@ MVP Scope: User Stories 1 & 2 (Foundation + System-Aware Analysis)
 
 **Independent Test**: Can create rule for Management Reporting, verify not applied to Financial Reporting
 
-- [ ] T055 [P] [US4] Add system selector to rule creation form in apps/accountflow/src/components/rules/RuleForm.vue
-- [ ] T056 [US4] Display system badges in rule list in apps/accountflow/src/components/rules/RuleList.vue
-- [ ] T057 [P] [US4] Filter rules by selected system in apps/accountflow/src/pages/admin/rules/index.vue
-- [ ] T058 [US4] Update rule composable with system filter in apps/accountflow/src/composables/useRules.ts
+- [X] T055 [P] [US4] Add system selector to rule creation form in apps/accountflow/src/components/rules/RuleFormModal.vue
+- [X] T056 [US4] Display system badges in rule list in apps/accountflow/src/pages/admin/rules/index.vue
+- [X] T057 [P] [US4] Filter rules by selected system in apps/accountflow/src/pages/admin/rules/index.vue
+- [X] T058 [US4] Update rule composable with system filter in apps/accountflow/src/composables/useRules.ts
 
 ---
 
@@ -157,11 +157,11 @@ MVP Scope: User Stories 1 & 2 (Foundation + System-Aware Analysis)
 
 **Independent Test**: Can compare Financial vs Management analysis results via API
 
-- [ ] T059 [P] [US5] Create GET /api/scenarios/[id]/compare endpoint in apps/accountflow/src/server/api/scenarios/[id]/compare.get.ts
-- [ ] T060 [US5] Create POST /api/analyses/compare endpoint in apps/accountflow/src/server/api/analyses/compare.post.ts
-- [ ] T061 [P] [US5] Implement diff algorithm for journal entries in apps/accountflow/src/server/utils/diff/journal-entries.ts
-- [ ] T062 [P] [US5] Create comparison service in apps/accountflow/src/server/services/comparison.ts
-- [ ] T063 [US5] Add GET /api/scenarios/[id]/systems endpoint in apps/accountflow/src/server/api/scenarios/[id]/systems.get.ts
+- [X] T059 [P] [US5] Create GET /api/scenarios/[id]/compare endpoint in apps/accountflow/src/server/api/scenarios/[id]/compare.get.ts
+- [X] T060 [US5] Create POST /api/analyses/compare endpoint in apps/accountflow/src/server/api/analyses/compare.post.ts
+- [X] T061 [P] [US5] Implement diff algorithm for journal entries in apps/accountflow/src/server/utils/diff/journal-entries.ts
+- [X] T062 [P] [US5] Create comparison service in apps/accountflow/src/server/services/comparison.ts
+- [X] T063 [US5] Add GET /api/scenarios/[id]/systems endpoint in apps/accountflow/src/server/api/scenarios/[id]/systems.get.ts
 
 ---
 
@@ -171,11 +171,11 @@ MVP Scope: User Stories 1 & 2 (Foundation + System-Aware Analysis)
 
 **Independent Test**: Can view comparison with highlighted differences between two systems
 
-- [ ] T064 [P] [US5] Create SystemComparison component in apps/accountflow/src/components/analysis/SystemComparison.vue
-- [ ] T065 [P] [US5] Create ComparisonDiff view in apps/accountflow/src/pages/scenarios/[id]/compare.vue
-- [ ] T066 [US5] Add diff highlighting styles in apps/accountflow/src/assets/styles/comparison.css
-- [ ] T067 [US5] Create comparison composable in apps/accountflow/src/composables/useComparison.ts
-- [ ] T068 [P] [US5] Add "Compare with Another System" button in apps/accountflow/src/components/analysis/AnalysisActions.vue
+- [X] T064 [P] [US5] Create SystemComparison component in apps/accountflow/src/components/analysis/SystemComparison.vue
+- [X] T065 [P] [US5] Create ComparisonDiff view in apps/accountflow/src/pages/scenarios/[id]/compare.vue
+- [X] T066 [US5] Add diff highlighting styles in apps/accountflow/src/assets/styles/comparison.css
+- [X] T067 [US5] Create comparison composable in apps/accountflow/src/composables/useComparison.ts
+- [X] T068 [P] [US5] Add "Compare with Another System" button in apps/accountflow/src/components/analysis/AnalysisActions.vue
 
 ---
 
@@ -185,14 +185,14 @@ MVP Scope: User Stories 1 & 2 (Foundation + System-Aware Analysis)
 
 **Independent Test**: All success criteria met (performance, usability, correctness)
 
-- [ ] T069 [P] Add database indexes for system queries in apps/accountflow/src/server/db/migrations/0014_add_system_indexes.sql
-- [ ] T070 Update TypeScript types for all new entities in apps/accountflow/src/types/systems.ts
-- [ ] T071 Add error handling for system operations in apps/accountflow/src/composables/useErrorHandler.ts
-- [ ] T072 Add loading states for system operations in apps/accountflow/src/components/ui/SystemLoading.vue
-- [ ] T073 [P] Optimize system context queries in apps/accountflow/src/server/db/queries/systems.ts
-- [ ] T074 Add system validation to analysis endpoints in apps/accountflow/src/server/utils/validators/analysis.ts
-- [ ] T075 [P] Create system preference management UI in apps/accountflow/src/components/admin/SystemPreferences.vue
-- [ ] T076 Add system preference endpoints in apps/accountflow/src/server/api/systems/[id]/preferences.ts
+- [X] T069 [P] Add database indexes for system queries in apps/accountflow/src/server/db/migrations/0014_add_system_indexes.sql
+- [X] T070 Update TypeScript types for all new entities in apps/accountflow/src/types/index.ts
+- [X] T071 Add error handling for system operations in apps/accountflow/src/composables/useSystems.ts
+- [X] T072 Add loading states for system operations in apps/accountflow/src/components/admin/SystemPreferences.vue
+- [X] T073 [P] Optimize system context queries in apps/accountflow/src/server/db/queries/systems.ts
+- [X] T074 Add system validation to analysis endpoints in apps/accountflow/src/server/utils/schemas.ts
+- [X] T075 [P] Create system preference management UI in apps/accountflow/src/components/admin/SystemPreferences.vue
+- [X] T076 Add system preference endpoints in apps/accountflow/src/server/api/systems/[id]/preferences.ts
 
 ---
 

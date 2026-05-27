@@ -51,6 +51,7 @@
           :loading="confirmedAnalysis.loading.value"
           :scenario-id="scenarioIdNum"
           :source-message-id="confirmedAnalysis.data.value?.sourceMessageId"
+          :system-id="selectedSystem?.id"
           @clear="handleClear"
         />
       </div>

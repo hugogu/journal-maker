@@ -18,12 +18,16 @@ export const useSystems = () => {
     error.value = null
     try {
       const query = filters ? new URLSearchParams(filters as Record<string, string>).toString() : ''
-      const { data } = await useFetch(`/api/systems${query ? `?${query}` : ''}`)
-      if (data.value?.data) {
-        systems.value = data.value.data
+const result = await $fetch(`/api/systems${query ? `?${query}` : ''}`)
+      if (result?.success && result?.data) {
+        systems.value = result.data
+      } else {
+        systems.value = []
       }
     } catch (e: any) {
-      error.value = e?.data?.message || '加载体系列表失败'
+      console.error('fetchSystems error:', e)
+      error.value = e?.data?.message || e?.message || '加载体系列表失败'
+      systems.value = []
     } finally {
       loading.value = false
     }
@@ -34,12 +38,14 @@ export const useSystems = () => {
     loading.value = true
     error.value = null
     try {
-      const { data } = await useFetch(`/api/systems/${id}`)
-      if (data.value?.data) {
-        return data.value.data as SystemWithStats
+      const result = await $fetch(`/api/systems/${id}`)
+      if (result?.data) {
+        return result.data as SystemWithStats
       }
+      return null
     } catch (e: any) {
-      error.value = e?.data?.message || '加载体系详情失败'
+      error.value = e?.data?.message || e?.message || '加载体系详情失败'
+      return null
     } finally {
       loading.value = false
     }
@@ -53,16 +59,18 @@ export const useSystems = () => {
     loading.value = true
     error.value = null
     try {
-      const { data: result } = await useFetch('/api/systems', {
+      const result = await $fetch('/api/systems', {
         method: 'POST',
         body: data
       })
-      if (result.value?.data) {
-        systems.value.push(result.value.data)
-        return result.value.data
+      if (result?.data) {
+        systems.value.push(result.data)
+        return result.data
+      } else {
+        throw new Error('创建失败：服务器未返回数据')
       }
     } catch (e: any) {
-      error.value = e?.data?.message || '创建体系失败'
+      error.value = e?.data?.message || e?.message || '创建体系失败'
       throw e
     } finally {
       loading.value = false
@@ -78,19 +86,21 @@ export const useSystems = () => {
     loading.value = true
     error.value = null
     try {
-      const { data: result } = await useFetch(`/api/systems/${id}`, {
+      const result = await $fetch(`/api/systems/${id}`, {
         method: 'PATCH',
         body: data
       })
-      if (result.value?.data) {
+      if (result?.data) {
         const index = systems.value.findIndex(s => s.id === id)
         if (index !== -1) {
-          systems.value[index] = result.value.data
+          systems.value[index] = result.data
         }
-        return result.value.data
+        return result.data
+      } else {
+        throw new Error('更新失败：服务器未返回数据')
       }
     } catch (e: any) {
-      error.value = e?.data?.message || '更新体系失败'
+      error.value = e?.data?.message || e?.message || '更新体系失败'
       throw e
     } finally {
       loading.value = false
@@ -102,12 +112,12 @@ export const useSystems = () => {
     loading.value = true
     error.value = null
     try {
-      await useFetch(`/api/systems/${id}`, {
+      await $fetch(`/api/systems/${id}`, {
         method: 'DELETE'
       })
       systems.value = systems.value.filter(s => s.id !== id)
     } catch (e: any) {
-      error.value = e?.data?.message || '删除体系失败'
+      error.value = e?.data?.message || e?.message || '删除体系失败'
       throw e
     } finally {
       loading.value = false

@@ -340,3 +340,135 @@ export const FlowchartEdge = z.object({
   label: z.string().optional(),
 })
 export type FlowchartEdge = z.infer<typeof FlowchartEdge>
+
+// ============================================================================
+// SYSTEM PREFERENCE TYPES
+// ============================================================================
+
+export const SystemPreference = z.object({
+  id: z.number(),
+  systemId: z.number(),
+  key: z.string(),
+  value: z.any(),
+  createdAt: z.date(),
+  updatedAt: z.date(),
+})
+export type SystemPreference = z.infer<typeof SystemPreference>
+
+// ============================================================================
+// COMPARISON TYPES
+// ============================================================================
+
+export const ComparedLineItem = z.object({
+  accountId: z.number().optional(),
+  accountCode: z.string(),
+  accountName: z.string().optional(),
+  amount: z.number(),
+  description: z.string().optional(),
+  diffStatus: z.enum(['identical', 'modified', 'added', 'removed']),
+  diffDetails: z.object({
+    field: z.string(),
+    otherValues: z.record(z.union([z.number(), z.string()])),
+  }).optional(),
+})
+export type ComparedLineItem = z.infer<typeof ComparedLineItem>
+
+export const ComparedEntry = z.object({
+  id: z.string().optional(),
+  date: z.string().optional(),
+  description: z.string(),
+  debits: z.array(ComparedLineItem),
+  credits: z.array(ComparedLineItem),
+  diffStatus: z.enum(['identical', 'modified', 'added', 'removed']),
+})
+export type ComparedEntry = z.infer<typeof ComparedEntry>
+
+export const ComparisonDifference = z.object({
+  type: z.enum(['account', 'amount', 'timing', 'rule', 'entry']),
+  severity: z.enum(['high', 'medium', 'low']),
+  description: z.string(),
+  systems: z.array(z.string()),
+  entryId: z.string().optional(),
+  explanation: z.object({
+    cause: z.enum(['different_accounts', 'different_rules', 'different_preferences', 'system_specific']),
+    details: z.string(),
+  }).optional(),
+})
+export type ComparisonDifference = z.infer<typeof ComparisonDifference>
+
+export const ComparisonSummary = z.object({
+  totalDifferences: z.number(),
+  accountDifferences: z.number(),
+  amountDifferences: z.number(),
+  timingDifferences: z.number(),
+  ruleDifferences: z.number(),
+})
+export type ComparisonSummary = z.infer<typeof ComparisonSummary>
+
+export const ComparedSystem = z.object({
+  systemId: z.number(),
+  systemName: z.string(),
+  systemType: z.string(),
+  analysisId: z.number().optional(),
+  status: z.string(),
+  entries: z.array(ComparedEntry),
+  subjects: z.array(z.object({
+    code: z.string(),
+    name: z.string(),
+    direction: z.string(),
+  })),
+  flowchart: z.string().optional(),
+})
+export type ComparedSystem = z.infer<typeof ComparedSystem>
+
+export const ComparisonResponse = z.object({
+  scenarioId: z.number(),
+  comparisonId: z.string(),
+  systems: z.array(ComparedSystem),
+  differences: z.array(ComparisonDifference),
+  summary: ComparisonSummary,
+  view: z.enum(['entries', 'rules', 'flowcharts', 'all']),
+})
+export type ComparisonResponse = z.infer<typeof ComparisonResponse>
+
+// ============================================================================
+// SYSTEM CONTEXT TYPES (for AI)
+// ============================================================================
+
+export const SystemContext = z.object({
+  id: z.number(),
+  name: z.string(),
+  description: z.string().optional(),
+  preferences: z.record(z.any()).optional(),
+})
+export type SystemContext = z.infer<typeof SystemContext>
+
+// ============================================================================
+// AI SERVICE TYPES (Extended with system context)
+// ============================================================================
+
+export const AIContext = z.object({
+  company: z.object({
+    name: z.string(),
+    description: z.string().optional(),
+    industry: z.string().optional(),
+    businessModel: z.string().optional(),
+    accountingPreference: z.string().optional(),
+  }),
+  accounts: z.array(Account),
+  templateScenario: z.object({
+    name: z.string(),
+    description: z.string().optional(),
+    rules: z.array(z.object({
+      eventName: z.string(),
+      debitAccount: z.string().optional(),
+      creditAccount: z.string().optional(),
+    })),
+  }).optional(),
+  currentScenario: z.object({
+    name: z.string(),
+    description: z.string().optional(),
+  }).optional(),
+  accountingSystem: SystemContext.optional(),
+})
+export type AIContext = z.infer<typeof AIContext>

@@ -71,6 +71,6 @@ export default defineEventHandler(async (event) => {
 
     throw new AppError(405, 'Method not allowed')
   } catch (error) {
-    return handleError(event, error)
+    handleError(error)
   }
 })

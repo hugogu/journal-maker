@@ -39,6 +39,6 @@ export default defineEventHandler(async (event) => {
 
     return successResponse(systems)
   } catch (error) {
-    return handleError(event, error)
+    handleError(error)
   }
 })

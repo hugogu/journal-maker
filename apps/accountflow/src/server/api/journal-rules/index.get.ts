@@ -1,6 +1,6 @@
 import { defineEventHandler, createError, getQuery } from 'h3'
 import { db } from '../../db'
-import { journalRules, scenarios, accountingEvents } from '../../db/schema'
+import { journalRules, scenarios, accountingEvents, systemRules, accountingSystems } from '../../db/schema'
 import { eq, like, desc, asc, sql, and, or } from 'drizzle-orm'
 
 export default defineEventHandler(async (event) => {
@@ -41,7 +41,7 @@ export default defineEventHandler(async (event) => {
     const total = countResult[0]?.count || 0
 
     // Get rules with related data
-    const rules = await db.query.journalRules.findMany({
+    const rulesData = await db.query.journalRules.findMany({
       where: whereClause,
       with: {
         scenario: {
@@ -50,7 +50,7 @@ export default defineEventHandler(async (event) => {
             name: true,
           },
         },
-        event: {
+        accountingEvent: {
           columns: {
             id: true,
             eventName: true,
@@ -76,6 +76,26 @@ export default defineEventHandler(async (event) => {
       limit: pageSize,
       offset: (page - 1) * pageSize,
     })
+
+    // Fetch systems for each rule
+    const rules = await Promise.all(
+      rulesData.map(async (rule) => {
+        const systems = await db
+          .select({
+            id: accountingSystems.id,
+            name: accountingSystems.name,
+            type: accountingSystems.type,
+          })
+          .from(systemRules)
+          .innerJoin(accountingSystems, eq(systemRules.systemId, accountingSystems.id))
+          .where(eq(systemRules.ruleId, rule.id))
+
+        return {
+          ...rule,
+          systems,
+        }
+      })
+    )
 
     return {
       success: true,
