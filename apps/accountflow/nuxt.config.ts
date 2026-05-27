@@ -21,6 +21,12 @@ export default defineNuxtConfig({
 
   modules: [],
 
+  components: {
+    dirs: [
+      { path: '~/components', pathPrefix: false }
+    ]
+  },
+
   runtimeConfig: {
     openaiApiKey: process.env.OPENAI_API_KEY || '',
     openaiApiEndpoint: process.env.OPENAI_API_ENDPOINT || 'https://api.openai.com/v1',

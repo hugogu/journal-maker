@@ -201,7 +201,7 @@ const handleDelete = (system: SystemWithStats) => {
 
 const confirmDelete = async () => {
   if (!systemToDelete.value) return
-  
+
   deleteLoading.value = true
   try {
     await deleteSystem(systemToDelete.value.id)
