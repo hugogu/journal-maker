@@ -84,6 +84,7 @@ export const sendMessageSchema = z.object({
   content: z.string().min(1).max(10000),
   providerId: z.number().int().positive().optional(),
   model: z.string().optional(),
+  systemId: z.number().int().positive().optional(),
 })
 
 export const conversationMessageSchema = z.object({
@@ -150,9 +151,17 @@ export const accountingRuleSchema = z.object({
   id: z.string().min(1).max(50),
   description: z.string().min(1).max(500),
   condition: z.string().max(200).optional(),
+  event: z.string().max(100).optional(),
+  debit: z.string().max(20).optional(),
+  credit: z.string().max(20).optional(),
   debitAccount: z.string().max(20).optional(),
   creditAccount: z.string().max(20).optional(),
-})
+}).transform((data) => ({
+  ...data,
+  // Normalize debit/credit fields
+  debitAccount: data.debitAccount || data.debit,
+  creditAccount: data.creditAccount || data.credit,
+}))
 
 export const confirmAnalysisRequestSchema = z.object({
   subjects: z.array(accountingSubjectSchema).default([]),

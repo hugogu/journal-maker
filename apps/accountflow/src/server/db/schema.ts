@@ -426,7 +426,7 @@ export const accountingEventsRelations = relations(accountingEvents, ({ one, man
   analysisEntries: many(analysisEntries),
 }))
 
-export const journalRulesRelations = relations(journalRules, ({ one }) => ({
+export const journalRulesRelations = relations(journalRules, ({ one, many }) => ({
   scenario: one(scenarios, {
     fields: [journalRules.scenarioId],
     references: [scenarios.id],
@@ -439,6 +439,15 @@ export const journalRulesRelations = relations(journalRules, ({ one }) => ({
     fields: [journalRules.eventId],
     references: [accountingEvents.id],
   }),
+  debitAccount: one(accounts, {
+    fields: [journalRules.debitAccountId],
+    references: [accounts.id],
+  }),
+  creditAccount: one(accounts, {
+    fields: [journalRules.creditAccountId],
+    references: [accounts.id],
+  }),
+  systems: many(systemRules),
 }))
 
 export const analysisSubjectsRelations = relations(analysisSubjects, ({ one }) => ({

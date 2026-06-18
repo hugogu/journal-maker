@@ -80,14 +80,25 @@ export async function confirmMessage(messageId: number, scenarioId: number) {
     }
  
     const { rules, diagrams } = structuredData
-    if (subjects || rules || diagrams) {
+    
+    // Normalize rules: map debit/credit to debitAccount/creditAccount
+    const normalizedRules = rules ? rules.map((r: any, index: number) => ({
+      id: r.id || `RULE-${String(index + 1).padStart(3, '0')}`,
+      event: r.event || r.eventName,
+      description: r.description || '',
+      condition: r.condition,
+      debitAccount: r.debitAccount || r.debit,
+      creditAccount: r.creditAccount || r.credit,
+    })) : []
+    
+    if (subjects || normalizedRules.length > 0 || diagrams) {
       // Import the analysis functions
       const { saveAndConfirmAnalysis } = await import('./analysis')
       
       await saveAndConfirmAnalysis(
         scenarioId,
         subjects || [],
-        rules || [],
+        normalizedRules,
         diagrams?.mermaid || null,
         messageId
       )

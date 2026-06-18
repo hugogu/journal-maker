@@ -28,6 +28,12 @@ interface AIContext {
     name: string
     description?: string
   }
+  accountingSystem?: {
+    id: number
+    name: string
+    description?: string
+    preferences?: Record<string, any>
+  }
 }
 
 interface AIResponse {
@@ -265,6 +271,23 @@ export class AIService {
       prompt = prompt
         .replace(/\{\{scenarioName\}\}/g, '')
         .replace(/\{\{scenarioDescription\}\}/g, '')
+    }
+
+    // Accounting system variables (if available)
+    if (context.accountingSystem) {
+      const systemPrefs = context.accountingSystem.preferences 
+        ? JSON.stringify(context.accountingSystem.preferences, null, 2) 
+        : 'N/A'
+      prompt = prompt
+        .replace(/\{\{systemName\}\}/g, context.accountingSystem.name)
+        .replace(/\{\{systemDescription\}\}/g, context.accountingSystem.description || '')
+        .replace(/\{\{systemPreferences\}\}/g, systemPrefs)
+    } else {
+      // Remove system-related sections if no system selected
+      prompt = prompt
+        .replace(/\{\{systemName\}\}/g, 'Default')
+        .replace(/\{\{systemDescription\}\}/g, '')
+        .replace(/\{\{systemPreferences\}\}/g, '')
     }
     
     return prompt

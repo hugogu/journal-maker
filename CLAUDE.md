@@ -63,13 +63,64 @@ npm run db:studio        # Drizzle Studio (interactive DB browser)
 
 PostgreSQL with Drizzle ORM. Schema defined in `src/server/db/schema.ts`. Migrations in `src/server/db/migrations/`.
 
-Core domain tables: `scenarios`, `accounts` (chart of accounts with hierarchy), `journal_rules`, `analysis_entries`, `analysis_subjects`, `analysis_diagrams`, `sample_transactions`.
+### Core Domain Tables
 
-AI/config tables: `ai_providers`, `ai_models`, `prompt_templates`, `prompt_versions`, `user_preferences`.
+**Business Flow Tables:**
+- `scenarios` - Business scenarios for analysis
+- `accounts` - Chart of accounts with hierarchy (支持多体系)
+- `accounting_systems` - 会计体系（如财务报表、管理报表）
+- `system_accounts` - 科目与体系的关联表
 
-Conversation tables: `conversation_messages`, `conversation_shares`.
+**CRITICAL: Rules Storage Architecture (⚠️ 重要设计区分)**
 
-Key enums: `scenario_status` (draft/confirmed/archived), `account_type` (asset/liability/equity/revenue/expense), `provider_type` (openai/azure/ollama/custom), `prompt_scenario_type` (scenario_analysis/sample_generation/prompt_generation/flowchart_generation).
+有两个表存储规则/分录数据，但用途完全不同：
+
+1. **`journal_rules`** - 可复用规则库（归一化存储）
+   - **用途**: 用户手动创建或从AI分析中"保存"的规则
+   - **场景**: 规则管理页面 `/journal-rules` 显示的内容
+   - **生命周期**: 长期保存，可跨场景复用
+   - **字段特点**: `debitSide`/`creditSide` (JSONB), `status` (proposal/confirmed), 支持公式计算
+   - **体系关联**: 通过 `system_rules` 表关联到 `accounting_systems`
+
+2. **`analysis_entries`** - AI分析结果归档（扁平化存储）
+   - **用途**: 记录每次AI分析的结果快照
+   - **场景**: 分析确认页面显示的内容
+   - **生命周期**: 与特定消息绑定，仅供历史追溯
+   - **字段特点**: `lines` (JSONB数组), `isConfirmed` (布尔), `systemId` (直接外键)
+   - **写入时机**: 仅在"确认分析结果"时写入
+
+**业务逻辑流程:**
+```
+AI分析生成规则
+    ↓
+显示在分析页面（临时状态）
+    ↓
+用户操作分支：
+    ├─ "确认分析结果" → 保存到 analysis_entries（历史记录）
+    └─ "保存到规则库" → 保存到 journal_rules（可复用规则）
+```
+
+**⚠️ 禁止双写**: 不要在确认分析时同时写入 journal_rules。两个表是独立的业务逻辑。
+
+**其他分析相关表:**
+- `analysis_subjects` - AI识别的会计科目
+- `analysis_diagrams` - AI生成的流程图
+- `sample_transactions` - 示例交易数据
+
+### AI/Config Tables
+- `ai_providers`, `ai_models` - AI供应商和模型配置
+- `prompt_templates`, `prompt_versions` - 提示词模板管理
+- `user_preferences` - 用户偏好设置
+
+### Conversation Tables
+- `conversation_messages` - AI对话消息历史
+- `conversation_shares` - 对话分享功能
+
+### Key Enums
+- `scenario_status` (draft/confirmed/archived)
+- `account_type` (asset/liability/equity/revenue/expense)
+- `provider_type` (openai/azure/ollama/custom)
+- `prompt_scenario_type` (scenario_analysis/sample_generation/prompt_generation/flowchart_generation)
 
 ## Environment Variables
 

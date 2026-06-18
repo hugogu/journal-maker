@@ -2,7 +2,7 @@ import { db } from '../../db'
 import { accountingSystems, systemAccounts, systemRules, analysisEntries } from '../../db/schema'
 import { createSystemSchema, updateSystemSchema } from '../../utils/schemas'
 import { AppError, handleError, successResponse } from '../../utils/error'
-import { eq, and, like, sql, count } from 'drizzle-orm'
+import { eq, and, like, sql, count, asc } from 'drizzle-orm'
 import { defineEventHandler, getMethod, readBody, getRouterParam, getQuery } from 'h3'
 
 export default defineEventHandler(async (event) => {
@@ -26,7 +26,7 @@ export default defineEventHandler(async (event) => {
       
       const allSystems = await db.query.accountingSystems.findMany({
         where: conditions,
-        orderBy: accountingSystems.name,
+        orderBy: asc(accountingSystems.name),
       })
       
       return successResponse(allSystems)
@@ -186,6 +186,6 @@ export default defineEventHandler(async (event) => {
 
     throw new AppError(405, 'Method not allowed')
   } catch (error) {
-    return handleError(event, error)
+    handleError(error)
   }
 })
